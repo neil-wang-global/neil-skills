@@ -7,7 +7,7 @@ description: Use when user invokes /issue-close, or when matching intent to clos
 
 ## Overview
 
-Close a GitHub/GitLab issue and clean up the local environment: exit worktree (if any), close the remote issue, **force-delete ALL non-base local branches**, prune stale remote refs, and pull latest.
+Close a GitHub/GitLab issue and clean up the local environment: exit worktree (if any), close the remote issue, **delete the current issue's local branch**, prune stale remote refs, and pull latest.
 
 **All behavior is driven by `.workflow-config.json` in the repo root.** Read it first.
 
@@ -22,7 +22,7 @@ digraph issue_close {
     "ExitWorktree remove" [shape=box];
     "git checkout base-branch" [shape=box];
     "Close remote issue" [shape=box];
-    "Force-delete ALL non-base local branches" [shape=box];
+    "Delete current issue's branch" [shape=box];
     "git fetch --prune && git pull" [shape=box];
     "Report" [shape=box];
     "Done" [shape=doublecircle];
@@ -34,8 +34,8 @@ digraph issue_close {
     "In worktree?" -> "git checkout base-branch" [label="no"];
     "ExitWorktree remove" -> "Close remote issue";
     "git checkout base-branch" -> "Close remote issue";
-    "Close remote issue" -> "Force-delete ALL non-base local branches";
-    "Force-delete ALL non-base local branches" -> "git fetch --prune && git pull";
+    "Close remote issue" -> "Delete current issue's branch";
+    "Delete current issue's branch" -> "git fetch --prune && git pull";
     "git fetch --prune && git pull" -> "Report";
     "Report" -> "Done";
 }
@@ -73,23 +73,26 @@ Based on `type` in config:
 
 If the issue is already closed, this is a no-op — proceed without error.
 
-### 5. Force-Delete ALL Non-Base Local Branches
+### 5. Delete Current Issue's Branch
 
-**CRITICAL: Delete ALL local branches except `base-branch`. Not just the current feature branch. Not just merged branches. ALL of them.**
+**Only delete the branch associated with the current issue.** Do NOT delete other branches.
+
+The branch name was determined in Step 2 (e.g. `feature/67-add-bypass-permissions-mode`). Delete it:
 
 ```bash
-git branch | grep -v '^\* ' | grep -v '^  <base-branch>$' | xargs git branch -D
+git branch -D <branch-name>
 ```
 
-Use exact match for `base-branch` to avoid false positives (e.g. `grep -v 'main'` would wrongly skip a branch named `feature/maintain-db`). The `^\* ` filter skips the current branch marker.
+Also delete any worktree-prefixed branch that was created for this issue (e.g. `worktree-feature+67-add-bypass-permissions-mode`):
 
-This uses `-D` (force delete), not `-d`. Unmerged branches are deleted too. This is intentional — the user wants a clean slate.
+```bash
+git branch -D worktree-<branch-name-with-slashes-replaced-by-plus> 2>/dev/null
+```
 
 **Do NOT:**
-- Delete only the current feature branch
-- Use `-d` (safe delete) instead of `-D`
-- Skip branches because they "might be needed"
-- Ask the user for confirmation on each branch
+- Delete ALL non-base local branches — other branches belong to other issues
+- Delete branches used by other worktrees
+- Delete remote branches
 
 ### 6. Prune and Pull
 
@@ -111,10 +114,10 @@ Tell the user:
 
 | Mistake | Correct Behavior |
 |---------|-----------------|
-| Only delete current feature branch | Delete **ALL** non-base local branches |
-| Use `git branch -d` (safe delete) | Use `git branch -D` (force delete) |
+| Delete ALL non-base local branches | Only delete the **current issue's** branch (and its worktree branch) |
+| Delete branches used by other worktrees | Skip branches occupied by other worktrees |
 | Delete remote feature branch | Do **NOT** delete remote branches |
 | Skip reading `.workflow-config.json` | Always read config first |
-| Ask for confirmation before deleting branches | Just delete them — user invoked `/issue-close` intentionally |
+| Ask for confirmation before deleting branch | Just delete it — user invoked `/issue-close` intentionally |
 | Forget `git fetch --prune` | Always prune stale remote-tracking refs |
 | Run `git pull` before switching to base branch | Switch to base branch FIRST, then pull |

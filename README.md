@@ -101,7 +101,7 @@ Implement login form with email and password fields.
 2. 从当前分支名提取 issue 编号
 3. 切回基准分支（如在 worktree 中则退出并删除 worktree）
 4. 关闭远端 issue（GitHub `gh` / GitLab `glab`）
-5. 强制删除**所有**非基准分支的本地分支（`git branch -D`）
+5. 删除当前 issue 关联的本地分支（`git branch -D`）
 6. 清理过期的远程跟踪引用并拉取最新代码
 
 **与 `/issue-init` 共用同一份 `.workflow-config.json` 配置。**
