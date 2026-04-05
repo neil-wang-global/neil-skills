@@ -1,0 +1,13 @@
+{
+  "name": "neil-skills",
+  "version": "1.0.0",
+  "description": "Neil's workflow skills for Claude Code",
+  "author": {
+    "name": "Neil Wang",
+    "url": "https://github.com/neil-wang-global"
+  },
+  "homepage": "https://github.com/neil-wang-global/neil-skills",
+  "repository": "https://github.com/neil-wang-global/neil-skills",
+  "license": "MIT",
+  "keywords": ["workflow", "issue", "git", "github", "gitlab"]
+}
