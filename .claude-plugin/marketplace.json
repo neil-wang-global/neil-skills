@@ -9,7 +9,7 @@
     {
       "name": "neil-skills",
       "description": "Workflow skills: issue-init, init-commit-hooks, issue-close",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "source": "./",
       "author": {
         "name": "Neil Wang",
