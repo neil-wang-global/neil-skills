@@ -46,6 +46,21 @@ Initialize a development workflow from issue to branch in one command.
 - [GitHub CLI (`gh`)](https://cli.github.com/) for GitHub repos
 - [GitLab CLI (`glab`)](https://gitlab.com/gitlab-org/cli) for GitLab repos
 
+### /issue-close
+
+Clean up the local environment after finishing feature work.
+
+**What it does:**
+
+1. Reads `.workflow-config.json` from repo root
+2. Extracts issue number from the current branch name
+3. Returns to base branch (exits and removes worktree if applicable)
+4. Closes the remote issue (GitHub `gh` / GitLab `glab`)
+5. Force-deletes **all** non-base local branches (`git branch -D`)
+6. Prunes stale remote-tracking refs and pulls latest
+
+**Uses the same `.workflow-config.json` as `/issue-init`.**
+
 ## License
 
 MIT
