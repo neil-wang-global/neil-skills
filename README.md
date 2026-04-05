@@ -25,7 +25,8 @@ Claude Code 工作流自动化技能插件。
   "type": "github",
   "base-branch": "main",
   "branch-template": "feature/{issue-no}-{issue-subject}",
-  "need-worktree": true
+  "need-worktree": true,
+  "remarks": ""
 }
 ```
 
@@ -35,6 +36,7 @@ Claude Code 工作流自动化技能插件。
 | `base-branch` | 创建功能分支的基准分支 | `"main"` |
 | `branch-template` | 分支命名模板 | `"feature/{issue-no}-{issue-subject}"` |
 | `need-worktree` | 是否使用 git worktree 隔离工作环境 | `true` |
+| `remarks` | 额外指令，作为上下文载入技能执行流程（如 label 规则、命名约定等） | `""` |
 
 **模板变量：**
 
@@ -45,6 +47,36 @@ Claude Code 工作流自动化技能插件。
 
 - GitHub 仓库需安装 [GitHub CLI (`gh`)](https://cli.github.com/)
 - GitLab 仓库需安装 [GitLab CLI (`glab`)](https://gitlab.com/gitlab-org/cli)
+
+### /init-commit-hooks
+
+为 Node.js 项目初始化标准提交钩子（lefthook + commitlint）。
+
+**功能：**
+
+1. 安装 `@commitlint/cli`、`@commitlint/config-conventional`、`lefthook` 为 devDependencies
+2. 创建 `commitlint.config.cjs` — conventional commits 规范，要求 scope 和 body
+3. 创建 `lefthook.yml` — commit-msg 阶段运行 commitlint + 禁止 co-author 信息
+4. 在 `package.json` 中添加 `prepare` 脚本自动安装 hooks
+5. 激活 hooks 并验证
+
+**允许的 commit type：** `feat`、`fix`、`docs`、`style`、`refactor`、`test`、`chore`、`ci`、`perf`、`build`
+
+**commit message 格式：**
+
+```
+<type>(<scope>): <subject>
+
+<body>
+```
+
+示例：
+
+```
+feat(auth): add login page
+
+Implement login form with email and password fields.
+```
 
 ### /issue-close
 

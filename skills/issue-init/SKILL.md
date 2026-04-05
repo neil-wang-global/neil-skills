@@ -70,7 +70,8 @@ Located at **repo root**. If missing, create with these defaults and show the us
   "type": "github",
   "base-branch": "main",
   "branch-template": "feature/{issue-no}-{issue-subject}",
-  "need-worktree": true
+  "need-worktree": true,
+  "remarks": ""
 }
 ```
 
@@ -80,12 +81,15 @@ Located at **repo root**. If missing, create with these defaults and show the us
 | `base-branch` | Branch to create feature branch from. |
 | `branch-template` | Template for branch names. `{issue-no}` and `{issue-subject}` are replaced. |
 | `need-worktree` | Whether to use `EnterWorktree` tool or plain `git checkout`. |
+| `remarks` | Extra instructions loaded as context when `/issue-init` runs. Can be any text — e.g. issue labeling rules, naming conventions, team workflow notes. Empty string means no extra context. |
 
 ## Step-by-Step
 
 ### 1. Read Config
 
 Read `.workflow-config.json` from repo root. If not found, create with defaults above, inform user, and continue.
+
+**If `remarks` is non-empty, treat it as additional instructions for this entire workflow.** Apply remarks as context throughout all subsequent steps — e.g. if remarks say "always add label `priority:high`", do so when creating issues; if remarks say "use kebab-case for branch subjects", follow that in branch naming.
 
 ### 2. Validate Type
 
