@@ -4,14 +4,16 @@ Claude Code 工作流自动化技能插件。
 
 ## 安装
 
-在 Claude Code 中依次运行：
-
-```
-/plugin marketplace add neil-wang-global/neil-skills
-/plugin install neil-skills@neil-skills
+```bash
+claude plugin marketplace add neil-wang-global/neil-skills
+claude plugin install neil-skills@neil-skills
 ```
 
-第一条命令注册 marketplace，第二条安装插件（包含仓库内所有技能）。安装后重启 Claude Code 即可使用。
+## 更新
+
+```bash
+claude plugin update neil-skills@neil-skills
+```
 
 ## 技能
 
