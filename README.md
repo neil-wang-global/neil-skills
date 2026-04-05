@@ -50,15 +50,16 @@ Claude Code 工作流自动化技能插件。
 
 ### /init-commit-hooks
 
-为 Node.js 项目初始化标准提交钩子（lefthook + commitlint）。
+为任意项目初始化标准提交钩子（lefthook + commitlint）。支持 Node.js、Go、Python、Rust 等任何 git 项目。
 
 **功能：**
 
-1. 安装 `@commitlint/cli`、`@commitlint/config-conventional`、`lefthook` 为 devDependencies
-2. 创建 `commitlint.config.cjs` — conventional commits 规范，要求 scope 和 body
-3. 创建 `lefthook.yml` — commit-msg 阶段运行 commitlint + 禁止 co-author 信息
-4. 在 `package.json` 中添加 `prepare` 脚本自动安装 hooks
-5. 激活 hooks 并验证
+1. 确保 `package.json` 存在（非 Node 项目会自动创建）
+2. 安装 `@commitlint/cli`、`@commitlint/config-conventional`、`lefthook` 为 devDependencies
+3. 创建 `commitlint.config.cjs` — conventional commits 规范，要求 scope 和 body
+4. 创建 `lefthook.yml` — commit-msg 阶段运行 commitlint + 禁止 co-author 信息
+5. 在 `package.json` 中添加 `prepare` 脚本自动安装 hooks
+6. 激活 hooks 并验证
 
 **允许的 commit type：** `feat`、`fix`、`docs`、`style`、`refactor`、`test`、`chore`、`ci`、`perf`、`build`
 
