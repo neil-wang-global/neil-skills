@@ -1,0 +1,20 @@
+{
+  "name": "neil-skills",
+  "description": "Neil's workflow automation skills for Claude Code",
+  "owner": {
+    "name": "Neil Wang",
+    "url": "https://github.com/neil-wang-global"
+  },
+  "plugins": [
+    {
+      "name": "neil-skills",
+      "description": "Workflow skills: issue-init, init-commit-hooks, issue-close",
+      "version": "1.0.0",
+      "source": "./",
+      "author": {
+        "name": "Neil Wang",
+        "url": "https://github.com/neil-wang-global"
+      }
+    }
+  ]
+}
