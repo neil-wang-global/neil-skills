@@ -95,7 +95,16 @@ Read `.workflow-config.json` from repo root. If not found, create with defaults 
 
 ### 3. Ask: Existing or New Issue
 
-**GATE — You MUST determine whether the user wants an existing issue or a new one.** Use `AskUserQuestion` unless the user's message already makes intent unambiguous (e.g. "issue #42 已有" = existing, "帮我提个 issue，标题是 X" = new). When in doubt, ask.
+**GATE — You MUST determine whether the user wants an existing issue or a new one.**
+
+**Default: new issue.** Only treat as existing when the user **explicitly mentions an issue number** (e.g. `#42`, `issue 42`, `议题 42`). Describing a feature, bug, or task without referencing an issue number = **new issue**.
+
+Examples:
+- "将 bypass permissions 模式加入模式组" → **new** (describes a feature, no issue number)
+- "帮我提个 issue，标题是 X" → **new**
+- "issue #42 已有" / "关联 #42" / "用 issue 42" → **existing**
+
+When genuinely ambiguous, use `AskUserQuestion`. But if the user describes what they want to build, it is NOT ambiguous — it's a new issue.
 
 - **Existing issue** → get issue number (ask if not provided) → fetch with `gh issue view <no>` or `glab issue view <no>`
 - **New issue** → get title and description from user. If user provided title but no description, **ask for description** — do NOT leave issue body empty or repeat the title as body.
@@ -124,13 +133,15 @@ Apply `branch-template` with substitution. **Both placeholders are required:**
 
 ### 5. Create Remote Branch + Link Issue
 
-**Create branch on remote and link to issue in one step:**
+**One command does everything. Do NOT create the branch separately first.**
 
 **GitHub:**
 ```bash
 gh issue develop <issue-no> --name <branch-name> --base <base-branch>
 ```
 This creates the remote branch from `base-branch`, names it `branch-name`, and links it to the issue — all in one command.
+
+**Do NOT use `gh api repos/.../git/refs` or `git push` to create the branch.** `gh issue develop` handles branch creation. Pre-creating the branch causes `"API returned empty branch name"` error.
 
 **GitLab:**
 ```bash
@@ -167,6 +178,7 @@ Tell user:
 | Mistake | Correct Behavior |
 |---------|-----------------|
 | Skip asking existing/new issue | **Determine intent** — ask if ambiguous, infer if unambiguous |
+| Treat feature description as existing issue | No issue number mentioned = **new issue**, always |
 | Create branch locally only | Create on **remote first**, then fetch + checkout |
 | Use CJK in branch name | **Transliterate** to English meaning (not pinyin) |
 | Forget to read config | **Always read** .workflow-config.json first |
