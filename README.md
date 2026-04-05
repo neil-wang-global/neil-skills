@@ -2,7 +2,16 @@
 
 Claude Code 工作流自动化技能插件。
 
-通过 [Superpowers Marketplace](https://github.com/superpowers-ai/marketplace) 安装，或直接在 Claude Code 设置中添加。
+## 安装
+
+在 Claude Code 中依次运行：
+
+```
+/plugin marketplace add neil-wang-global/neil-skills
+/plugin install neil-skills@neil-skills
+```
+
+第一条命令注册 marketplace，第二条安装插件（包含仓库内所有技能）。安装后重启 Claude Code 即可使用。
 
 ## 技能
 
