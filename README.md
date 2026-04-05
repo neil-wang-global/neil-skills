@@ -12,6 +12,7 @@ claude plugin install neil-skills@neil-skills
 ## 更新
 
 ```bash
+claude plugin marketplace update neil-skills
 claude plugin update neil-skills@neil-skills
 ```
 
