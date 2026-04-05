@@ -29,8 +29,7 @@ digraph issue_init {
     "Ask user for title + description" [shape=box];
     "Create issue via CLI" [shape=box];
     "Generate branch name from template" [shape=box];
-    "Create remote branch from base-branch" [shape=box];
-    "Link branch to issue" [shape=box];
+    "Create branch + link to issue" [shape=box];
     "need-worktree?" [shape=diamond];
     "EnterWorktree with branch" [shape=box];
     "git fetch + checkout branch" [shape=box];
@@ -51,9 +50,8 @@ digraph issue_init {
     "Ask user for title + description" -> "Create issue via CLI";
     "Fetch issue via CLI" -> "Generate branch name from template";
     "Create issue via CLI" -> "Generate branch name from template";
-    "Generate branch name from template" -> "Create remote branch from base-branch";
-    "Create remote branch from base-branch" -> "Link branch to issue";
-    "Link branch to issue" -> "need-worktree?";
+    "Generate branch name from template" -> "Create branch + link to issue";
+    "Create branch + link to issue" -> "need-worktree?";
     "need-worktree?" -> "EnterWorktree with branch" [label="true"];
     "need-worktree?" -> "git fetch + checkout branch" [label="false"];
     "EnterWorktree with branch" -> "Done";
@@ -126,23 +124,20 @@ Apply `branch-template` with substitution. **Both placeholders are required:**
 
 ### 5. Create Remote Branch + Link Issue
 
-**Create branch on remote first**, then track locally:
+**Create branch on remote and link to issue in one step:**
 
 **GitHub:**
 ```bash
-git fetch origin <base-branch>
-gh api repos/{owner}/{repo}/git/refs -f ref="refs/heads/<branch-name>" -f sha="$(git rev-parse origin/<base-branch>)"
+gh issue develop <issue-no> --name <branch-name> --base <base-branch>
 ```
+This creates the remote branch from `base-branch`, names it `branch-name`, and links it to the issue — all in one command.
 
 **GitLab:**
 ```bash
 git fetch origin <base-branch>
 glab api projects/:id/repository/branches -f branch="<branch-name>" -f ref="<base-branch>"
 ```
-
-**Link branch to issue:**
-- GitHub: branch naming convention auto-links; optionally use `gh issue develop <no> --branch <branch-name>` if available
-- GitLab: branch name starting with `<no>-` auto-links to issue
+Branch name starting with `<no>-` auto-links to the issue in GitLab.
 
 ### 6. Set Up Working Environment
 
@@ -178,4 +173,6 @@ Tell user:
 | Mix EnterWorktree with manual git branch | Use EnterWorktree **or** git checkout, not both |
 | Leave issue body empty or repeat title | **Ask user for description** if not provided |
 | Use pinyin instead of English | Prefer English meaning: 优化→optimize, not youhua |
-| Don't link issue to branch | Use platform conventions or CLI to link |
+| Don't link issue to branch | For GitHub, use `gh issue develop` which creates + links in one step |
+| Create branch via API then try `gh issue develop` | `gh issue develop` creates the branch itself — don't pre-create it |
+| Use `--branch` flag with `gh issue develop` | Correct flag is `--name` (`-n`) |
