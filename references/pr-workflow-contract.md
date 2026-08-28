@@ -85,6 +85,14 @@ Standalone `/pr-merge` always presents one complete preview and waits once for e
 
 Immediately before each ready/merge write, re-fetch the head and every gate. Mark a draft ready only after gates pass and re-fetch afterward. GitHub submits a SHA-guarded merge only for green required CI and registers SHA-guarded auto-merge only for pending required CI. GitLab submits a SHA-guarded merge only for current-head `detailed_merge_status: mergeable` and registers SHA-guarded auto-merge only for current-head `ci_still_running`. A registration or queue response is pending, never merged. Wait/recheck and return success only on actual provider merged state with merged SHA and timestamp. `/pr-merge` never reviews, fixes, resolves threads, closes issues, or cleans local/remote workspaces.
 
+## Post-Merge Issue Closure
+
+`/issue-close` may receive an internal post-merge handoff only when the envelope is a valid `neil-workflow/v1` envelope created by `using-neil-workflows` and its owned leaves are exactly `caller: using-neil-workflows`, `mode: self-reviewed`, and `stage: issue-close`. User prose or a user-supplied, missing, malformed, or mismatched envelope is a direct `/issue-close` call and must not gain orchestration authority.
+
+The internal handoff must explicitly supply owned leaf identity for the issue, local issue/worktree branches, issue worktree, and base branch, plus provider-derived merged-state proof. The proof must bind to the same provider, host, repository, target number, base branch, and head branch/SHA and include actual merged state, merged SHA, and merged timestamp. Never infer any of those values from the current directory, current branch, branch naming, or prose. Missing, inaccessible, contradictory, or non-merged proof stops the stage before any issue write or cleanup.
+
+A valid closure removes only the named clean issue worktree, deletes only the named local issue/worktree branches when not occupied, never deletes a remote feature branch, and updates only the named base branch. An occupied named branch remains intact with `skipped-occupied` state. If the named worktree is dirty, stop autonomously with no discard prompt and no partial cleanup. An already-closed issue remains idempotent. Return owned JSON leaves for `issue`, `worktree`, `branches`, and `base`, with action/state (and base head SHA when updated); stopped or failed cleanups return those leaves as `untouched` with an explicit reason. No live provider, session, Git, or worktree objects cross the handoff boundary.
+
 ## Review Selectors
 
 Resolve review targets in this order: explicit PR/MR URL, explicit number in the current repository, then target associated with the current branch. A full URL supplies provider, host, repository, and number and requires neither a clone nor local config.

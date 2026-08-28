@@ -11,7 +11,45 @@ Close a GitHub/GitLab issue and clean up the local environment: exit worktree (i
 
 **All behavior is driven by `.workflow-config.json` in the repo root.** Read it first.
 
-## Process Flow
+## Orchestrated Post-Merge Handoff
+
+This section applies only to a trusted internal `neil-workflow/v1` call whose owned leaves name `caller: using-neil-workflows`, `mode: self-reviewed`, and `stage: issue-close`. A direct user `/issue-close` call, a user-supplied envelope, or a malformed/untrusted handoff follows the ordinary process below unchanged.
+
+Before any close, removal, branch deletion, fetch, or pull, validate an explicit handoff containing only owned leaf values for:
+
+- `issue`: number, URL, and target repository identity.
+- `branch`: the local issue branch and local worktree branch eligible for deletion.
+- `worktree`: the exact path and branch of the issue worktree eligible for removal.
+- `base`: the target base branch to update.
+- `merge`: provider-derived proof for the matching target that includes merged state, merged SHA, and merged timestamp.
+
+The merged proof must identify the same provider, host, repository, target number, base branch, and head branch/SHA as the handoff. A PR/MR that is merely open, approved, mergeable, queued, or represented by a user assertion is not proof. Missing, inaccessible, malformed, or mismatched proof or identity fails closed: perform no cleanup and report the failed validation.
+
+Never infer issue, branch, worktree, base branch, repository, or merge state from the current directory, current branch, prose, or derived naming. Use only the validated handoff leaves.
+
+For a valid orchestrated handoff:
+
+1. Read the remote issue. An already-closed issue is idempotent; retain `already-closed` state and continue.
+2. Inspect the named worktree before any cleanup. If it is dirty, stop autonomously. Do not ask to discard, do not discard, and do not remove the worktree, delete either local branch, or update the base branch.
+3. Remove only the named clean issue worktree. Delete only the explicitly handed-off local issue and worktree branches, and only when neither is occupied by another worktree. Never delete an unrelated local branch or a remote feature branch. If a named branch is occupied, leave it intact and return its state as `skipped-occupied`.
+4. Close an open issue, then fetch/prune and update only the explicitly handed-off base branch.
+5. Return an owned JSON closure leaf, never live provider, session, Git, or worktree objects:
+
+```json
+{
+  "issue": { "number": 42, "state": "closed" },
+  "worktree": { "path": "/absolute/issue-worktree", "state": "removed" },
+  "branches": {
+    "issue": { "name": "feature/42-example", "state": "deleted" },
+    "worktree": { "name": "worktree-feature+42-example", "state": "deleted" }
+  },
+  "base": { "name": "main", "state": "updated", "headSha": "owned-sha" }
+}
+```
+
+For a validation failure or dirty worktree, return the same owned leaf shape with `state: "untouched"` for every cleanup target and an explicit `status: "stopped"` or `status: "failed"` reason. Parent orchestration validates these leaves before continuing.
+
+## Direct Invocation
 
 ```dot
 digraph issue_close {
