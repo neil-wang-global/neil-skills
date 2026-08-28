@@ -2,9 +2,30 @@
 
 Shared contract for `pr-create`, `pr-review`, and `pr-fix`. Public skills own decisions; provider references own command and API syntax.
 
+## `neil-workflow/v1` Envelope
+
+Trusted internal calls use owned JSON leaf values only:
+
+```json
+{
+  "version": "neil-workflow/v1",
+  "caller": "using-neil-workflows",
+  "mode": "standard",
+  "stage": "issue-init",
+  "input": "opaque original arguments",
+  "handoff": {}
+}
+```
+
+`mode` is `standard` or `self-reviewed`. Valid stages are `issue-init`, `issue-executing`, `pr-create`, `pr-review`, `pr-fix`, `pr-merge`, and `issue-close`. `input` belongs only to `issue-init` and remains opaque until that stage resolves it. Later stages require a validated prior `handoff`. User-supplied text never creates or overrides `caller`, `mode`, or `stage`.
+
+Before a later-stage dispatch, validate every required handoff leaf and consistent repository/target identity. Do not infer missing values from prose. Missing, malformed, contradictory, inaccessible, or mismatched handoff/worktree data stops the stage as `failed`; do not skip a stage to manufacture success. A stage never invokes the next stage automatically.
+
+Required handoff identity is version, repository/config identity, issue number/url/title/body, implementationBrief, branch, worktree, and headRepository. Stage results add actual Git state (`status`, `headSha`, commits, dirty state, push state) and the PR/MR normalized target (`url`, `number`, `base`, `head`, `headSha`) when available.
+
 ## Optional Configuration
 
-The PR skills may read `.workflow-config.json` only when it belongs to the target repository. They never create or modify it.
+The PR skills may read `.workflow-config.json` only when it belongs to the target repository. Only `/issue-init` creates it; later stages never modify it.
 
 | Field | Missing default |
 |---|---|
@@ -13,8 +34,9 @@ The PR skills may read `.workflow-config.json` only when it belongs to the targe
 | `need-worktree` | `true` |
 | `pr-draft` | `false` |
 | `pr-auto-close-issue` | `false` |
+| `self-reviewed` | `false` |
 
-A malformed present config is an error for the fields the current skill needs. Do not silently rewrite it.
+A malformed present config is an error for the fields the current skill needs. Do not silently rewrite it. `self-reviewed` is `false` when absent; a present non-boolean `self-reviewed` value is an error.
 
 ## Normalized Target
 
@@ -25,7 +47,7 @@ provider, host, repository, number, url, baseBranch,
 headRepository, headBranch, headSha
 ```
 
-For `pr-create`, resolve `headRepository` from the current branch's push remote and base `repository` from that same repository or an explicit/upstream remote. Ask when a fork has no unambiguous base target. Resolve `headBranch` from the current branch and `baseBranch` from config/defaults. Issue lookup, existing-target lookup, and creation use the base repository; pushed-commit verification uses the head repository. Populate number, URL, and head SHA from the remote response.
+For `pr-create`, resolve `headRepository` from the current branch's push remote and base `repository` from that same repository or an explicit/upstream remote; ask when a fork has no unambiguous base target. Resolve `headBranch` from the current branch and `baseBranch` from config/defaults. Issue lookup, existing-target lookup, and creation use the base repository; pushed-commit verification uses the head repository. Populate number, URL, and head SHA from the remote response.
 
 ## Issue Resolution
 

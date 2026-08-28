@@ -55,3 +55,18 @@ A final reviewer found that the provider reference unconditionally used GitLab `
 A later reviewer found fork checkouts would query/create inside the fork because provider commands omitted the upstream base target and qualified head. This became Scenario G.
 
 A final provider check found `gh pr create --head` rejects organization owners. This became Scenario H and requires REST creation for organization-owned fork heads.
+
+## Task 1 fresh-agent RED scenario
+
+### Scenario I: orchestrated normalized target — FAIL
+
+> Created PR #81 for issue #42: https://github.com/acme/widgets/pull/81
+>
+> Base: `main`
+> Head: `feature/42-cache`
+> Head SHA: `abc123`
+> Draft: no
+>
+> Next available command: `/pr-review`
+
+Failure: the prose response did not validate or identify the supplied handoff/worktree and did not return a `neil-workflow/v1` leaf-only internal normalized target with explicit `url`, `number`, `base`, `head`, and `headSha` fields.

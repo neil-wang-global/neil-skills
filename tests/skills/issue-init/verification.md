@@ -50,7 +50,7 @@ The skill stops after reporting its own result.
 
 | Scenario | Result | Evidence |
 |---|---|---|
-| Missing configuration | PASS | Exact eight-field default JSON |
+| Missing configuration | PASS | Exact nine-field default JSON |
 | Existing configuration | PASS | New fields preserved verbatim |
 | No automatic chaining | PASS | Explicitly invokes no later skill |
 
@@ -58,4 +58,34 @@ No new rationalization or loophole appeared during GREEN verification.
 
 ## Cross-skill verification
 
-Flow A passed: `issue-init` alone creates the exact eight-field config, reports its issue/branch/worktree result, and does not invoke `issue-executing` or a PR stage.
+Flow A passed: `issue-init` alone creates the exact nine-field config, reports its issue/branch/worktree result, and does not invoke `issue-executing` or a PR stage.
+
+## Task 1 GREEN scenarios
+
+### Scenario D: self-review default — PASS
+
+> Created `.workflow-config.json`:
+>
+> ```json
+> {
+>   "type": "github",
+>   "base-branch": "main",
+>   "branch-template": "feature/{issue-no}-{issue-subject}",
+>   "need-worktree": true,
+>   "execution-strategy": "",
+>   "pr-draft": false,
+>   "pr-auto-close-issue": false,
+>   "self-reviewed": false,
+>   "remarks": ""
+> }
+> ```
+>
+> What title and body should the new issue use?
+
+The fresh result contains the required nine-field flat default, with `self-reviewed:false` immediately before `remarks`.
+
+### Scenario E: opaque orchestrator input — PASS
+
+> {"version":"neil-workflow/v1","repository":{"provider":"github","host":"github.com","name":"acme/widgets"},"configIdentity":{"repository":"acme/widgets","path":".workflow-config.json"},"issue":{"number":42,"url":"https://github.com/acme/widgets/issues/42","title":"Cache invalidation","body":"Add invalidation"},"implementationBrief":{"rawInput":"#42 --label urgent preserve this wording","outcomes":["Cache invalidation"]},"branch":"feature/42-cache-invalidation","worktree":"/repo/.worktrees/feature+42-cache-invalidation","headRepository":"acme/widgets"}
+
+A completed-resolution simulation preserved the entire opaque string and returned every required versioned repository/config, issue, implementation, branch, worktree, and head-repository leaf. It invoked no later stage.

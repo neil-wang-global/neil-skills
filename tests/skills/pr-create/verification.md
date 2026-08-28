@@ -71,3 +71,11 @@ Scenario F passed: default GitLab creation omits `--related-issue` and uses only
 Scenario G passed: fork checkout resolves base/head separately, performs idempotency lookup with base branch plus qualified fork source (GitHub REST and GitLab project/source filters), creates on upstream, verifies pushed state in the fork, and asks when base identity is ambiguous.
 
 Scenario H passed: organization-owned GitHub fork heads use host-routed REST `POST /pulls` with explicit base/head and draft boolean; unsupported owner-qualified `gh pr create` is not used.
+
+## Task 1 GREEN scenario
+
+### Scenario I: orchestrated normalized target — PASS
+
+> {"version":"neil-workflow/v1","stage":"pr-create","target":{"url":"https://github.com/acme/widgets/pull/81","number":81,"base":"main","head":"feature/42-cache","headSha":"abc123"}}
+
+The fresh simulation returned a leaf-only normalized target with actual URL, number, base, head, and head SHA. The contract requires validated handoff/worktree identity before this result, writes no config outside `/issue-init`, and invokes no later stage.

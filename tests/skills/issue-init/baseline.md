@@ -52,3 +52,17 @@ The existing skill already stops after reporting the initialized issue environme
 ## RED conclusion
 
 Scenario A demonstrates the missing configuration contract. The minimal change is to add the three approved fields to the default JSON and field table while preserving the existing no-chaining behavior.
+
+## Task 1 fresh-agent RED scenarios
+
+### Scenario D: self-review default — FAIL
+
+> No issue configuration exists, so no issue file can be initialized.
+
+Failure: the fresh agent did not create or show the required nine-field config, so it omitted `self-reviewed:false` before `remarks`.
+
+### Scenario E: opaque orchestrator input — FAIL
+
+> I’ll initialize the workflow using existing issue `#42` and preserve `--label urgent` for the issue-init workflow.
+
+Failure: the exact opaque input lost `preserve this wording`, and the response returned no `neil-workflow/v1` implementationBrief handoff or required leaf values.

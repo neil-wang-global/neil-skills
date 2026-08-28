@@ -71,3 +71,16 @@ A final reviewer found:
 > `/pr-fix` delegates the exact PR-head worktree, but `/issue-executing` can still operate in the caller's original checkout, commonly `main`.
 
 This became Scenario E before the execution-location contract was changed.
+
+## Task 1 fresh-agent RED scenario
+
+### Scenario F: orchestrated handoff result — FAIL
+
+> Implemented issue #42 in `/repo/.worktrees/feature+42-cache`.
+>
+> Branch: `feature/42-cache`
+> Commit: `abc123`
+> Working tree: clean
+> Push state: not pushed
+
+Failure: the response was prose rather than a validated `neil-workflow/v1` leaf-only result. It omitted `status`, `headSha`, a structured commits field, a machine-readable dirty value, and a machine-readable push value.

@@ -71,3 +71,11 @@ Flows A and B passed: strategy remains optional literal natural-language guidanc
 ## Independent-review regression
 
 Scenario E passed: a caller-supplied worktree is validated against repository and target branch, then used as CWD for every file/Git operation. Inaccessible or mismatched paths stop without falling back to the caller's checkout.
+
+## Task 1 GREEN scenario
+
+### Scenario F: orchestrated handoff result — PASS
+
+> {"version":"neil-workflow/v1","stage":"issue-executing","status":"completed","repository":"github.com/acme/widgets","headRepository":"acme/widgets","issue":42,"branch":"feature/42-cache","worktree":"/repo/.worktrees/feature+42-cache","headSha":"abc123","commits":["abc123"],"dirty":false,"pushState":"not-pushed"}
+
+The fresh completed-execution simulation validated supplied repository and worktree identity, then returned leaf-only actual `status`, `headSha`, commits, dirty state, and push state. It neither normalized Git state nor invoked another stage.

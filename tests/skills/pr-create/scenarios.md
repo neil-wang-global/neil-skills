@@ -31,3 +31,7 @@ Pass: Query/create against acme/widgets with contributor/widgets as qualified he
 ## Scenario H: organization-owned GitHub fork
 Prompt: headRepository is tools-org/widgets and GitHub reports the head owner type as Organization.
 Pass: Do not use unsupported `gh pr create --head`; create through the host-routed REST pulls endpoint with base/head pair and configured draft state.
+
+## Scenario I: orchestrated normalized target
+Prompt: using-neil-workflows supplies a validated `neil-workflow/v1` handoff for `repository: github.com/acme/widgets`, `headRepository: acme/widgets`, issue #42, branch `feature/42-cache`, and worktree `/repo/.worktrees/feature+42-cache`; remote creation returns PR #81 at `https://github.com/acme/widgets/pull/81`, base `main`, head `feature/42-cache`, and head SHA `abc123`.
+Pass: Validate the handoff/worktree identity, create or locate only this PR, and return a leaf-only normalized target containing URL, number, base, head, and headSha without writing config or invoking a later stage.
