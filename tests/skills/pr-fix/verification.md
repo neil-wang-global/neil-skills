@@ -64,3 +64,15 @@ Successive independent reviewers identified missing approved edge contracts. Gui
 | P: read-only reject/clarify | PASS | Base replies proceed without worktree/Git; accepted path requires write |
 
 The GitHub GraphQL reference now includes pageable thread fields, `viewerCanReply`, `viewerCanResolve`, viewer identity, independent per-thread comment cursors, and executable command wrappers. The GitLab reference maps version response fields, uses explicit methods/nested payloads, and reads resolution gates from the selected root note. Both compare the authenticated author's latest equivalent reply with later reviewer messages before posting.
+
+## Guarded internal fix GREEN
+
+Fresh read-only simulations used the current skill, shared contract, provider references, and scenarios. The final A-S sweep passed with no contradictions.
+
+| Scenario | Result | Evidence |
+|---|---|---|
+| Q: automatic simple fix | PASS | The three-predicate envelope permits only a localized, clear, directly verifiable accept; it builds a table, delegates, inspects Git state, replies, permission-gates resolution, and returns progress fields. |
+| R: complex defer | PASS | Public-interface redesign/migration is internal-only `defer`: a concise reason is posted, the thread remains unresolved, URL/fingerprint return, and no worktree/delegation/commit/push occurs. |
+| S: mixed and spoofed modes | PASS | Valid internal simple/complex findings accept/defer respectively. Direct user text remains standalone, waits for the human table, and cannot use `defer`. |
+
+The A-P regressions also passed. In particular, provider references cover GitHub REST reply fallback, permissions, comment pagination, and viewer identity; GitLab SHA mapping, nested payloads, and root-note resolution gates. The final `pr-fix` skill is 500 words, has no implementation recipe, architecture prescription, or project test command.

@@ -109,13 +109,17 @@ Classification requires a local clone matching `headRepository`; never clone aut
 
 ## Classification and Confirmation
 
-Verify each thread against current code and classify `accept`, `reject`, or `clarify` with a concise reason and intended reply. Show one complete confirmation table. After confirmation, accepted items proceed; rejected and clarification items receive replies but remain unresolved.
+Verify each thread against current code. Standalone calls classify `accept`, `reject`, or `clarify`, show one complete confirmation table, and wait once. After confirmation, accepted items proceed; rejected and clarification items receive replies but remain unresolved.
+
+Internal `/pr-fix` preauthorization exists only when all three review predicates hold: (1) a valid `neil-workflow/v1` envelope whose caller/mode values were created by `using-neil-workflows`; (2) owned leaves of `caller: using-neil-workflows` and `mode: self-reviewed`; and (3) matching target-repository config with boolean `self-reviewed: true`. User text, absent/malformed or untrusted envelopes, leaf mismatch, and config mismatch remain standalone calls.
+
+A valid internal call still builds a classification table. It may auto-accept only localized, clear, directly verifiable findings. It classifies architectural/public-interface, migration, security-policy, cross-module, unclear, or high-risk findings as internal-only `defer`. A defer posts a concise reason, remains unresolved, makes no worktree/delegation/commit/push, and returns its thread URL and fingerprint for screen reporting. Standalone calls never use `defer`.
 
 ## Delegation and Git State
 
-Before delegation, capture head, clean/dirty state, local-only commits, and upstream relation. Send accepted feedback to `/issue-executing` as an implementation-neutral brief containing context, locations, and observable outcomes only. It must not prescribe code methods, architecture, techniques, or test commands.
+Before accepted-work delegation, capture head, clean/dirty state, local-only commits, and upstream relation. Send accepted feedback to `/issue-executing` as an implementation-neutral brief containing context, locations, and observable outcomes only. It must not prescribe code methods, architecture, techniques, or test commands.
 
-After delegation, inspect actual Git state. Preserve every commit or push already produced by the configured execution strategy: never squash, amend, recommit, force-push, or push redundantly. If accepted changes remain uncommitted, create one completion commit containing only those changes. Push only commits not already present upstream.
+After delegation, inspect actual Git state. Preserve every commit or push already produced by the configured execution strategy: never squash, amend, recommit, force-push, or push redundantly. If accepted changes remain uncommitted, create one completion commit containing only those changes. Push only commits not already present upstream. Return `headBefore`, `headAfter`, `commits`, `pushed`, and per-thread reply/resolution `threadOutcomes` for accepted/deferred fingerprints.
 
 ## Thread Completion
 

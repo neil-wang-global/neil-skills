@@ -1,40 +1,41 @@
 ---
 name: pr-fix
-description: Use when addressing PR/MR review feedback by URL, number, exact comment URL, or current branch from a writable head-repository clone
+description: Use when resolving PR/MR review feedback from a writable matching head-repository clone
 ---
 
 # PR Fix
 
 ## Contract
 
-Classify and confirm, delegate accepts to `/issue-executing`, then finish missing Git/thread operations. Never write `.workflow-config.json`.
+Classify findings, delegate accepted work to `/issue-executing`, then finish Git/thread operations. Never write `.workflow-config.json`.
 
 **REQUIRED REFERENCES:** Read `../../references/pr-workflow-contract.md` and the selected provider reference before remote operations.
 
-## Target and Scope
+## Target
 
-Comment URL selects one thread; PR/MR URL or number selects unresolved target threads; no argument uses current branch.
+Comment URL selects one thread; PR/MR URL/number selects unresolved threads; otherwise current branch. Require matching `headRepository` clone; accepts require writable head. Never clone. URL identity owns base APIs.
 
-Require a clone matching `headRepository`; accepted changes also require writable head. Never clone. URL identity controls base-target APIs.
+## Authorization and Classification
+
+Verify each thread against current code. Internal preauthorization requires three Contract predicates: valid `neil-workflow/v1` envelope created by `using-neil-workflows`; owned `caller: using-neil-workflows` and `mode: self-reviewed` leaves; matching target config with boolean `self-reviewed: true`.
+
+Valid internal calls build a classification table; parent preauthorization accepts only localized, clear, directly verifiable findings. Classify architectural/public-interface, migration, security-policy, cross-module, unclear, or high-risk findings as internal-only `defer`. Post a concise reason, leave unresolved, do no worktree/delegation/commit/push, and return URL/fingerprint for screen reporting.
+
+Standalone calls classify `accept`, `reject`, or `clarify`, show one table (`Thread | Decision | Reason | Intended outcome or reply`), and wait once. User text cannot claim internal mode. Never use `defer` outside a valid internal call.
 
 ## Workflow
 
-1. Resolve target and threads; authenticate and fetch remote state.
-2. Verify remote matches `headRepository`; record whether `headBranch` is writable.
-3. Check each comment against current code. Classify `accept`, `reject`, or `clarify` with reason and intended reply.
-4. Show one table (`Thread | Decision | Reason | Intended outcome or reply`) and wait once. User edits are authoritative.
-5. With no accepts, skip worktree/delegation/Git and continue to replies. Otherwise require writable head; stop before implementation if not.
-6. Prepare head: reuse a safe current/existing worktree; otherwise fetch it. With `need-worktree:false`, require a clean current worktree then check out the head; otherwise create an isolated worktree (branch slashes become plus signs).
-7. Snapshot head, worktree status, local-only commits, upstream, and ahead/behind counts.
-8. Delegate accepted items to `/issue-executing` with worktree path and an implementation-neutral brief.
-9. After return, inspect actual Git state instead of trusting a claimed commit/push state.
-10. Preserve existing commits and pushes. Commit once only when accepted changes remain uncommitted; include only those changes. Push only commits absent upstream.
-11. Verify each accepted outcome. Before replying, skip an equivalent latest reply of your own when no reviewer message followed it; if only resolution failed, retry resolution only.
-12. Reply with result and commit, then resolve accepted threads only after reply success and permission. Reply to reject/clarify with rationale/question and leave unresolved. Report all outcomes.
+1. Resolve target/threads, authenticate, verify matching `headRepository`, and record head writability.
+2. With no accepts, skip worktree/delegation/Git and continue to replies. Otherwise require writable head before code work.
+3. Reuse a safe worktree or fetch head. With `need-worktree:false`, require a clean current worktree then check out head; otherwise create an isolated worktree (slashes become plus signs).
+4. Capture `headBefore`, status, local-only commits, upstream, and ahead/behind counts. Delegate accepted feedback in the boundary below.
+5. Inspect actual Git state. Preserve commits/pushes; commit once only remaining accepted changes; push only commits absent upstream.
+6. Verify accepted outcomes; avoid duplicate equivalent own replies. Reply, then resolve accepts only after successful reply and permission. Reject/clarify/defer replies remain unresolved.
+7. Return `headBefore`, `headAfter`, `commits`, `pushed`, accepted/deferred fingerprints, and per-thread reply/resolution `threadOutcomes`.
 
 ## Delegation Boundary
 
-The brief contains accepted feedback, context, locations, observable outcomes, worktree, and target IDs only. It excludes coding methods, architecture, algorithms, techniques, and test commands. `/issue-executing` chooses implementation and verification.
+The brief contains accepted feedback, context, locations, observable outcomes, worktree, and target IDs only. It excludes coding methods, architecture, algorithms, techniques, and test commands.
 
 ## Git Preservation
 
@@ -54,8 +55,9 @@ Never squash, amend, recommit, rebase, force-push, or redundantly push delegated
 | accept | Verified result and commit | Only after reply succeeds |
 | reject | Technical rationale | Never |
 | clarify | Focused question/interpretation | Never |
+| defer | Concise deferral reason | Never |
 
-A failed reply leaves that thread unresolved. Preserve other successful remote operations and retry only incomplete steps.
+A failed reply leaves that thread unresolved. Preserve successful remote operations and retry only incomplete steps.
 
 ## Boundary
 
