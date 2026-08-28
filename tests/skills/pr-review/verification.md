@@ -56,3 +56,7 @@ The final skill is 484 words. It retains URL review, preview, full scope, dedupe
 ## Result
 
 All required review scenarios pass. No reply/resolve operations were added before the `/pr-fix` RED baseline.
+
+## Cross-skill verification
+
+Flows B and C passed: URL review needs neither clone nor config, always previews before publication, and repeats a full review while suppressing prior unchanged findings. It reports `/pr-fix` without invoking it.

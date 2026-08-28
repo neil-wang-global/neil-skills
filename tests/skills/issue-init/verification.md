@@ -55,3 +55,7 @@ The skill stops after reporting its own result.
 | No automatic chaining | PASS | Explicitly invokes no later skill |
 
 No new rationalization or loophole appeared during GREEN verification.
+
+## Cross-skill verification
+
+Flow A passed: `issue-init` alone creates the exact eight-field config, reports its issue/branch/worktree result, and does not invoke `issue-executing` or a PR stage.

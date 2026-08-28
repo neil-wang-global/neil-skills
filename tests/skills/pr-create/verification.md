@@ -59,3 +59,7 @@ The skill was compressed from 507 to 494 words. Post-refactor checks passed:
 ## Result
 
 All required creation behaviors pass without adding review/fix APIs before their RED baselines.
+
+## Cross-skill verification
+
+Flows A and C passed: defaults create a ready, non-closing PR/MR without writing config. The skill reports `/pr-review` but never invokes it; no public stage chains automatically.

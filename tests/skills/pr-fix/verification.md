@@ -43,3 +43,7 @@ The final skill is 499 words and retains selectors, confirmation, worktree defau
 ## Result
 
 All required fix scenarios pass. The skill contains no code implementation recipe, architecture prescription, or project test-command prompt.
+
+## Cross-skill verification
+
+Flows B and C passed: a matching clone and default worktree are required; existing delegated commits/pushes are preserved; accepted replies gate resolution; reject/clarify replies remain unresolved. This is the only verified internal delegation: `pr-fix` to `issue-executing`.

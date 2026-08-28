@@ -63,3 +63,7 @@ The skill was compressed from 518 to 490 words. Three fresh post-refactor checks
 ## Result
 
 All required scenarios pass. The two observed RED failures are addressed without adding restrictions for behavior that was already stable.
+
+## Cross-skill verification
+
+Flows A and B passed: strategy remains optional literal natural-language guidance; delegated review work retains implementation ownership but not thread ownership. Only `pr-fix` delegates this skill, and actual commit/push state is reported rather than normalized.
