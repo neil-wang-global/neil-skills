@@ -50,14 +50,13 @@ Route every call through the host parsed from the MR URL. `glab` 1.115.0 support
 
 ```bash
 glab api --hostname <host> --method GET "projects/<encoded-project>/merge_requests/<iid>"
-glab api --hostname <host> --method GET --paginate "projects/<encoded-project>/merge_requests/<iid>/pipelines?per_page=100"
 glab api --hostname <host> --method GET "projects/<encoded-project>/merge_requests/<iid>/approvals"
 glab api --hostname <host> --method GET "projects/<encoded-project>/merge_requests/<iid>/approval_state"
 glab api --hostname <host> --method GET "projects/<encoded-project>/protected_branches/<encoded-base-branch>"
 glab api --hostname <host> --method GET --paginate "projects/<encoded-project>/merge_requests/<iid>/discussions?per_page=100"
 ```
 
-The MR response supplies `draft`, `sha`, `has_conflicts`, `merge_status`, `detailed_merge_status`, `merge_when_pipeline_succeeds`, `state`, `merged_at`, and `merge_commit_sha`. Require its current `sha`, every required pipeline status, approval-state rules, target protection, no conflicts, mergeable status, and every discussion resolved. Inaccessible required state stops.
+The MR response supplies `draft`, `sha`, `has_conflicts`, `merge_status`, `detailed_merge_status`, `merge_when_pipeline_succeeds`, `state`, `merged_at`, and `merge_commit_sha`. Its current-head `detailed_merge_status` is the provider-authoritative merge/CI gate; do not infer required status from `pipelines` or `head_pipeline`. Only `mergeable` permits immediate merge. Only `ci_still_running` permits auto-merge, and only when `sha` equals `reviewed-head-sha`. `ci_must_pass`, `checking`, every other documented or unknown status, conflicts, missing approvals, protection blocks, or inaccessible required state stop. Independently require the current `sha`, approval-state rules, target protection, no conflicts, and every discussion resolved.
 
 After all gates and authorization pass, make a draft ready and re-read every gate:
 
@@ -68,9 +67,9 @@ glab mr update <iid> --repo <base-project-url> --ready --yes
 Use the reviewed SHA for every merge write. Current `glab mr merge --help` documents `--auto-merge=false` for immediate merge and `--auto-merge` for provider auto-merge; it has no `--when-pipeline-succeeds` flag.
 
 ```bash
-# Green required pipelines: request merge now.
+# Only current-head detailed_merge_status=mergeable: request merge now.
 glab mr merge <iid> --repo <base-project-url> --sha <reviewed-head-sha> --auto-merge=false --yes
-# Pending required pipelines only: register auto-merge.
+# Only current-head detailed_merge_status=ci_still_running: register auto-merge.
 glab mr merge <iid> --repo <base-project-url> --sha <reviewed-head-sha> --auto-merge --yes
 ```
 

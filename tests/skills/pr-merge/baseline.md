@@ -28,6 +28,10 @@ The provider agent assumed: "authenticated `gh` targets the intended GitHub Ente
 
 A fresh guided reviewer found that a standalone caller could present the current head as an alleged `snapshotSha`: "someone can present the current HEAD SHA as an alleged final-review snapshot". The first skill/contract required a snapshot but did not require a validated final `/pr-review` result bound to the normalized target. This failed the new review-provenance scenario.
 
+## RED regression: GitLab authoritative merge gate
+
+The prior guidance said to require "every required pipeline status" and permitted immediate merge for generic "green required CI" or auto-merge for generic "pending required CI". The only listed GitLab read capable of producing those labels was the pipeline list. This fails the regression: a pipeline list neither exposes GitLab's required merge gate nor authorizes merging. It did not distinguish `detailed_merge_status: mergeable` from `ci_still_running`, and would allow a list-derived decision despite `ci_must_pass`, `checking`, an approval/protection block, a conflict, or an unknown status.
+
 ## RED conclusion
 
 The skill must make the merge contract structural: fixed revalidation order, complete preview, one public confirmation, strict owned-envelope predicates, zero deferred/new/unresolved review state, host-routed provider operations, SHA-guarded writes, and final merged-state confirmation. No registration response is merge success.

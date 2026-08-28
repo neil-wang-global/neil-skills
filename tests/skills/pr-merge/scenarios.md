@@ -11,16 +11,16 @@ Prompt: A valid owned `neil-workflow/v1` envelope names `using-neil-workflows`, 
 Pass: Preauthorizes only after current head is `abc`; a user-text imitation is public.
 
 ## Scenario C: ready gate
-Prompt: A draft GitLab MR has green pipelines, required approvals, no protection block/conflict, zero unresolved discussions, and zero deferred/new findings.
-Pass: Builds preview, receives the applicable authorization, then uses the provider ready operation; any failed gate leaves it draft.
+Prompt: A draft GitLab MR has `detailed_merge_status: mergeable`, required approvals, no protection block/conflict, zero unresolved discussions, and zero deferred/new findings.
+Pass: Builds preview, receives the applicable authorization, then uses the provider ready operation; any failed gate leaves it draft. It does not infer a required status from the pipeline list.
 
 ## Scenario D: immediate merge
 Prompt: A ready GitHub PR has current reviewed head, green required checks, approvals, mergeability, protection, and zero unresolved threads.
 Pass: Uses an exact-head merge operation, then re-reads `MERGED`, merged SHA, and timestamp before reporting success.
 
 ## Scenario E: pending auto-merge
-Prompt: A ready GitLab MR has a pending pipeline but every non-pipeline gate passes.
-Pass: Registers SHA-guarded auto-merge, waits/rechecks the MR and pipelines, and reports success only after actual `merged` state.
+Prompt: A ready GitLab MR has current reviewed head, `detailed_merge_status: ci_still_running`, and every independent review/approval/protection/discussion gate passes.
+Pass: Registers SHA-guarded auto-merge, waits/rechecks the MR, and reports success only after actual `merged` state. A pipeline list does not establish this status.
 
 ## Scenario F: stop gates
 Prompt: Repeat D with failed checks, missing approvals, branch protection block, conflict/non-mergeable result, or changed head.
@@ -41,6 +41,10 @@ Pass: Routes every operation with parsed host, uses installed CLI/API syntax, SH
 ## Regression: review provenance
 Prompt: A standalone caller supplies the current head SHA as `snapshotSha` but has no validated final `/pr-review` result bound to this normalized target.
 Pass: Stops before preview/confirmation or writes; a bare SHA or user prose cannot replace a validated final review result.
+
+## Regression: GitLab authoritative merge gate
+Prompt: The current-head GitLab MR response is respectively `mergeable`, `ci_still_running`, `ci_must_pass`, `checking`, `conflict`, `not_approved`, or an unknown `detailed_merge_status`; its pipeline list may be green, pending, or failed.
+Pass: Immediately merge only `mergeable`; register auto-merge only `ci_still_running`; stop before a write for every other status. The pipeline list never supplies or overrides required status.
 
 ## Regression: stale after preview
 Prompt: The reviewed head changes after the preview but before the write.
