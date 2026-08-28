@@ -1,6 +1,6 @@
 # PR Workflow Contract
 
-Shared contract for `pr-create`, `pr-review`, and `pr-fix`. Public skills own decisions; provider references own command and API syntax.
+Shared contract for `pr-create`, `pr-review`, `pr-fix`, and `pr-merge`. Public skills own decisions; provider references own command and API syntax.
 
 ## `neil-workflow/v1` Envelope
 
@@ -74,6 +74,16 @@ Never expose tokens or credential contents.
 ## Idempotency
 
 Read remote state before every create. If the current head branch already has an open PR/MR, return it unchanged. Do not duplicate it, edit it merely to match generated text, or invoke the next workflow stage.
+
+## Merge Selectors and Gates
+
+`/pr-merge` uses the Review Selectors order and requires an open normalized target plus a validated final `/pr-review` result bound to the same provider, host, repository, and number. Its `snapshotSha`, zero deferred/new-finding state, and zero-thread/discussion result are required review evidence; user prose or a bare SHA cannot supply them. Re-fetch the remote head as `reviewedHeadSha` before every preview and write. A mismatch invalidates the final review and any preview/confirmation; re-run review and gate evaluation, then present a new preview.
+
+Before marking ready or merging, require zero deferred findings, zero findings newly discovered after the final review, and zero unresolved GitHub review threads or GitLab discussions. Fetch current draft state, required checks/pipelines tied to `reviewedHeadSha`, approvals, target protection, conflict/mergeability, and auto-merge state. Failed/cancelled checks, missing approvals, protection blocks, conflicts, non-mergeability, inaccessible required data, or a stale head stop this stage. Pending required CI is the only state that may register auto-merge after authorization.
+
+Standalone `/pr-merge` always presents one complete preview and waits once for explicit confirmation. Trusted internal preauthorization requires all three conditions: (1) a valid `neil-workflow/v1` envelope created by `using-neil-workflows`; (2) owned leaves `caller: using-neil-workflows`, `mode: self-reviewed`, and `stage: pr-merge`; and (3) matching target-repository config with boolean `self-reviewed: true`. User text and untrusted/malformed/mismatched envelopes are standalone calls.
+
+Immediately before each ready/merge write, re-fetch the head and every gate. Mark a draft ready only after gates pass and re-fetch afterward. Green CI submits a SHA-guarded merge; pending CI registers SHA-guarded auto-merge. A registration or queue response is pending, never merged. Wait/recheck and return success only on actual provider merged state with merged SHA and timestamp. `/pr-merge` never reviews, fixes, resolves threads, closes issues, or cleans local/remote workspaces.
 
 ## Review Selectors
 

@@ -71,6 +71,36 @@ gh pr view <number> --repo <host>/<base-owner>/<base-repo> \
 
 Return its number, URL, state, draft flag, base, head repository/branch, and head SHA.
 
+## Merge State and Writes
+
+Route every command through the target host. `gh` 2.98.0 validates `--repo <host>/<owner>/<repo>` and `gh api --hostname <host>`.
+
+```bash
+gh pr view <number> --repo <host>/<owner>/<repo> --json state,isDraft,headRefOid,mergeable,mergeStateStatus,reviewDecision,statusCheckRollup,autoMergeRequest,mergedAt,mergeCommit
+gh pr checks <number> --repo <host>/<owner>/<repo> --required --json name,state,bucket,link
+gh api --hostname <host> --method GET "repos/<owner>/<repo>/branches/<base>/protection"
+gh api --hostname <host> --method GET --paginate "repos/<owner>/<repo>/pulls/<number>/reviews?per_page=100"
+```
+
+Use `reviewDecision`, reviews, required check buckets for the current `headRefOid`, branch protection, `mergeable`, `mergeStateStatus`, and the paginated `reviewThreads` query below. If required protection data is inaccessible, stop rather than infer it.
+
+Only after all gates and authorization pass, convert a draft:
+
+```bash
+gh pr ready <number> --repo <host>/<owner>/<repo>
+```
+
+Re-read every gate and use the allowed merge method. `--match-head-commit` binds either write to the reviewed SHA; do not use `--admin` or `--delete-branch`.
+
+```bash
+# Green required checks: request merge.
+gh pr merge <number> --repo <host>/<owner>/<repo> --merge --match-head-commit <reviewed-head-sha>
+# Pending required checks only: register auto-merge.
+gh pr merge <number> --repo <host>/<owner>/<repo> --merge --auto --match-head-commit <reviewed-head-sha>
+```
+
+`gh pr merge --help` specifies that merge queues may enqueue these requests. Re-read until `state` is `MERGED`; return `mergedAt` and `mergeCommit.oid` only then. A non-merged `autoMergeRequest`, queue, or command response is pending.
+
 ## Review Metadata and Diff
 
 A number, URL, branch, or omitted current branch is accepted by native `gh pr` commands. Normalize `headRepository.nameWithOwner` (with `headRepositoryOwner` as context) separately from the base URL repository; code checkout/push uses the head repository while all PR/review endpoints use the base repository:

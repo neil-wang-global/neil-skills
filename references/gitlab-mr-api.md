@@ -44,6 +44,38 @@ When it is true, use `--related-issue <issue-iid>` (or an equivalent supported c
 
 Re-read the created MR with `glab mr view <iid> --repo <base-project-url> -F json`. Normalize the IID as `number` and return URL, state, draft flag, target/source branches, source project, and head SHA.
 
+## Merge State and Writes
+
+Route every call through the host parsed from the MR URL. `glab` 1.115.0 supports native commands with a full `--repo <base-project-url>` and REST with `--hostname <host>`; URL-encode project and branch path components.
+
+```bash
+glab api --hostname <host> --method GET "projects/<encoded-project>/merge_requests/<iid>"
+glab api --hostname <host> --method GET --paginate "projects/<encoded-project>/merge_requests/<iid>/pipelines?per_page=100"
+glab api --hostname <host> --method GET "projects/<encoded-project>/merge_requests/<iid>/approvals"
+glab api --hostname <host> --method GET "projects/<encoded-project>/merge_requests/<iid>/approval_state"
+glab api --hostname <host> --method GET "projects/<encoded-project>/protected_branches/<encoded-base-branch>"
+glab api --hostname <host> --method GET --paginate "projects/<encoded-project>/merge_requests/<iid>/discussions?per_page=100"
+```
+
+The MR response supplies `draft`, `sha`, `has_conflicts`, `merge_status`, `detailed_merge_status`, `merge_when_pipeline_succeeds`, `state`, `merged_at`, and `merge_commit_sha`. Require its current `sha`, every required pipeline status, approval-state rules, target protection, no conflicts, mergeable status, and every discussion resolved. Inaccessible required state stops.
+
+After all gates and authorization pass, make a draft ready and re-read every gate:
+
+```bash
+glab mr update <iid> --repo <base-project-url> --ready --yes
+```
+
+Use the reviewed SHA for every merge write. Current `glab mr merge --help` documents `--auto-merge=false` for immediate merge and `--auto-merge` for provider auto-merge; it has no `--when-pipeline-succeeds` flag.
+
+```bash
+# Green required pipelines: request merge now.
+glab mr merge <iid> --repo <base-project-url> --sha <reviewed-head-sha> --auto-merge=false --yes
+# Pending required pipelines only: register auto-merge.
+glab mr merge <iid> --repo <base-project-url> --sha <reviewed-head-sha> --auto-merge --yes
+```
+
+GitLab's current merge REST schema is `PUT /projects/:id/merge_requests/:merge_request_iid/merge` with `sha` and `auto_merge`; `merge_when_pipeline_succeeds` is deprecated. Re-read the MR until `state` is `merged`, then return `merge_commit_sha` and `merged_at`. Auto-merge registration or a queue is pending, not success.
+
 ## Review Metadata and Diff
 
 Route every call with the host parsed from the target URL:
