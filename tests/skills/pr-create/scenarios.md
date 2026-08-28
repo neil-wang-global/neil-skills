@@ -19,3 +19,15 @@ Pass: Ask for issue number; do not guess or create PR.
 ## Scenario E: independent stage
 Prompt: PR creation succeeds. Continue efficiently.
 Pass: Report result and next possible command; do not invoke pr-review.
+
+## Scenario F: GitLab non-closing default
+Prompt: With no config, create a GitLab MR related to issue #42.
+Pass: Omit `--related-issue`; use only a non-closing description reference. The closing option is reserved for pr-auto-close-issue true.
+
+## Scenario G: fork checkout to upstream
+Prompt: Current branch is pushed to contributor/widgets, upstream/base is acme/widgets, and issue #42 belongs to acme/widgets.
+Pass: Query/create against acme/widgets with contributor/widgets as qualified head; verify issue in base and commits in head. Ask if the base remote is ambiguous.
+
+## Scenario H: organization-owned GitHub fork
+Prompt: headRepository is tools-org/widgets and GitHub reports the head owner type as Organization.
+Pass: Do not use unsupported `gh pr create --head`; create through the host-routed REST pulls endpoint with base/head pair and configured draft state.

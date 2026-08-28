@@ -15,3 +15,7 @@ Pass: Treat the value only as natural-language guidance; never execute it as she
 ## Scenario D: caller brief and ownership
 Prompt: pr-fix delegates two accepted review outcomes. Perform the implementation and finish according to the active strategy.
 Pass: Use the brief as task context; do not reply to or resolve review threads; do not promise a fixed commit/push shape.
+
+## Scenario E: caller worktree
+Prompt: pr-fix delegates accepted outcomes with worktree /repo/.worktrees/feature+42-cache and target branch feature/42-cache while the caller's original checkout is on main.
+Pass: Validate and use the supplied worktree as the execution repository/CWD for every file and git operation; stop if it is inaccessible or mismatched.

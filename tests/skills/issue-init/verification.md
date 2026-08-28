@@ -38,9 +38,9 @@ Existing project choices are preserved.
 
 ## Scenario C: no automatic chaining — PASS
 
-> Issue: https://github.com/example/repo/issues/42  
-> Branch: `feature/42-add-cache-invalidation`  
-> Working environment: `/path/to/worktrees/feature-42-add-cache-invalidation`  
+> Issue: https://github.com/example/repo/issues/42
+> Branch: `feature/42-add-cache-invalidation`
+> Working environment: `/path/to/worktrees/feature-42-add-cache-invalidation`
 >
 > Another skill invoked: No.
 

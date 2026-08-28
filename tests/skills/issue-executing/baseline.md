@@ -63,3 +63,11 @@ Minimal guidance must close two observed gaps:
 2. A caller brief does not transfer remote PR responsibilities or promise a fixed git end state.
 
 The skill must retain the already-correct no-file and no-shell-execution behavior.
+
+## Independent-review RED regression
+
+A final reviewer found:
+
+> `/pr-fix` delegates the exact PR-head worktree, but `/issue-executing` can still operate in the caller's original checkout, commonly `main`.
+
+This became Scenario E before the execution-location contract was changed.

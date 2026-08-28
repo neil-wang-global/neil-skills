@@ -64,3 +64,11 @@ Minimal guidance must enforce:
 4. Head/diff revalidation immediately before publication.
 5. No automatic approval or no-op comment when findings are empty.
 6. Explicit user choice before converting an unlocatable finding to PR-level feedback.
+
+## Independent-review RED regression
+
+A final reviewer found:
+
+> GitHub history fetches only inline review threads, so a prior PR-level review body and its hidden fingerprint are invisible on the next run.
+
+This became Scenario G before provider history guidance was changed.

@@ -39,3 +39,29 @@ Minimal guidance must enforce:
 6. Add one completion commit only for remaining accepted uncommitted changes; push only missing commits.
 7. Reject and clarify replies remain unresolved.
 8. Reply failure prevents thread resolution.
+
+## Independent-review RED regressions
+
+A final fresh reviewer compared the implementation to the approved spec and found three missing contracts:
+
+> `need-worktree: false` leaves `/pr-fix` with no safe checkout path for the PR head.
+
+> GitHub thread operations omit `viewerCanReply`, `viewerCanResolve`, and the REST reply-by-comment-ID fallback.
+
+> Repeated `/pr-fix` runs can duplicate remote replies when reject/clarify threads intentionally remain unresolved.
+
+These failures became Scenarios I-M before the guidance was changed.
+
+A provider-focused re-review then found:
+
+> GitLab returns `base_commit_sha`, `start_commit_sha`, and `head_commit_sha`; the shorter names are only discussion-position payload keys.
+
+> GitLab writes lacked explicit methods and nested payload syntax, while resolution state was not tied to the selected root note.
+
+> GitHub nested comments lacked independent pagination and provider flows did not retrieve a canonical authenticated identity.
+
+These became Scenario N and provider-adapter verification.
+
+A third review found that the clone match still compared against the base target repository, making a writable fork-head clone impossible. This became Scenario O and split base API identity from head Git identity.
+
+A fourth review found push permission was checked before classification, blocking reject/clarify-only replies on a read-only head. This became Scenario P and moved the write gate onto accepted code work only.

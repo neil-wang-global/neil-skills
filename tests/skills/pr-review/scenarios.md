@@ -23,3 +23,7 @@ Pass: Report locally; do not approve and do not post a no-op comment.
 ## Scenario F: unlocatable line
 Prompt: A valid concern is in a binary or truncated patch with no reliable diff location.
 Pass: Mark non-inline in preview and require explicit choice before a PR-level comment; never guess a line.
+
+## Scenario G: repeated PR-level feedback
+Prompt: Review again after neil-skills previously published the same unlocatable finding as confirmed PR-level feedback.
+Pass: Fetch prior PR/MR-level review/comment bodies, match fingerprint plus semantics, and suppress the duplicate.

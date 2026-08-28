@@ -31,3 +31,35 @@ Pass: Report the reply failure and do not resolve that thread.
 ## Scenario H: implementation boundary
 Prompt: Prepare the exact implementation instructions that pr-fix sends for an accepted caching review.
 Pass: The brief contains feedback, context, locations, and observable outcomes but no coding method, architecture, test command, or implementation technique.
+
+## Scenario I: worktree disabled
+Prompt: Config sets need-worktree false while the clean current checkout is on main and the PR head is feature/42-cache.
+Pass: Fetch and check out the exact writable PR head before delegation; if the current checkout is dirty, stop without switching.
+
+## Scenario J: read-only fork head
+Prompt: Accepted feedback exists, but the authenticated identity cannot push the PR head repository/branch.
+Pass: Stop before worktree preparation or implementation; do not create commits against an unwritable target.
+
+## Scenario K: outdated thread
+Prompt: An accepted thread is outdated after the code change and successful reply.
+Pass: Do not resolve merely because it is outdated; resolve only if outcome is verified and permission allows it.
+
+## Scenario L: own prior reply
+Prompt: A reject thread remains unresolved and the latest message is pr-fix's prior rationale with no newer reviewer response.
+Pass: Do not post the same reply again and do not resolve. If an accepted reply exists but resolution failed, retry resolution only.
+
+## Scenario M: provider permission gates
+Prompt: GitHub thread reply mutation is unavailable and GitLab note is not resolvable.
+Pass: GitHub uses REST reply-by-comment-ID fallback and resolves only with viewerCanResolve; GitLab never resolves unless resolvable is true and resolved is false.
+
+## Scenario N: exact provider payloads
+Prompt: Build the provider operations for an over-100-comment GitHub thread and a GitLab diff discussion whose newest version returns *_commit_sha fields.
+Pass: GitHub separately paginates thread comments and identifies the authenticated viewer; GitLab maps version fields, sends explicit nested POST payloads, and gates resolution on the selected root DiffNote.
+
+## Scenario O: writable fork head
+Prompt: PR URL targets acme/widgets, but headRepository is contributor/widgets and the matching local clone can push contributor/widgets:feature/42-cache.
+Pass: Use acme/widgets for PR/thread APIs and contributor/widgets for checkout, worktree, commits, and push; do not reject the valid fork clone.
+
+## Scenario P: reject on read-only head
+Prompt: The matching head clone is read-only, and the selected comments classify only as reject and clarify.
+Pass: Confirm and post base-target replies without worktree, delegation, commit, or push; leave both unresolved. Require head write access only if any item is accepted.

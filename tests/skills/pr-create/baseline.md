@@ -47,3 +47,11 @@ Minimal guidance must make these defaults deterministic:
 3. Existing PR lookup is idempotent.
 4. An unparseable branch requires an explicit issue number.
 5. Successful creation reports the next available command without invoking it.
+
+## Independent-review RED regression
+
+A final reviewer found that the provider reference unconditionally used GitLab `--related-issue`, whose generated description contains a closing relationship. This contradicted the default non-closing policy and became Scenario F before the adapter was changed.
+
+A later reviewer found fork checkouts would query/create inside the fork because provider commands omitted the upstream base target and qualified head. This became Scenario G.
+
+A final provider check found `gh pr create --head` rejects organization owners. This became Scenario H and requires REST creation for organization-owned fork heads.

@@ -25,7 +25,7 @@ provider, host, repository, number, url, baseBranch,
 headRepository, headBranch, headSha
 ```
 
-For `pr-create`, resolve provider and repository from the current Git remote, `headBranch` from the current branch, and `baseBranch` from config/defaults. Populate number, URL, and head SHA from an existing or newly created PR/MR response.
+For `pr-create`, resolve `headRepository` from the current branch's push remote and base `repository` from that same repository or an explicit/upstream remote. Ask when a fork has no unambiguous base target. Resolve `headBranch` from the current branch and `baseBranch` from config/defaults. Issue lookup, existing-target lookup, and creation use the base repository; pushed-commit verification uses the head repository. Populate number, URL, and head SHA from the remote response.
 
 ## Issue Resolution
 
@@ -59,7 +59,7 @@ Resolve review targets in this order: explicit PR/MR URL, explicit number in the
 
 ## Review Snapshot
 
-A review snapshot owns `headSha`, changed-file metadata, complete available diff, and existing review threads. Review the full diff every run.
+A review snapshot owns `headSha`, changed-file metadata, complete available diff, inline threads/discussions, and PR/MR-level review/comment bodies. Review the full diff every run.
 
 Before any remote write, fetch the current head again. If it changed, withhold publication, re-fetch the diff, remap/revalidate findings, and re-preview changed or new findings.
 
@@ -67,7 +67,7 @@ Before any remote write, fetch the current head again. If it changed, withhold p
 
 Each finding has severity, concise title, validity reason, consequence, correction direction, path, side, line/range, and a versioned hidden fingerprint. Build the fingerprint from normalized category, path, relevant code context, and remediation identity; do not rely on line number alone.
 
-Compare fingerprints and semantics with existing threads. Suppress previously reported unchanged findings. Preview only new actionable findings while noting suppressed prior items locally.
+Compare fingerprints and semantics with inline threads/discussions and PR/MR-level bodies. Suppress previously reported unchanged findings. Preview only new actionable findings while noting suppressed prior items locally.
 
 ## Review Publication
 
@@ -81,7 +81,7 @@ GitHub may submit one atomic review. GitLab discussions are individual writes: r
 
 A review-comment/discussion URL selects exactly that thread. A PR/MR URL or number selects its unresolved threads. With no argument, use the target for the current branch.
 
-Code changes require a matching writable local clone; never clone automatically. Explicit URL identity remains authoritative. If local remote, provider, host, or repository does not match, stop. Use an isolated worktree by default (`need-worktree` defaults true), checked out at the PR/MR head branch. Never change the caller's base checkout.
+Classification requires a local clone matching `headRepository`; never clone automatically. Accepted code changes additionally require permission to push `headBranch`. The explicit URL remains authoritative for the base target used by review/thread APIs. For same-repository targets, `repository` and `headRepository` match. Require the same provider/host, push only to `headRepository`, and stop code work on identity or permission mismatch. Reject/clarify-only handling may still post confirmed base-target replies without head write access. Reuse a safe worktree already on the target head only for accepted work. Otherwise, when `need-worktree` defaults true, fetch the writable head and create an isolated worktree whose branch slashes become plus signs. With `need-worktree:false`, require a clean current worktree, then fetch and check out the exact target head.
 
 ## Classification and Confirmation
 
@@ -98,3 +98,5 @@ After delegation, inspect actual Git state. Preserve every commit or push alread
 For each accepted thread, verify the observable outcome, then reply with the result and relevant commit. Resolve only after the reply succeeds. A reply failure leaves the thread unresolved and is reported for retry.
 
 For each rejected or clarification thread, post the confirmed rationale/question and leave it unresolved. No accepted changes means no completion commit. Record per-thread reply and resolution outcomes; retry only incomplete remote operations.
+
+On a repeated run, compare the authenticated account's latest reply with later reviewer messages. When no reviewer message followed an equivalent own reply, do not post it again. If the reply succeeded but resolution alone failed, retry only resolution.

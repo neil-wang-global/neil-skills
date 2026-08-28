@@ -38,7 +38,7 @@ Both variants leave accepted threads unresolved on reply failure. Reject and cla
 
 ## Skill size
 
-The final skill is 499 words and retains selectors, confirmation, worktree defaults, neutral delegation, actual Git-state reconciliation, and per-thread completion gates.
+The final skill is 500 words and retains selectors, both worktree paths, fork-head identity, neutral delegation, Git-state reconciliation, reply idempotency, and permission-gated thread completion.
 
 ## Result
 
@@ -46,4 +46,21 @@ All required fix scenarios pass. The skill contains no code implementation recip
 
 ## Cross-skill verification
 
-Flows B and C passed: a matching clone and default worktree are required; existing delegated commits/pushes are preserved; accepted replies gate resolution; reject/clarify replies remain unresolved. This is the only verified internal delegation: `pr-fix` to `issue-executing`.
+Flows B and C passed: a writable head-repository clone and default worktree are required; existing delegated commits/pushes are preserved; accepted replies gate resolution; reject/clarify replies remain unresolved. This is the only verified internal delegation: `pr-fix` to `issue-executing`.
+
+## Independent-review regressions
+
+Successive independent reviewers identified missing approved edge contracts. Guided reruns passed:
+
+| Scenario | Result | Evidence |
+|---|---|---|
+| I: worktree disabled | PASS | Clean checkout fetches/checks out exact head; dirty checkout stops |
+| J: read-only fork | PASS | Stops before worktree, delegation, commit, or push |
+| K: outdated thread | PASS | Outdated alone never resolves; outcome and permissions still gate |
+| L: own prior reply | PASS | No duplicate reply; resolution-only retry preserves reply |
+| M: provider gates | PASS | GitHub REST fallback; GitLab `resolvable`/`resolved` checks |
+| N: exact payloads | PASS | GitHub two-stage cursors/viewer; GitLab SHA mapping/nested writes/root note |
+| O: writable fork head | PASS | Base repo owns APIs; writable head repo owns checkout/commit/push |
+| P: read-only reject/clarify | PASS | Base replies proceed without worktree/Git; accepted path requires write |
+
+The GitHub GraphQL reference now includes pageable thread fields, `viewerCanReply`, `viewerCanResolve`, viewer identity, independent per-thread comment cursors, and executable command wrappers. The GitLab reference maps version response fields, uses explicit methods/nested payloads, and reads resolution gates from the selected root note. Both compare the authenticated author's latest equivalent reply with later reviewer messages before posting.

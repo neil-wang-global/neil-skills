@@ -14,7 +14,7 @@ Fresh agents used `pr-create` plus the creation-only shared/provider references.
 
 ### Scenario A representative response
 
-> Do not create or modify `.workflow-config.json`; apply defaults in memory. Target `main`, create a ready PR/MR, and relate issue #42 without a closing keyword. GitHub uses `Related to #42`; GitLab uses `--related-issue 42` plus a non-closing description reference. Opening never closes the issue. `/pr-review` is offered but not invoked.
+> Do not create or modify `.workflow-config.json`; apply defaults in memory. Target `main`, create a ready PR/MR, and relate issue #42 without a closing keyword. GitHub uses `Related to #42`; GitLab omits `--related-issue` and uses the same non-closing description reference. Opening never closes the issue. `/pr-review` is offered but not invoked.
 
 ### Scenario B representative response
 
@@ -45,13 +45,13 @@ This changes the RED distribution from 5/5 failures to 5/5 passes.
 | GitHub default | PASS | `Related to #42`, no closing keyword |
 | GitHub configured | PASS | `--draft` and `Closes #42` |
 | GitHub existing | PASS | Existing PR returned unchanged |
-| GitLab default | PASS | `--related-issue 42`, ready, non-closing description |
-| GitLab configured | PASS | `--draft`, related issue, supported closing reference |
+| GitLab default | PASS | No `--related-issue`; ready; non-closing description |
+| GitLab configured | PASS | `--draft`, `--related-issue`, provider closing relationship |
 | GitLab existing | PASS | Existing MR returned unchanged |
 
 ## Refactor verification
 
-The skill was compressed from 507 to 494 words. Post-refactor checks passed:
+The final skill is 500 words after fork-aware base/head routing. Post-refactor checks passed:
 
 - Scenario A: no config creation, `main`, ready, `Related to #42`, no close, no review invocation.
 - Existing GitLab MR: no create, edit, config write, or review.
@@ -63,3 +63,11 @@ All required creation behaviors pass without adding review/fix APIs before their
 ## Cross-skill verification
 
 Flows A and C passed: defaults create a ready, non-closing PR/MR without writing config. The skill reports `/pr-review` but never invokes it; no public stage chains automatically.
+
+## Independent-review regression
+
+Scenario F passed: default GitLab creation omits `--related-issue` and uses only `Related to #42`; configured closing mode reserves `--related-issue` for a relationship that closes after eligible merge.
+
+Scenario G passed: fork checkout resolves base/head separately, performs idempotency lookup with base branch plus qualified fork source (GitHub REST and GitLab project/source filters), creates on upstream, verifies pushed state in the fork, and asks when base identity is ambiguous.
+
+Scenario H passed: organization-owned GitHub fork heads use host-routed REST `POST /pulls` with explicit base/head and draft boolean; unsupported owner-qualified `gh pr create` is not used.

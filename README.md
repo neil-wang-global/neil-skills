@@ -84,7 +84,7 @@ claude plugin update neil-skills@neil-skills
 
 ### /pr-create
 
-从当前分支创建 GitHub PR 或 GitLab MR，或返回该分支已有的 open PR/MR。默认创建 ready、非自动关闭 issue 的请求；配置可切换 draft 和 closing relationship。创建完成后不会自动触发 review。
+从当前分支创建 GitHub PR 或 GitLab MR，或返回该 base/head 组合已有的 open PR/MR。fork checkout 会把 upstream 作为 base target、分支 push remote 作为 head repository；base 不明确时询问。默认创建 ready、非自动关闭 issue 的请求；配置可切换 draft 和 closing relationship。创建完成后不会自动触发 review。
 
 ### /pr-review
 
@@ -92,7 +92,7 @@ claude plugin update neil-skills@neil-skills
 
 ### /pr-fix
 
-按 PR/MR URL、编号、当前分支或精确 review-comment URL 处理反馈；comment URL 只处理对应 thread。需要匹配且可写的本地 clone，默认使用隔离 worktree。先分类并确认 `accept` / `reject` / `clarify`，再将 accepted outcome 中性地委托给 `/issue-executing`。返回后保留其已有 commit/push，只补齐缺失提交、push、reply 和 resolve；reject/clarify thread 始终保持 unresolved。
+按 PR/MR URL、编号、当前分支或精确 review-comment URL 处理反馈；comment URL 只处理对应 thread。需要匹配且可写的 head repository 本地 clone，默认使用隔离 worktree；fork 的 base repository 仍用于 PR/thread API。先分类并确认 `accept` / `reject` / `clarify`，再将 accepted outcome 中性地委托给 `/issue-executing`。返回后保留其已有 commit/push，只补齐缺失提交、push、reply 和 resolve；reject/clarify thread 始终保持 unresolved。
 
 ### /issue-close
 

@@ -24,7 +24,7 @@ A full URL works from any directory without a clone. Ignore unrelated local conf
 ## Workflow
 
 1. Resolve target, authenticate, require an open PR/MR, and capture head SHA.
-2. Fetch complete available changed-file metadata/diff and existing review threads.
+2. Fetch complete available changed-file metadata/diff, inline threads/discussions, and PR/MR-level review/comment bodies.
 3. Review the full diff every run, not only commits since a prior review.
 4. Keep actionable defects. Suppress previously reported unchanged findings by fingerprint plus semantic comparison.
 5. Map each finding to a reliable old/new diff line. Mark unlocatable findings non-inline; never guess.

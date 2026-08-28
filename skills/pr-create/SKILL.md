@@ -7,7 +7,7 @@ description: Use when development on the current issue branch is ready to open o
 
 ## Overview
 
-Create or locate the current branch's issue-related PR/MR. Never create or modify `.workflow-config.json`.
+Create or locate the branch's issue-related PR/MR. Never create or modify `.workflow-config.json`.
 
 **REQUIRED REFERENCES:** Read `../../references/pr-workflow-contract.md` and the selected provider reference before remote operations.
 
@@ -26,12 +26,12 @@ Use non-empty `remarks` as project instructions. An explicit Git remote determin
 
 ## Workflow
 
-1. Require a local Git repository and resolve its root, remote, provider, current branch, and optional config.
+1. Require local Git. Resolve `headRepository` from the branch push remote and base `repository` from the same or an explicit/upstream remote; ask when a fork's base is ambiguous.
 2. Require the current branch to differ from `base-branch`.
 3. Extract the issue number by applying `branch-template` to the complete branch name. Use an explicitly supplied issue number when present. If neither works, ask; never guess.
-4. Check provider authentication and verify the remote issue exists.
-5. Query an open PR/MR for the current head branch. If found, return it unchanged and stop.
-6. Require all intended changes to be committed and the remote head to contain the intended commits. Do not create from an ambiguous local-only state.
+4. Check provider authentication and verify the issue in the base repository.
+5. Query the base repository for an open PR/MR from `headRepository` and branch. If found, return unchanged.
+6. Require committed changes and verify the head repository branch contains them; do not create from ambiguous local-only state.
 7. Build a concise title from the issue and a body with `Summary`, `Testing`, and `Issue` sections. Report only testing evidence already available in context; never invent it.
 8. Relate the issue using non-closing wording by default. Use a provider closing reference only when `pr-auto-close-issue` is true.
 9. Create a ready PR/MR by default. Create a draft only when `pr-draft` is true.

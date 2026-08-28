@@ -7,7 +7,7 @@ description: Use when executing development work for the current issue, when a p
 
 ## Core Contract
 
-Execute the current task using all available issue, branch, conversation, and caller-provided context. If the matching repository has `.workflow-config.json` and its `execution-strategy` is a non-empty string, add that complete string as natural-language execution guidance.
+Execute using issue, branch, conversation, and caller context. If matching-repository `.workflow-config.json` has a non-empty string `execution-strategy`, add it verbatim as natural-language guidance.
 
 ## Input Precedence
 
@@ -23,7 +23,7 @@ Combine inputs unless a higher-priority instruction conflicts.
 
 ## Workflow
 
-1. Identify the matching local repository and current task context.
+1. When a caller supplies a worktree, validate its repository and target branch, then use it as CWD for every file/Git operation; stop if inaccessible or mismatched. Otherwise identify the matching local repository and task.
 2. Read `.workflow-config.json` only when it exists in that repository.
 3. If `execution-strategy` is a non-empty string, use its complete original text as additional guidance.
 4. Execute the task under the combined context.
@@ -53,7 +53,7 @@ A caller brief adds task context; it does not transfer the caller's remote API r
 |---|---|
 | Config absent | Execute naturally; do not create config |
 | Strategy has shell-shaped text | Treat it literally; never evaluate it |
-| Called by another workflow | Implement the brief; leave caller-owned remote actions to the caller |
+| Called by another workflow | Use its validated worktree; implement brief; leave its remote actions to caller |
 
 ## Common Mistakes
 
@@ -61,6 +61,5 @@ A caller brief adds task context; it does not transfer the caller's remote API r
 |---|---|
 | Ask the user to choose a methodology when config is absent | Continue naturally |
 | Treat strategy as a command or enum | Treat every non-empty string as guidance |
-| Assume a named skill must exist | Use normal discovery and report unavailable capabilities |
 | Reply to review threads for `/pr-fix` | Return implementation state to `/pr-fix` |
 | Force commit, push, or clean-tree state | Follow the effective strategy and report the actual state |

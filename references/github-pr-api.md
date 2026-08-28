@@ -6,7 +6,7 @@ Operational syntax for GitHub branches of the PR workflow. Use live `gh` results
 
 ```bash
 gh auth status --hostname <host>
-gh repo view --json nameWithOwner,url,defaultBranchRef
+gh repo view <host>/<base-owner>/<base-repo> --json nameWithOwner,url,defaultBranchRef
 ```
 
 Do not print tokens. A failed auth check stops remote writes.
@@ -14,20 +14,33 @@ Do not print tokens. A failed auth check stops remote writes.
 ## Issue and Existing PR
 
 ```bash
-gh issue view <issue-no> --json number,title,url,state
-gh pr view <head-branch> --json id,number,url,state,isDraft,headRefName,headRefOid,baseRefName
+gh issue view <issue-no> --repo <host>/<base-owner>/<base-repo> --json number,title,url,state
+gh api --hostname <host> --method GET --paginate \
+  -f state=open -f base='<base>' -f head='<head-owner>:<head-branch>' -F per_page=100 \
+  "repos/<base-owner>/<base-repo>/pulls"
 ```
 
-Treat an open PR returned for the head branch as the idempotent result.
+Treat an open PR returned for the base/head pair as the idempotent result. `<head-selector>` is `<head-branch>` for same-repository work or `<head-owner>:<head-branch>` for a fork.
 
 ## Create
 
+For same-repository work or a user-owned fork, use native creation (`<head-selector>` is the branch or `<user>:<branch>`):
+
 ```bash
-gh pr create --base <base> --head <head> --title <title> --body <body>
-gh pr create --base <base> --head <head> --title <title> --body <body> --draft
+gh pr create --repo <host>/<base-owner>/<base-repo> --base <base> --head <head-selector> --title <title> --body <body>
+gh pr create --repo <host>/<base-owner>/<base-repo> --base <base> --head <head-selector> --title <title> --body <body> --draft
 ```
 
-Use `--draft` only when `pr-draft` is true.
+For a fork, run `gh api --hostname <host> --method GET "users/<head-owner>" --jq .type`. When it returns `Organization`, do not use unsupported owner-qualified `gh pr create`; use REST:
+
+```bash
+gh api --hostname <host> --method POST "repos/<base-owner>/<base-repo>/pulls" \
+  -f title='<title>' -f body='<body>' -f head='<head-owner>:<head-branch>' -f base='<base>' -F draft=false
+gh api --hostname <host> --method POST "repos/<base-owner>/<base-repo>/pulls" \
+  -f title='<title>' -f body='<body>' -f head='<head-owner>:<head-branch>' -f base='<base>' -F draft=true
+```
+
+Use the command whose draft value matches `pr-draft`.
 
 ### Issue relationship
 
@@ -49,21 +62,80 @@ A closing keyword closes the issue after an eligible merge, never when the PR is
 
 ## Result
 
-Re-read the created PR with `gh pr view` and return its number, URL, state, draft flag, base, head branch, and head SHA.
+Re-read the created PR by number:
+
+```bash
+gh pr view <number> --repo <host>/<base-owner>/<base-repo> \
+  --json number,url,state,isDraft,baseRefName,headRefName,headRefOid,headRepository,headRepositoryOwner
+```
+
+Return its number, URL, state, draft flag, base, head repository/branch, and head SHA.
 
 ## Review Metadata and Diff
 
-A number, URL, branch, or omitted current branch is accepted by native `gh pr` commands:
+A number, URL, branch, or omitted current branch is accepted by native `gh pr` commands. Normalize `headRepository.nameWithOwner` (with `headRepositoryOwner` as context) separately from the base URL repository; code checkout/push uses the head repository while all PR/review endpoints use the base repository:
 
 ```bash
-gh pr view <selector> --json id,number,url,state,isDraft,headRefOid,baseRefName,headRefName
+gh pr view <selector> --json id,number,url,state,isDraft,headRefOid,baseRefName,headRefName,headRepository,headRepositoryOwner
 gh api --hostname <host> --paginate "repos/<owner>/<repo>/pulls/<number>/files?per_page=100"
+gh api --hostname <host> --paginate "repos/<owner>/<repo>/pulls/<number>/reviews?per_page=100"
 gh api --hostname <host> -H 'Accept: application/vnd.github.diff' "repos/<owner>/<repo>/pulls/<number>"
 ```
 
-Changed files may omit patches for binary or large content. Never invent a line location.
+Changed files may omit patches for binary or large content. Never invent a line location. Retain prior review IDs, authors, timestamps, and bodies; their hidden fingerprints cover previously confirmed PR-level findings that have no inline thread.
 
-Query existing threads with `gh api graphql --hostname <host>`, using `repository.pullRequest.reviewThreads` and paging through all results. Read thread ID, resolution/outdated state, path, line/range, diff side, and comment bodies/URLs for duplicate detection.
+Query all threads with the root query below:
+
+```bash
+gh api graphql --hostname <host> --paginate \
+  -f owner='<owner>' -f repo='<repo>' -F number='<number>' \
+  -f query='<root reviewThreads query below>'
+```
+
+```graphql
+query($owner: String!, $repo: String!, $number: Int!, $endCursor: String) {
+  viewer { login }
+  repository(owner: $owner, name: $repo) {
+    viewerPermission
+    pullRequest(number: $number) {
+      reviewThreads(first: 100, after: $endCursor) {
+        pageInfo { hasNextPage endCursor }
+        nodes {
+          id isResolved isOutdated path line startLine diffSide
+          viewerCanReply viewerCanResolve
+          comments(first: 100) {
+            totalCount
+            nodes { id databaseId url body createdAt author { login } }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Use `--paginate`; its `$endCursor` variable drives this single root connection. When `comments.totalCount` exceeds 100, execute the node query separately:
+
+```bash
+gh api graphql --hostname <host> --paginate \
+  -F threadId='<thread-node-id>' \
+  -f query='<per-thread comments query below>'
+```
+
+```graphql
+query($threadId: ID!, $endCursor: String) {
+  node(id: $threadId) {
+    ... on PullRequestReviewThread {
+      comments(first: 100, after: $endCursor) {
+        pageInfo { hasNextPage endCursor }
+        nodes { id databaseId url body createdAt author { login } }
+      }
+    }
+  }
+}
+```
+
+Retain `viewer.login`, permissions, IDs/URLs, and timestamps for selection, duplicate detection, and reply idempotency. Handle nullable author/database ID defensively; the REST fallback requires an available `databaseId`.
 
 ## Submit One Inline Review
 
@@ -91,15 +163,23 @@ Payload shape:
 }
 ```
 
+For explicitly confirmed PR-level feedback, use the same endpoint with `event: "COMMENT"` and the fingerprinted finding in `body`, omitting `comments`. The reviews listing makes that body available for later duplicate suppression.
+
 Added/context lines use `RIGHT`; deleted lines use `LEFT`. Multiline comments add `start_line` and `start_side`. Use modern line/side fields, never deprecated `position`.
 
 Re-fetch `headRefOid` immediately before POST. One invalid location can reject the entire review, so validate every comment first. This skill uses `COMMENT`, never `APPROVE` or `REQUEST_CHANGES`.
 
 ## Select and Finish Threads
 
-A URL fragment such as `#discussion_r<database-id>` selects that review comment only. Page GraphQL `reviewThreads` comments and match the comment database ID or exact URL to obtain its containing thread ID. Never expand a comment URL to every unresolved thread.
+A URL fragment such as `#discussion_r<database-id>` selects that review comment only. Page GraphQL `reviewThreads` comments and match the comment database ID or exact URL to obtain its containing thread ID. Never expand a comment URL to every unresolved thread. Require repository write access plus authoritative per-thread permission fields; treat mutation results as final.
 
-Use `gh api graphql --hostname <host>` for replies:
+Use this mutation only when `viewerCanReply` is true:
+
+```bash
+gh api graphql --hostname <host> \
+  -F threadId='<thread-node-id>' -f body='<confirmed reply>' \
+  -f query='<reply mutation below>'
+```
 
 ```graphql
 mutation($threadId: ID!, $body: String!) {
@@ -110,7 +190,21 @@ mutation($threadId: ID!, $body: String!) {
 }
 ```
 
-After a successful accepted reply, resolve with:
+When `viewerCanReply` is true but the thread mutation is unavailable, use the selected review-comment ID as the REST fallback through `gh api --hostname <host>`:
+
+```bash
+gh api --hostname <host> --method POST \
+  "repos/<owner>/<repo>/pulls/<number>/comments/<comment-id>/replies" \
+  -f 'body=<confirmed reply>'
+```
+
+After a successful accepted reply, resolve only when `viewerCanResolve` is true and the thread is unresolved:
+
+```bash
+gh api graphql --hostname <host> \
+  -F threadId='<thread-node-id>' \
+  -f query='<resolve mutation below>'
+```
 
 ```graphql
 mutation($threadId: ID!) {
@@ -120,4 +214,6 @@ mutation($threadId: ID!) {
 }
 ```
 
-Do not call `resolveReviewThread` when reply creation failed or classification is reject/clarify. Re-query the thread after each mutation and record its actual state. GraphQL failures may return HTTP success with an `errors` array; treat any error as failure.
+Do not call `resolveReviewThread` when reply creation failed, `viewerCanResolve` is false, or classification is reject/clarify. Outdated status alone never authorizes resolution. Re-query after each mutation and inspect GraphQL `errors` even on HTTP success.
+
+Before replying on a repeated run, compare the authenticated author's latest equivalent reply timestamp with later reviewer comments. With no later reviewer message, skip a duplicate reply; when only resolution previously failed, retry resolution only.

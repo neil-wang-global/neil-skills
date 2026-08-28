@@ -51,7 +51,7 @@ Post-fix simulations passed for:
 
 ## Skill size and structure
 
-The final skill is 484 words. It retains URL review, preview, full scope, dedupe, stale-head handling, no-findings behavior, non-inline choice, provider writes, and stage boundaries.
+The final skill is 486 words. It retains URL review, preview, full scope, inline and PR-level dedupe, stale-head handling, no-findings behavior, non-inline choice, provider writes, and stage boundaries.
 
 ## Result
 
@@ -60,3 +60,7 @@ All required review scenarios pass. No reply/resolve operations were added befor
 ## Cross-skill verification
 
 Flows B and C passed: URL review needs neither clone nor config, always previews before publication, and repeats a full review while suppressing prior unchanged findings. It reports `/pr-fix` without invoking it.
+
+## Independent-review regression
+
+Scenario G passed: GitHub review bodies and GitLab general discussions expose prior confirmed PR/MR-level fingerprints. An identical unlocatable finding is suppressed locally and is neither previewed nor republished.

@@ -52,7 +52,7 @@ Responses consistently preserved public APIs and selected a narrow reversible ch
 
 ## Refactor verification — PASS
 
-The skill was compressed from 518 to 490 words. Three fresh post-refactor checks passed:
+The skill was compressed from 518 to 489 words. Three fresh post-refactor checks passed:
 
 | Behavior | Result |
 |---|---|
@@ -67,3 +67,7 @@ All required scenarios pass. The two observed RED failures are addressed without
 ## Cross-skill verification
 
 Flows A and B passed: strategy remains optional literal natural-language guidance; delegated review work retains implementation ownership but not thread ownership. Only `pr-fix` delegates this skill, and actual commit/push state is reported rather than normalized.
+
+## Independent-review regression
+
+Scenario E passed: a caller-supplied worktree is validated against repository and target branch, then used as CWD for every file/Git operation. Inaccessible or mismatched paths stop without falling back to the caller's checkout.
