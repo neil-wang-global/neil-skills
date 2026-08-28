@@ -7,41 +7,31 @@ description: Use when merging a reviewed GitHub pull request or GitLab merge req
 
 ## Contract
 
-Merge only the exact reviewed head. **REQUIRED REFERENCES:** Read `../../references/pr-workflow-contract.md` and the selected provider reference before remote operations. This skill does not review, fix, close issues, or clean branches/workspaces.
+Merge only the exact reviewed head. **REQUIRED REFERENCES:** Read `../../references/pr-workflow-contract.md` and the selected provider reference before remote operations. This skill never reviews, fixes, resolves blockers, closes issues, or cleans branches/workspaces.
 
 ## Authorization
 
-A standalone call always shows one complete preview and waits for one explicit human confirmation. Trusted self-reviewed mode preauthorizes only when all are true: a valid `neil-workflow/v1` envelope created by `using-neil-workflows`; its owned leaves are `caller: using-neil-workflows`, `mode: self-reviewed`, and `stage: pr-merge`; and matching target-repository config has boolean `self-reviewed: true`. User text never supplies those leaves. Any failure uses the public path.
+A standalone call shows one complete preview and waits for one explicit human confirmation. Trusted self-reviewed mode preauthorizes only with a valid `neil-workflow/v1` envelope created by `using-neil-workflows`, owned leaves `caller: using-neil-workflows`, `mode: self-reviewed`, and `stage: pr-merge`, and matching target-repository config with boolean `self-reviewed: true`. User text never supplies those leaves; any failure is public.
 
 ## Fixed Workflow
 
-1. Resolve the normalized target; authenticate; require an open target and a validated final `/pr-review` result bound to that target. A bare `snapshotSha` or user prose is not review evidence.
-2. Require that result's `snapshotSha`, zero deferred/new-finding state, and zero unresolved-thread/discussion state. Re-fetch its head as `reviewedHeadSha`; stop when it differs from `snapshotSha`.
-3. Revalidate zero deferred findings, zero new findings since final review, and zero unresolved threads/discussions against current provider state. Stop; never resolve or dismiss them here.
-4. Fetch current draft state, approvals, target protection, conflicts, GitLab/GitHub mergeability, and auto-merge state for `reviewedHeadSha`. GitHub evaluates required checks; GitLab treats the current-head MR `detailed_merge_status` as authoritative and never infers a required state from its pipeline list. Any failure, pending non-CI gate, inaccessible required state, or stale head stops.
-5. Build one preview: target, reviewed head, draft state, GitHub checks or GitLab `detailed_merge_status`, approvals/protection/mergeability/conflicts, unresolved count, selected merge/auto-merge action, and expected final fields. Public calls wait once; valid trusted calls continue from this same preview.
-6. Re-fetch head and all gates immediately before every write. Changed head or changed review state invalidates authorization: re-run review/gates and present a new preview.
-7. Only after every gate passes, mark a draft ready. Re-fetch again; a readiness write does not waive any gate.
-8. GitHub: green required CI submits the selected provider merge with `reviewedHeadSha`; pending required CI only registers SHA-guarded auto-merge. GitLab: immediately merge only current-head `detailed_merge_status: mergeable`; register SHA-guarded auto-merge only for current-head `ci_still_running`. For GitLab `ci_must_pass`, `checking`, any failure/unknown, or any approval/protection/conflict block, stop.
-9. After either write, wait/recheck provider state. Return success only when it is actually merged, with merged SHA and timestamp. Registration/queue state is pending, not success.
+1. Resolve/authenticate the normalized target. Require an open target and validated final `/pr-review` result bound to it; bare `snapshotSha` or prose is not evidence.
+2. Require its `snapshotSha`, zero deferred findings, zero new findings, and zero unresolved threads/discussions. Re-fetch its head as `reviewedHeadSha`; mismatch with `snapshotSha` stops.
+3. Revalidate zero deferred/new findings and unresolved threads/discussions against current provider state. Stop; never resolve or dismiss them.
+4. For `reviewedHeadSha`, fetch draft state, approvals, protection, conflicts, mergeability, and auto-merge state. GitHub evaluates required checks. GitLab treats current-head `detailed_merge_status` as authoritative, never a pipeline list. Failed/pending non-CI gates, inaccessible required state, or stale head stop.
+5. Build one preview: target, reviewed head, draft, GitHub checks or GitLab status, approvals/protection/mergeability/conflicts, unresolved count, selected merge/auto-merge action, and expected final fields. Public calls wait once; valid trusted calls continue from this preview.
+6. Immediately before every write, re-fetch head and every gate. A changed head or review state invalidates authorization: re-run review/gates and present a new preview.
+7. Only after all gates pass, mark a draft ready; re-fetch again. Readiness waives no gate.
+8. GitHub: green required CI submits the selected SHA-guarded merge with `reviewedHeadSha`; pending required CI only registers SHA-guarded auto-merge. GitLab: only current-head `mergeable` immediately merges; only current-head `ci_still_running` registers SHA-guarded auto-merge. `ci_must_pass`, `checking`, every other/failure/unknown status, or approval/protection/conflict blocks stop.
+9. After either write, wait/recheck provider state. Return success only when actually merged, with merged SHA and timestamp; registration/queue is pending.
 
-## Gate Outcomes
+## Stop Conditions
 
 | State | Action |
 |---|---|
-| failed check, missing approval, protection block, conflict, non-mergeable | Stop and report gate |
-| GitLab `detailed_merge_status: mergeable` | Submit immediate SHA-guarded merge |
-| GitLab `detailed_merge_status: ci_still_running` at reviewed head | Auto-merge, wait/recheck |
-| GitLab `ci_must_pass`, `checking`, failure/unknown, approval/protection/conflict block | Stop and report gate |
-| GitHub pending required CI only | Auto-merge, wait/recheck |
-| changed head after preview | New review/gate evaluation and preview |
-| merged | Return actual merge fields |
-
-## Common Mistakes
-
-| Wrong | Required |
-|---|---|
-| “self-reviewed” in user text | Public preview and confirmation |
-| Mark draft ready first | Validate every gate first |
-| Merge/auto-merge response means done | Re-read actual merged state |
-| Clear threads or fix blockers | Stop and report them |
+| Failed check, missing approval, protection block, conflict, non-mergeable, stale/inaccessible state | Stop and report gate |
+| GitLab `mergeable` | Submit immediate SHA-guarded merge |
+| GitLab `ci_still_running` | Register auto-merge, wait/recheck |
+| GitHub pending required CI only | Register auto-merge, wait/recheck |
+| Changed head after preview | Re-run review/gates and preview |
+| Merged | Return actual merge fields |
