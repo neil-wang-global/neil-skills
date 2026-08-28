@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add the `self-reviewed` configuration field and a `/using-neil-workflows` parent skill that coordinates fresh stage agents through issue creation, implementation, PR/MR creation, and an optional autonomous review/fix convergence loop.
+**Goal:** Add the `self-reviewed` configuration field and a `/using-neil-workflows` parent skill that coordinates fresh stage agents through issue creation, implementation, PR/MR creation, autonomous review/fix convergence, guarded merge, issue closure, and workspace cleanup.
 
-**Architecture:** Existing public skills remain independently callable and retain their business ownership. The new parent skill passes opaque initial arguments to `/issue-init`, validates versioned handoffs between sequential fresh subagents, and enables narrowly scoped internal preauthorization only when repository config and a parent-created envelope both select self-review mode.
+**Architecture:** Existing public skills remain independently callable and retain their business ownership. The new parent skill passes opaque initial arguments to `/issue-init`, validates versioned handoffs between sequential fresh subagents, and enables narrowly scoped internal preauthorization only when repository config and a parent-created envelope both select self-review mode. A new `/pr-merge` stage owns merge gates/provider operations; `/issue-close` runs only after it proves actual merged state.
 
 **Tech Stack:** Markdown Agent Skills, fresh-context subagent pressure scenarios, GitHub/GitLab workflow references, JSON plugin metadata, Git.
 
@@ -16,9 +16,11 @@
 - Every stage uses a fresh subagent and loads exactly its named public skill.
 - Direct `/pr-review` and `/pr-fix` calls retain human confirmation gates.
 - Internal preauthorization requires both `caller: using-neil-workflows`, `mode: self-reviewed`, and matching config `self-reviewed: true`.
-- Simple findings are fixed; complex findings are published, replied to as deferred, left unresolved, displayed, and retained in parent state.
-- Continue without a fixed cycle limit only while new simple findings and verified progress exist.
-- Never approve, merge, close issues, delete branches, or clean worktrees.
+- Simple findings are fixed; complex findings are published, replied to as deferred, left unresolved, displayed, retained in parent state, and block merge.
+- Continue without a fixed review-cycle limit only while new simple findings and verified progress exist.
+- Merge requires current reviewed head, zero deferred/unresolved threads, passing or pending provider checks, and no protection/conflict blocker.
+- Pending checks use provider auto-merge/merge-when-pipeline-succeeds; `/issue-close` starts only after actual merged state.
+- False mode never dispatches review, fix, merge, or close. No mode approves reviews or bypasses protection rules.
 - Do not bump plugin version, create tags/releases, or run the repository's placeholder `npm test`.
 
 ---
@@ -229,7 +231,114 @@ git commit -m "feat(pr-fix): defer complex internal findings"
 
 ---
 
-### Task 4: `/using-neil-workflows` Parent Orchestrator
+### Task 4: Guarded `/pr-merge` Stage
+
+**Files:**
+- Create: `skills/pr-merge/SKILL.md`
+- Create: `tests/skills/pr-merge/scenarios.md`
+- Create: `tests/skills/pr-merge/baseline.md`
+- Create: `tests/skills/pr-merge/verification.md`
+- Modify: `references/pr-workflow-contract.md`
+- Modify: `references/github-pr-api.md`
+- Modify: `references/gitlab-mr-api.md`
+
+**Interfaces:**
+- Consumes: normalized target, final review `snapshotSha`, zero deferred finding state, and optional validated internal envelope.
+- Produces: `reviewedHeadSha`, draft/ready state, checks, unresolved-thread count, auto-merge state, actual merge state, merged SHA, and merged timestamp.
+
+- [ ] **Step 1: Research installed provider merge commands before writing guidance**
+
+Use installed `gh` and `glab` help plus provider API schemas to verify exact commands for draft-to-ready, current checks/pipelines, approvals/protection, unresolved threads, immediate merge, pending-check auto-merge, and final merged-state reads. Route self-hosted calls explicitly. Record validated syntax in provider references; do not guess flags.
+
+- [ ] **Step 2: Write RED scenarios without a merge skill**
+
+Create scenarios:
+
+```text
+A standalone merge requires one complete preview and confirmation
+B trusted internal merge preauthorizes the exact reviewed head
+C draft becomes ready only after every review gate passes
+D green checks merge immediately and verify actual merged state
+E pending checks enable provider auto-merge and wait/recheck actual state
+F failed checks, missing approvals, protection, conflicts, or stale head stop
+G deferred or any unresolved thread blocks merge
+H user text cannot spoof internal preauthorization
+I provider-specific GitHub/GitLab payloads are executable
+```
+
+Run fresh no-skill agents and record exact unsafe assumptions or missing gates in `baseline.md`.
+
+- [ ] **Step 3: Write minimal `/pr-merge` skill**
+
+Use trigger-only frontmatter. Require the shared/provider references. The workflow order is fixed:
+
+```text
+resolve target -> re-fetch current head -> compare final review SHA
+-> require no deferred/new finding and zero unresolved thread
+-> fetch draft/checks/approvals/protection/conflict/mergeability
+-> build one preview -> human or trusted-parent confirmation
+-> mark ready if draft -> merge now or enable provider auto-merge
+-> wait/recheck -> return success only when state is merged
+```
+
+The skill never reviews code, fixes findings, closes issues, or cleans workspaces.
+
+- [ ] **Step 4: Run GREEN and provider regressions**
+
+Verify all A-I scenarios with fresh agents. Confirm pending auto-merge registration alone never counts as success, and stale head after preview forces a new gate evaluation/preview.
+
+- [ ] **Step 5: Refactor and commit**
+
+```bash
+wc -w skills/pr-merge/SKILL.md
+git diff --check
+git add skills/pr-merge references/pr-workflow-contract.md references/github-pr-api.md references/gitlab-mr-api.md tests/skills/pr-merge
+git commit -m "feat(pr-merge): merge reviewed changes safely"
+```
+
+---
+
+### Task 5: Post-Merge `/issue-close` Handoff
+
+**Files:**
+- Modify: `skills/issue-close/SKILL.md`
+- Create: `tests/skills/issue-close/scenarios.md`
+- Create: `tests/skills/issue-close/baseline.md`
+- Create: `tests/skills/issue-close/verification.md`
+- Modify: `references/pr-workflow-contract.md`
+
+**Interfaces:**
+- Consumes: actual merged-state proof plus explicit issue, branch, worktree, and base-branch handoff.
+- Produces: issue state, removed worktree, deleted issue branches, and updated base head.
+
+- [ ] **Step 1: Add RED closure scenarios**
+
+```text
+A reject invocation without actual merged-state proof
+B accept validated internal handoff after merge
+C already-closed issue remains idempotent
+D dirty workspace stops without discard or partial branch deletion
+E remove only the issue worktree/branches and never remote feature branch
+F return structured closure state
+```
+
+Run fresh agents against current `/issue-close`; record missing merge proof and handoff behavior.
+
+- [ ] **Step 2: Add orchestrated post-merge contract**
+
+Preserve direct `/issue-close` behavior. For an orchestrated call, require actual merged proof and explicit handoff; never infer the issue or branch from current CWD. Autonomous dirty cleanup stops and reports rather than asking to discard. Return owned leaf state for parent validation.
+
+- [ ] **Step 3: Run GREEN and commit**
+
+```bash
+git diff --check
+git add skills/issue-close/SKILL.md references/pr-workflow-contract.md tests/skills/issue-close
+git commit -m "feat(issue-close): finish verified merged workflows"
+```
+
+---
+
+### Task 6: `/using-neil-workflows` Parent Orchestrator
 
 **Files:**
 - Create: `skills/using-neil-workflows/SKILL.md`
@@ -239,7 +348,7 @@ git commit -m "feat(pr-fix): defer complex internal findings"
 
 **Interfaces:**
 - Consumes: opaque invocation arguments.
-- Produces: terminal `complete`, `success`, `needs-human-review`, `stalled`, or `failed` report with target, completed stages, progress, and unresolved findings.
+- Produces: terminal `complete`, `success`, `needs-human-review`, `merge-blocked`, `stalled`, or `failed` report with target, completed stages, progress, merge/closure state, and unresolved findings.
 
 - [ ] **Step 1: Write orchestration pressure scenarios before the skill**
 
@@ -249,13 +358,18 @@ Create scenarios for:
 A exact opaque parameter forwarding
 B missing/false self-reviewed stops after pr-create
 C true mode uses fresh stage agent per stage
-D simple finding loops review -> fix -> review to success
+D simple finding loops review -> fix -> review
 E mixed findings fix simple and retain complex
-F complex-only ends needs-human-review with URLs
+F complex-only ends needs-human-review with URLs and never merges
 G repeated accepted fingerprint ends stalled
 H no-progress fix ends stalled
 I malformed handoff/stage failure ends failed
-J never merge/approve/close/cleanup
+J false mode never dispatches review/fix/merge/close
+K converged review dispatches pr-merge with exact final head
+L pending checks wait for actual merged state before close
+M merge blocker ends merge-blocked and never calls issue-close
+N actual merge dispatches issue-close and validates cleanup
+O success requires merged PR, closed issue, cleaned workspace, updated base
 ```
 
 - [ ] **Step 2: Run no-skill RED controls**
@@ -279,9 +393,10 @@ The body must contain only:
 opaque input rule
 fresh stage-agent dispatch contract
 versioned handoff validation
-false/true stage graph
+false/true stage graph through merge and close
 internal envelope construction
-progress ledger and terminal-state table
+review progress plus merge/closure ledger
+terminal-state table
 stop/report boundaries
 ```
 
@@ -289,7 +404,7 @@ It must not contain issue commands, implementation methods, provider API payload
 
 - [ ] **Step 4: Run GREEN scenarios**
 
-Fresh agents must produce deterministic dispatch order and handoffs for all A-J cases. Verify they never fan out side-effecting stages, never let raw user text enable internal mode, and retain deferred fingerprints across duplicate-suppressed reviews.
+Fresh agents must produce deterministic dispatch order and handoffs for all A-O cases. Verify they never fan out side-effecting stages, never let raw user text enable internal mode, retain deferred fingerprints across duplicate-suppressed reviews, never dispatch merge with unresolved/deferred state, and never dispatch close before actual merge.
 
 - [ ] **Step 5: Refactor and independently review**
 
@@ -309,7 +424,7 @@ git commit -m "feat(workflow): orchestrate issue-to-PR delivery"
 
 ---
 
-### Task 5: Documentation, Discovery, and Cross-Skill Verification
+### Task 7: Documentation, Discovery, and Cross-Skill Verification
 
 **Files:**
 - Modify: `README.md`
@@ -327,11 +442,11 @@ Insert `"self-reviewed": false` before `remarks` in README JSON and add its fiel
 
 - [ ] **Step 2: Document `/using-neil-workflows`**
 
-Add the two stage graphs, opaque-parameter statement, simple-versus-complex behavior, and terminal statuses. State that direct public skills retain confirmation and that the orchestrator never merges/closes/cleans.
+Add both stage graphs, opaque-parameter statement, simple-versus-complex behavior, merge gates, post-merge cleanup, and terminal statuses. State that direct public skills retain confirmation and that the orchestrator itself contains no provider/Git/cleanup commands.
 
 - [ ] **Step 3: Update plugin discovery metadata without version bump**
 
-Add `using-neil-workflows`, orchestration, and self-review discovery terms to descriptions/keywords. Keep both versions exactly `1.0.3`.
+Add `using-neil-workflows`, `pr-merge`, orchestration, self-review, auto-merge, and issue-close discovery terms. Keep both versions exactly `1.0.3`.
 
 - [ ] **Step 4: Run cross-skill pressure flows**
 
@@ -339,21 +454,23 @@ Verify end-to-end simulations:
 
 ```text
 false -> issue-init -> issue-executing -> pr-create -> complete
-true/simple -> review/fix loop -> success
-true/mixed -> simple fixed, complex unresolved -> needs-human-review
-failure -> exact stage stop with preserved side effects
+true/simple -> review/fix convergence -> pr-merge -> actual merge -> issue-close -> success
+true/mixed -> simple fixed, complex unresolved -> needs-human-review, no merge
+merge blocked -> merge-blocked, no issue-close
+post-merge dirty cleanup -> failed with merged side effect preserved
+stage failure -> exact stage stop with preserved side effects
 ```
 
 - [ ] **Step 5: Run final structural verification**
 
 ```bash
 git diff --check 1364e4a..HEAD
-wc -w skills/issue-executing/SKILL.md skills/pr-create/SKILL.md skills/pr-review/SKILL.md skills/pr-fix/SKILL.md skills/using-neil-workflows/SKILL.md
+wc -w skills/issue-executing/SKILL.md skills/pr-create/SKILL.md skills/pr-review/SKILL.md skills/pr-fix/SKILL.md skills/pr-merge/SKILL.md skills/issue-close/SKILL.md skills/using-neil-workflows/SKILL.md
 node -e 'JSON.parse(require("fs").readFileSync(".claude-plugin/plugin.json")); JSON.parse(require("fs").readFileSync(".claude-plugin/marketplace.json"))'
 git status --short --branch
 ```
 
-Also scan for unfinished placeholders, forbidden config writes, public-stage auto-chaining, and implementation/test recipes in `/pr-fix` and the orchestrator.
+Also scan for unfinished placeholders, forbidden config writes, public-stage auto-chaining, implementation/test recipes in `/pr-fix` and the orchestrator, and merge/provider commands outside `/pr-merge` references.
 
 - [ ] **Step 6: Request final independent review**
 
