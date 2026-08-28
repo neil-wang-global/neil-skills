@@ -50,3 +50,47 @@ A closing keyword closes the issue after an eligible merge, never when the PR is
 ## Result
 
 Re-read the created PR with `gh pr view` and return its number, URL, state, draft flag, base, head branch, and head SHA.
+
+## Review Metadata and Diff
+
+A number, URL, branch, or omitted current branch is accepted by native `gh pr` commands:
+
+```bash
+gh pr view <selector> --json id,number,url,state,isDraft,headRefOid,baseRefName,headRefName
+gh api --hostname <host> --paginate "repos/<owner>/<repo>/pulls/<number>/files?per_page=100"
+gh api --hostname <host> -H 'Accept: application/vnd.github.diff' "repos/<owner>/<repo>/pulls/<number>"
+```
+
+Changed files may omit patches for binary or large content. Never invent a line location.
+
+Query existing threads with `gh api graphql --hostname <host>`, using `repository.pullRequest.reviewThreads` and paging through all results. Read thread ID, resolution/outdated state, path, line/range, diff side, and comment bodies/URLs for duplicate detection.
+
+## Submit One Inline Review
+
+`gh pr review` cannot batch inline comments. Use `gh api --hostname <host>` with REST:
+
+```text
+POST /repos/{owner}/{repo}/pulls/{number}/reviews
+```
+
+Payload shape:
+
+```json
+{
+  "commit_id": "<current-head-sha>",
+  "event": "COMMENT",
+  "body": "<review summary>",
+  "comments": [
+    {
+      "path": "src/example.ts",
+      "line": 42,
+      "side": "RIGHT",
+      "body": "<finding plus hidden fingerprint>"
+    }
+  ]
+}
+```
+
+Added/context lines use `RIGHT`; deleted lines use `LEFT`. Multiline comments add `start_line` and `start_side`. Use modern line/side fields, never deprecated `position`.
+
+Re-fetch `headRefOid` immediately before POST. One invalid location can reject the entire review, so validate every comment first. This skill uses `COMMENT`, never `APPROVE` or `REQUEST_CHANGES`.

@@ -52,3 +52,27 @@ Never expose tokens or credential contents.
 ## Idempotency
 
 Read remote state before every create. If the current head branch already has an open PR/MR, return it unchanged. Do not duplicate it, edit it merely to match generated text, or invoke the next workflow stage.
+
+## Review Selectors
+
+Resolve review targets in this order: explicit PR/MR URL, explicit number in the current repository, then target associated with the current branch. A full URL supplies provider, host, repository, and number and requires neither a clone nor local config.
+
+## Review Snapshot
+
+A review snapshot owns `headSha`, changed-file metadata, complete available diff, and existing review threads. Review the full diff every run.
+
+Before any remote write, fetch the current head again. If it changed, withhold publication, re-fetch the diff, remap/revalidate findings, and re-preview changed or new findings.
+
+## Finding Identity
+
+Each finding has severity, concise title, validity reason, consequence, correction direction, path, side, line/range, and a versioned hidden fingerprint. Build the fingerprint from normalized category, path, relevant code context, and remediation identity; do not rely on line number alone.
+
+Compare fingerprints and semantics with existing threads. Suppress previously reported unchanged findings. Preview only new actionable findings while noting suppressed prior items locally.
+
+## Review Publication
+
+Always show one complete preview and wait for one explicit confirmation before a remote write, even when the request says publish. User edits to the preview become the authoritative set.
+
+No findings produces a local report only: no approval and no no-op comment. A finding without a reliable diff location is marked non-inline; convert it to PR-level feedback only after explicit user choice.
+
+GitHub may submit one atomic review. GitLab discussions are individual writes: record each success and retry only failed items. Include target, snapshot SHA, successes, failures, and skipped items in the report.
