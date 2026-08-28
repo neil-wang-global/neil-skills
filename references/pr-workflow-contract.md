@@ -76,3 +76,25 @@ Always show one complete preview and wait for one explicit confirmation before a
 No findings produces a local report only: no approval and no no-op comment. A finding without a reliable diff location is marked non-inline; convert it to PR-level feedback only after explicit user choice.
 
 GitHub may submit one atomic review. GitLab discussions are individual writes: record each success and retry only failed items. Include target, snapshot SHA, successes, failures, and skipped items in the report.
+
+## Fix Selectors and Clone
+
+A review-comment/discussion URL selects exactly that thread. A PR/MR URL or number selects its unresolved threads. With no argument, use the target for the current branch.
+
+Code changes require a matching writable local clone; never clone automatically. Explicit URL identity remains authoritative. If local remote, provider, host, or repository does not match, stop. Use an isolated worktree by default (`need-worktree` defaults true), checked out at the PR/MR head branch. Never change the caller's base checkout.
+
+## Classification and Confirmation
+
+Verify each thread against current code and classify `accept`, `reject`, or `clarify` with a concise reason and intended reply. Show one complete confirmation table. After confirmation, accepted items proceed; rejected and clarification items receive replies but remain unresolved.
+
+## Delegation and Git State
+
+Before delegation, capture head, clean/dirty state, local-only commits, and upstream relation. Send accepted feedback to `/issue-executing` as an implementation-neutral brief containing context, locations, and observable outcomes only. It must not prescribe code methods, architecture, techniques, or test commands.
+
+After delegation, inspect actual Git state. Preserve every commit or push already produced by the configured execution strategy: never squash, amend, recommit, force-push, or push redundantly. If accepted changes remain uncommitted, create one completion commit containing only those changes. Push only commits not already present upstream.
+
+## Thread Completion
+
+For each accepted thread, verify the observable outcome, then reply with the result and relevant commit. Resolve only after the reply succeeds. A reply failure leaves the thread unresolved and is reported for retry.
+
+For each rejected or clarification thread, post the confirmed rationale/question and leave it unresolved. No accepted changes means no completion commit. Record per-thread reply and resolution outcomes; retry only incomplete remote operations.

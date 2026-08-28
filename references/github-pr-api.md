@@ -94,3 +94,30 @@ Payload shape:
 Added/context lines use `RIGHT`; deleted lines use `LEFT`. Multiline comments add `start_line` and `start_side`. Use modern line/side fields, never deprecated `position`.
 
 Re-fetch `headRefOid` immediately before POST. One invalid location can reject the entire review, so validate every comment first. This skill uses `COMMENT`, never `APPROVE` or `REQUEST_CHANGES`.
+
+## Select and Finish Threads
+
+A URL fragment such as `#discussion_r<database-id>` selects that review comment only. Page GraphQL `reviewThreads` comments and match the comment database ID or exact URL to obtain its containing thread ID. Never expand a comment URL to every unresolved thread.
+
+Use `gh api graphql --hostname <host>` for replies:
+
+```graphql
+mutation($threadId: ID!, $body: String!) {
+  addPullRequestReviewThreadReply(input: {
+    pullRequestReviewThreadId: $threadId,
+    body: $body
+  }) { comment { id url } }
+}
+```
+
+After a successful accepted reply, resolve with:
+
+```graphql
+mutation($threadId: ID!) {
+  resolveReviewThread(input: {threadId: $threadId}) {
+    thread { id isResolved }
+  }
+}
+```
+
+Do not call `resolveReviewThread` when reply creation failed or classification is reject/clarify. Re-query the thread after each mutation and record its actual state. GraphQL failures may return HTTP success with an `errors` array; treat any error as failure.

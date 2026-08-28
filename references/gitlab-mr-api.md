@@ -76,3 +76,22 @@ Send `body` plus a text position containing:
 Use exactly one applicable `old_line` or `new_line`. Renames retain both paths. Multiline positions additionally require GitLab's `line_range` start/end objects.
 
 Re-fetch MR/version/diff immediately before publication. If a position is stale, recompute it against the new SHA tuple and re-preview the changed finding. Discussions are separate writes; record each successful discussion and never resend it when a later item fails.
+
+## Select and Finish Discussions
+
+An exact discussion/note URL selects its containing discussion only. Match URL anchor or note ID against paginated discussion notes; never expand it to every unresolved discussion.
+
+Reply through stable REST:
+
+```text
+POST projects/:id/merge_requests/:iid/discussions/:discussion_id/notes
+body=<confirmed reply>
+```
+
+For an accepted discussion only, after the reply succeeds, resolve through:
+
+```text
+PUT projects/:id/merge_requests/:iid/discussions/:discussion_id?resolved=true
+```
+
+Execute both with `glab api --hostname <host>`. Reject and clarify discussions remain unresolved. Re-fetch the discussion after each write and record actual note and resolved state. On failure, retain prior successes and retry only the incomplete reply or resolution.
