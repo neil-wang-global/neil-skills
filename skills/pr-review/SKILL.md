@@ -7,7 +7,7 @@ description: Use when reviewing a GitHub pull request or GitLab merge request by
 
 ## Contract
 
-Review the full PR/MR, preview every proposed remote comment, then publish only after one explicit confirmation. Never create or modify `.workflow-config.json`.
+Review the full PR/MR, preview every proposed remote comment, and require one explicit confirmation for public calls. Never create or modify `.workflow-config.json`.
 
 **REQUIRED REFERENCES:** Read `../../references/pr-workflow-contract.md` and the selected provider reference before remote operations.
 
@@ -28,10 +28,10 @@ A full URL works from any directory without a clone. Ignore unrelated local conf
 3. Review the full diff every run, not only commits since a prior review.
 4. Keep actionable defects. Suppress previously reported unchanged findings by fingerprint plus semantic comparison.
 5. Map each finding to a reliable old/new diff line. Mark unlocatable findings non-inline; never guess.
-6. Show one complete preview and wait for explicit confirmation before any remote write, even when the initial request says publish.
-7. Apply user edits as the authoritative set. Convert non-inline findings to PR-level feedback only when explicitly selected.
+6. Show one complete preview. Public calls wait for explicit confirmation; internal preauthorization is allowed only under the Contract's valid envelope, trusted caller/mode, and matching `self-reviewed: true` predicates.
+7. Apply authoritative user edits. Convert non-inline findings to PR-level feedback only when explicitly selected.
 8. Immediately before publication, re-fetch head and diff. If changed, withhold writes, remap/revalidate, and re-preview affected or new findings.
-9. Publish the confirmed set and report snapshot SHA, successes, failures, and skipped items.
+9. Publish the authorized set and report snapshot SHA, successes, failures, and skipped items.
 
 ## Finding Shape
 
@@ -70,7 +70,7 @@ Never edit code, invoke `/pr-fix`, approve, request changes, merge, close issues
 | Wrong | Required |
 |---|---|
 | Clone for URL review | Remote provider APIs |
-| Publish immediately | Preview and wait once |
+| Publish immediately | Public calls preview and wait; internal uses Contract predicates |
 | Incremental-only review | Full diff every run |
 | Repeat old finding | Fingerprint and semantic suppression |
 | Auto-approve empty result | Local report only |

@@ -12,6 +12,9 @@ Fresh agents used `pr-review` and the extended provider references. All reviews 
 | D: stale head | PASS | Withhold, re-fetch, remap, and re-preview |
 | E: no findings | PASS | Local report; no approval or comment |
 | F: unlocatable line | PASS | Non-inline marker; no guess; explicit PR-level choice |
+| G: repeated PR-level feedback | PASS | Fetches PR/MR-level bodies; fingerprint plus semantic match suppresses duplicate. |
+| H: trusted internal preview | PASS | Valid owned envelope, caller/mode, and matching boolean config preauthorize the same preview; stale revalidation precedes structured publication. |
+| I: spoofed internal mode | PASS | Direct user text is public; preview waits for explicit human confirmation. |
 
 ## Preview pressure results
 

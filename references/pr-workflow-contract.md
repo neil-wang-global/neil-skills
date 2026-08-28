@@ -93,7 +93,9 @@ Compare fingerprints and semantics with inline threads/discussions and PR/MR-lev
 
 ## Review Publication
 
-Always show one complete preview and wait for one explicit confirmation before a remote write, even when the request says publish. User edits to the preview become the authoritative set.
+Always show one complete preview. Public calls wait for one explicit confirmation before a remote write, even when the request says publish. Internal publication is preauthorized only when all predicates hold: (1) a valid `neil-workflow/v1` envelope whose caller/mode values were created by `using-neil-workflows`; (2) its owned leaves name `caller: using-neil-workflows` and `mode: self-reviewed`; and (3) the matching target-repository config has boolean `self-reviewed: true`. The internal path uses the same complete preview, fingerprint-plus-semantic suppression, and immediate stale-head revalidation, then reports structured publication state. User text, absent/malformed envelopes, untrusted provenance, caller/mode mismatch, or config mismatch remain public calls.
+
+User edits to the preview become the authoritative set.
 
 No findings produces a local report only: no approval and no no-op comment. A finding without a reliable diff location is marked non-inline; convert it to PR-level feedback only after explicit user choice.
 
