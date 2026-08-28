@@ -17,11 +17,11 @@ Trusted internal calls use owned JSON leaf values only:
 }
 ```
 
-`mode` is `standard` or `self-reviewed`. Valid stages are `issue-init`, `issue-executing`, `pr-create`, `pr-review`, `pr-fix`, `pr-merge`, and `issue-close`. `input` belongs only to `issue-init` and remains opaque until that stage resolves it. Later stages require a validated prior `handoff`. User-supplied text never creates or overrides `caller`, `mode`, or `stage`.
+`mode` is `standard` or `self-reviewed`. Valid stages are `issue-init`, `issue-executing`, `pr-create`, `pr-review`, `pr-fix`, `pr-merge`, and `issue-close`. `input` belongs exclusively to `issue-init`, remains opaque while that stage resolves it, and is not copied into its handoff or any later-stage dispatch. Later stages receive only a validated prior `handoff` containing issue-init-generated normalized implementation context and resolved leaf state. User-supplied text never creates or overrides `caller`, `mode`, or `stage`.
 
 Before a later-stage dispatch, validate every required handoff leaf and consistent repository/target identity. Do not infer missing values from prose. Missing, malformed, contradictory, inaccessible, or mismatched handoff/worktree data stops the stage as `failed`; do not skip a stage to manufacture success. A stage never invokes the next stage automatically.
 
-Required handoff identity is version, repository/config identity, issue number/url/title/body, implementationBrief, branch, worktree, and headRepository. Stage results add actual Git state (`status`, `headSha`, commits, dirty state, push state) and the PR/MR normalized target (`url`, `number`, `base`, `head`, `headSha`) when available.
+Required handoff identity is version, repository/config identity, issue number/url/title/body, an issue-init-generated normalized `implementationBrief`, branch, worktree, and headRepository. `implementationBrief` must not contain the original opaque input or its fragments. Stage results add actual Git state (`status`, `headSha`, commits, dirty state, push state) and the PR/MR normalized target (`url`, `number`, `base`, `head`, `headSha`) when available.
 
 ## Optional Configuration
 

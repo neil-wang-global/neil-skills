@@ -66,3 +66,11 @@ Failure: the fresh agent did not create or show the required nine-field config, 
 > I’ll initialize the workflow using existing issue `#42` and preserve `--label urgent` for the issue-init workflow.
 
 Failure: the exact opaque input lost `preserve this wording`, and the response returned no `neil-workflow/v1` implementationBrief handoff or required leaf values.
+
+## Task 1 opaque-input boundary RED regression
+
+### Scenario E: exclusion after issue-init resolution — FAIL
+
+> {"version":"neil-workflow/v1","repository":{"provider":"github","host":"github.com","name":"acme/widgets"},"configIdentity":{"repository":"acme/widgets","path":".workflow-config.json"},"issue":{"number":42,"url":"https://github.com/acme/widgets/issues/42","title":"Cache invalidation","body":"Add invalidation"},"implementationBrief":{"rawInput":"#42 --label urgent preserve this wording","outcomes":["Cache invalidation"]},"branch":"feature/42-cache-invalidation","worktree":"/repo/.worktrees/feature+42-cache-invalidation","headRepository":"acme/widgets"}
+
+Failure: the current issue-init contract requires the opaque raw value at `implementationBrief.rawInput`, exporting original user input in the handoff. That violates exclusive issue-init ownership after resolution and permits later stages to receive it.

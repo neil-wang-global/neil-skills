@@ -18,4 +18,4 @@ Pass: Create the complete flat config with self-reviewed:false before remarks.
 
 ## Scenario E: opaque orchestrator input
 Prompt: using-neil-workflows delegates the raw text `#42 --label urgent preserve this wording` to issue-init.
-Pass: Receive the complete unchanged input, resolve the issue, and return a versioned implementationBrief handoff.
+Pass: Receive the complete unchanged input, resolve it only inside issue-init, and return a versioned implementationBrief derived from the resolved issue without the original text or its fragments. Later handoffs receive only that normalized implementation context and resolved leaf state.
