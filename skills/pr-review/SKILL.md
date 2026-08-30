@@ -1,6 +1,6 @@
 ---
 name: pr-review
-description: Use when reviewing a GitHub pull request or GitLab merge request by URL, number, or current branch, including standalone web-based review without a local clone
+description: Use when reviewing a GitHub pull request or GitLab merge request by URL, number, or current branch, including config-authorized direct or orchestrated publication
 ---
 
 # PR Review
@@ -26,14 +26,14 @@ A URL works without a clone. Ignore unrelated local config.
 1. Resolve an open target, authenticate, capture head SHA, then fetch complete available diff/metadata, inline discussions, and PR/MR-level bodies.
 2. Review the full diff. Keep actionable defects and suppress unchanged duplicates by fingerprint plus semantics.
 3. Map findings to reliable old/new lines. Mark unlocatable ones non-inline; never guess.
-4. Show one complete preview. Public calls wait for confirmation. Internal publication requires the Contract's valid parent envelope, owned `caller: using-neil-workflows`, `mode: self-reviewed`, `stage: pr-review`, and matching boolean `self-reviewed: true`.
-5. Apply user edits. Public non-inline feedback needs explicit user choice. Trusted internal preauthorization authorizes required provider-level feedback; no publishable URL is `publication-failed`.
+4. Show one complete preview. A matching target-repository boolean `self-reviewed: true` authorizes publication without a human wait; false or absent waits for confirmation. A workflow envelope is sequencing/handoff metadata only and never changes authorization.
+5. Apply user edits for confirmation-gated calls. Config-authorized non-inline feedback may use required provider-level feedback; no publishable URL is `publication-failed`.
 6. Immediately re-fetch head/diff before writes. On change, withhold, remap/revalidate, and re-preview affected/new findings.
 7. Publish the authorized set; report snapshot SHA, successes, failures, and skips.
 
 ## Internal Result Handoff
 
-A trusted call returns only versioned owned leaves: `version`, `stage:"pr-review"`, normalized `target`, `snapshotSha`, `headSha`, `findings`, `convergence`, and `publication`. Target repeats provider, host, repository, number, base/head branches, and head SHA for parent validation against `pr-create`. Each finding has hidden `fingerprint`, `threadUrl`, `threadTarget`, `complexity` (`simple`/`complex`), and state (`unresolved`, `deferred`, `resolved`, `publication-failed`). A simple unavailable publication may use null. Every complex/deferred candidate requires a provider-derived URL and `threadTarget` of provider, host, repository, and number matching `target`; missing, malformed, fabricated, unrelated, or mismatched values return `publication-failed` and stop. Convergence records exact status/counts; publication records exact status and successful, failed, skipped identities. Suppression retains unresolved/deferred findings. Stale head, incomplete publication, unresolved, or deferred state is explicit.
+An orchestrated call returns only versioned owned leaves: `version`, `stage:"pr-review"`, normalized `target`, `snapshotSha`, `headSha`, `findings`, `convergence`, and `publication`. Target repeats provider, host, repository, number, base/head branches, and head SHA for parent validation against `pr-create`. Each finding has hidden `fingerprint`, `threadUrl`, `threadTarget`, `complexity` (`simple`/`complex`), and state (`unresolved`, `deferred`, `resolved`, `publication-failed`). A simple unavailable publication may use null. Every complex/deferred candidate requires a provider-derived URL and `threadTarget` of provider, host, repository, and number matching `target`; missing, malformed, fabricated, unrelated, or mismatched values return `publication-failed` and stop. Convergence records exact status/counts; publication records exact status and successful, failed, skipped identities. Suppression retains unresolved/deferred findings. Stale head, incomplete publication, unresolved, or deferred state is explicit.
 
 ## Finding Shape
 

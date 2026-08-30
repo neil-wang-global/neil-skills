@@ -55,7 +55,7 @@ claude plugin update neil-skills@neil-skills
 | `execution-strategy` | 可选自然语言执行偏好；缺失或为空时自然执行，不作为 shell 命令 | `""` |
 | `pr-draft` | 新 PR/MR 是否为 draft | `false` |
 | `pr-auto-close-issue` | 合并后是否通过 closing keyword 自动关闭 issue | `false` |
-| `self-reviewed` | 是否允许 `/using-neil-workflows` 使用受信任的内部自审编排；缺失时为 `false`，存在但不是布尔值会停止 | `false` |
+| `self-reviewed` | 目标仓库的自动化授权：字面布尔值 `true` 允许直接或编排调用自动发布审查、分类/执行修复（含 `defer`）和合并；缺失时为 `false`，存在但不是布尔值会停止 | `false` |
 | `remarks` | 额外指令，作为上下文载入技能执行流程（如 label 规则、命名约定等） | `""` |
 
 **模板变量：**
@@ -70,7 +70,7 @@ claude plugin update neil-skills@neil-skills
 
 ### PR 工作流
 
-公开技能的推荐生命周期如下：
+配置为 `"self-reviewed": false`（或字段缺失）时，公开技能的推荐生命周期如下：
 
 ```text
 /issue-init -> /issue-executing -> /pr-create -> /pr-review
@@ -78,7 +78,7 @@ claude plugin update neil-skills@neil-skills
                                                  -> 人工确认的 /pr-merge -> 实际合并 -> /issue-close
 ```
 
-每个直接调用的公开技能都独立运行，不会自动进入下一阶段，并遵循其各自的授权边界。`/pr-review` 发布评论前需要一次确认，`/pr-fix` 处理公开反馈前需要一次确认，`/pr-merge` 写入前需要一次确认；直接调用 `/issue-close` 仍按其普通清理流程运行，用户的直接调用即是该流程的授权。只有 `/issue-init` 会创建 `.workflow-config.json`；其他技能仅在文件存在且属于目标仓库时读取，缺失字段使用默认值。
+每个直接调用的公开技能都独立运行，不会自动进入下一阶段，并遵循其各自的安全 gate。目标仓库配置为 `"self-reviewed": true` 时，直接或编排调用的 `/pr-review` 可在完整预览和 stale 检查后自动发布，`/pr-fix` 可自动分类/执行简单 finding 并对复杂 finding 使用 `defer`，`/pr-merge` 可在完整预览后自动继续合并。配置为 `false` 或字段缺失时，这三个技能分别保留一次人工确认。直接调用 `/issue-close` 仍按其普通清理流程运行，用户的直接调用即是该流程的授权。只有 `/issue-init` 会创建 `.workflow-config.json`；其他技能仅在文件存在且属于目标仓库时读取，缺失字段使用默认值。
 
 ### /using-neil-workflows
 
@@ -92,7 +92,7 @@ claude plugin update neil-skills@neil-skills
 issue-init -> issue-executing -> pr-create -> complete
 ```
 
-配置为字面布尔值 `"self-reviewed": true` 时，编排器使用受信任的内部图：
+配置为字面布尔值 `"self-reviewed": true` 时，编排器使用自动化图：
 
 ```text
 issue-init -> issue-executing -> pr-create -> pr-review
@@ -105,7 +105,7 @@ pr-review (仅 complex/deferred，或简单项修复后仍保留 complex/deferre
   -> needs-human-review
 ```
 
-受信任的内部模式只适用于由 `/using-neil-workflows` 创建、字段匹配的 `neil-workflow/v1` envelope，以及目标仓库配置中布尔值 `self-reviewed: true` 的调用。用户文本不能伪造这种授权。它只免除编排内部阶段的重复人工确认；公开直接调用的 `/pr-review`、`/pr-fix` 和 `/pr-merge` 仍保留各自的确认，而直接 `/issue-close` 调用仍以用户调用本身作为普通清理流程的授权。
+`neil-workflow/v1` envelope 只承载编排顺序和 handoff 元数据：静态 Markdown 不能证明其来源，因此 envelope 的存在、内容或所谓来源都不构成授权。匹配目标仓库中的字面布尔值 `self-reviewed: true` 才是 `/pr-review`、`/pr-fix` 和 `/pr-merge` 的自动化授权，且同时适用于直接与编排调用；`false` 或缺失时，这些调用都等待各自的一次人工确认。直接 `/issue-close` 调用仍以用户调用本身作为普通清理流程的授权。
 
 内部自审只自动接受局部、明确、可直接验证的 **simple** finding。架构或公共接口变更、迁移、安全策略、跨模块、高风险或不明确的 finding 都是 **complex**：保持未解决，返回其已验证的 provider URL，并以 `needs-human-review` 停止。simple finding 必须经 `/pr-fix` 修复、确认进展并在更新后的 head 上重新完整审查；没有进展或重复接受相同 finding 时为 `stalled`。
 
@@ -125,11 +125,11 @@ pr-review (仅 complex/deferred，或简单项修复后仍保留 complex/deferre
 
 ### /pr-review
 
-按完整 URL、当前仓库中的编号或当前分支审查 PR/MR。完整 URL 可在任意目录直接使用，无需本地 clone。每次审查完整 diff，抑制已有重复 finding，先展示全部评论预览并等待一次确认，再发布行级评论。无 finding 时只返回本地报告，不自动 approve。
+按完整 URL、当前仓库中的编号或当前分支审查 PR/MR。完整 URL 可在任意目录直接使用，无需本地 clone。每次审查完整 diff，抑制已有重复 finding，并先展示全部评论预览。目标仓库配置为 `self-reviewed:true` 时，在 stale 检查后自动发布；配置为 `false` 或缺失时，等待一次确认。无 finding 时只返回本地报告，不自动 approve。
 
 ### /pr-fix
 
-按 PR/MR URL、编号、当前分支或精确 review-comment URL 处理反馈；comment URL 只处理对应 thread。需要匹配且可写的 head repository 本地 clone，默认使用隔离 worktree；fork 的 base repository 仍用于 PR/thread API。先分类并确认 `accept` / `reject` / `clarify`，再将 accepted outcome 中性地委托给 `/issue-executing`。返回后保留其已有 commit/push，只补齐缺失提交、push、reply 和 resolve；reject/clarify thread 始终保持 unresolved。
+按 PR/MR URL、编号、当前分支或精确 review-comment URL 处理反馈；comment URL 只处理对应 thread。需要匹配且可写的 head repository 本地 clone，默认使用隔离 worktree；fork 的 base repository 仍用于 PR/thread API。`self-reviewed:true` 时自动接受局部、明确、可直接验证的 finding，并将架构、公共接口、迁移、安全策略、跨模块、高风险或不明确 finding 分类为 `defer`；`false` 或缺失时先分类并确认 `accept` / `reject` / `clarify`。随后将 accepted outcome 中性地委托给 `/issue-executing`。返回后保留其已有 commit/push，只补齐缺失提交、push、reply 和 resolve；reject/clarify/defer thread 始终保持 unresolved。
 
 ### /issue-close
 

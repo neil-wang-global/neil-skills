@@ -13,8 +13,8 @@ Fresh agents used `pr-review` and the extended provider references. All reviews 
 | E: no findings | PASS | Local report; no approval or comment |
 | F: unlocatable line | PASS | Non-inline marker; no guess; explicit PR-level choice |
 | G: repeated PR-level feedback | PASS | Fetches PR/MR-level bodies; fingerprint plus semantic match suppresses duplicate. |
-| H: trusted internal preview | PASS | Valid owned envelope, caller/mode, and matching boolean config preauthorize the same preview; stale revalidation precedes structured publication. |
-| I: spoofed internal mode | PASS | Direct user text is public; preview waits for explicit human confirmation. |
+| H: direct `true` publication | PASS | Matching boolean config authorizes the same preview and stale revalidation before structured publication, with no human wait. |
+| I: direct `false` preview | PASS | False or absent config remains public and waits for explicit human confirmation. |
 
 ## Preview pressure results
 
@@ -68,20 +68,28 @@ Flows B and C passed: URL review needs neither clone nor config, always previews
 
 Scenario G passed: GitHub review bodies and GitLab general discussions expose prior confirmed PR/MR-level fingerprints. An identical unlocatable finding is suppressed locally and is neither previewed nor republished.
 
-## Parent-Handoff Regression
+## Direct-Config Regression
 
-### Scenario J: parent-owned review handoff — PASS
+### Scenario J: orchestrated review handoff — PASS
 
-A fresh internal-review simulation at `def456` returned a versioned owned result bound to the normalized target, which matches the retained `pr-create` provider, host, repository, number, branches, and head SHA. It also returned `snapshotSha`, `headSha`, each new finding's fingerprint, thread URL or explicit null, complexity, state, exact convergence counts/status, and exact publication identities/status. After duplicate suppression, the unresolved deferred complex thread remained in the handoff, so the parent could route it to `needs-human-review` rather than infer convergence from prose.
+A fresh orchestrated-review simulation at `def456` returned a versioned owned result bound to the normalized target, matching the retained `pr-create` provider, host, repository, number, branches, and head SHA. It retained the unresolved deferred complex thread after duplicate suppression so the parent could route it to `needs-human-review` rather than infer convergence from prose.
 
-### Scenario K: wrong internal stage — PASS
+### Scenario H: direct `true` publication — PASS
 
-A fresh simulation supplied a trusted caller/mode/config envelope with `stage: pr-fix` to internal review publication. It remained a public preview requiring explicit confirmation; only the parent-created owned `stage: pr-review` envelope preauthorized publication.
+A fresh direct-review simulation against a matching `self-reviewed:true` repository built the complete preview, revalidated the current head, and published its new finding without a human wait. The same result applies when an orchestrated call carries a valid handoff, because the envelope changes sequencing validation only.
 
-### Scenario L: internal complex non-inline URL — PASS
+### Scenario I: direct `false` preview — PASS
 
-A trusted internal complex non-inline finding used the parent's preauthorization for required provider-level feedback. A provider response without a thread/discussion URL returned `publication-failed`; it did not emit a complex/deferred result or permit `needs-human-review`. Public non-inline feedback still waited for explicit user choice.
+A fresh direct-review simulation against `self-reviewed:false` and an absent field retained the explicit confirmation gate. Request text and envelope contents did not change that config-derived result.
 
-### Scenarios M-N: trusted complex URL identity — PASS
+### Scenario K: envelope metadata does not revoke authority — PASS
+
+A fresh direct `self-reviewed:true` simulation repeated with absent, malformed, mismatched, and user-supplied envelope data still published after preview and stale revalidation. Envelope validation is required only when the caller uses it as an orchestration handoff.
+
+### Scenario L: config-authorized complex non-inline URL — PASS
+
+A config-authorized complex non-inline finding used required provider-level feedback. A provider response without a thread/discussion URL returned `publication-failed`; it did not emit a complex/deferred result or permit `needs-human-review`. Confirmation-gated non-inline feedback still waited for explicit user choice.
+
+### Scenarios M-N: complex URL identity — PASS
 
 A fresh GREEN evaluation supplied both a malformed/fabricated/unrelated non-null `threadUrl` and a syntactically valid URL whose `threadTarget` named another PR. Each was `publication-failed`, then parent `failed`; neither could reach `needs-human-review`. The contract requires a provider-derived URL resolving to `threadTarget`, with provider, host, repository, and number exactly matching the normalized target.

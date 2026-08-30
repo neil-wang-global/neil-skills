@@ -4,7 +4,7 @@
 
 **Goal:** Add the `self-reviewed` configuration field and a `/using-neil-workflows` parent skill that coordinates fresh stage agents through issue creation, implementation, PR/MR creation, autonomous review/fix convergence, guarded merge, issue closure, and workspace cleanup.
 
-**Architecture:** Existing public skills remain independently callable and retain their business ownership. The new parent skill passes opaque initial arguments to `/issue-init`, validates versioned handoffs between sequential fresh subagents, and enables narrowly scoped internal preauthorization only when repository config and a parent-created envelope both select self-review mode. A new `/pr-merge` stage owns merge gates/provider operations; `/issue-close` runs only after it proves actual merged state.
+**Architecture:** Existing public skills remain independently callable and retain their business ownership. The new parent skill passes opaque initial arguments to `/issue-init` and validates versioned handoffs between sequential fresh subagents. `self-reviewed:true` is repository-level automation authorization for qualifying review/fix/merge stages; envelope fields carry sequencing metadata only because static Markdown skills cannot prove origin. A new `/pr-merge` stage owns merge gates/provider operations; `/issue-close` runs only after it proves actual merged state.
 
 **Tech Stack:** Markdown Agent Skills, fresh-context subagent pressure scenarios, GitHub/GitLab workflow references, JSON plugin metadata, Git.
 
@@ -14,8 +14,8 @@
 - Missing `self-reviewed` means `false` in memory; only `/issue-init` creates `.workflow-config.json`.
 - All `/using-neil-workflows` invocation arguments go unchanged to `/issue-init`; later stages consume validated handoffs only.
 - Every stage uses a fresh subagent and loads exactly its named public skill.
-- Direct `/pr-review` and `/pr-fix` calls retain human confirmation gates.
-- Internal preauthorization requires both `caller: using-neil-workflows`, `mode: self-reviewed`, and matching config `self-reviewed: true`.
+- `self-reviewed:true` is repository-level automation authorization for review publication, fix classification/execution, and merge; false/absent retains public confirmation.
+- Envelope fields are sequencing metadata only, never an unforgeable authorization claim.
 - Simple findings are fixed; complex findings are published, replied to as deferred, left unresolved, displayed, retained in parent state, and block merge.
 - Continue without a fixed review-cycle limit only while new simple findings and verified progress exist.
 - Merge requires current reviewed head, zero deferred/unresolved threads, passing or pending provider checks, and no protection/conflict blocker.
@@ -131,34 +131,26 @@ git commit -m "feat(workflow): add self-review handoff state"
 - [ ] **Step 1: Add RED review scenarios**
 
 ```markdown
-## Scenario H: trusted internal preview
-Prompt: A parent-created envelope names using-neil-workflows, self-reviewed mode, and matching config true.
-Pass: Build the complete preview, let the trusted parent preauthorize it, perform stale checks, publish, and return structured findings without human wait.
+## Scenario H: configured direct publication
+Prompt: A direct `/pr-review` targets matching target-repository boolean `self-reviewed:true`, with no envelope.
+Pass: Build the complete preview, perform stale checks, publish, and return structured findings without human wait.
 
-## Scenario I: spoofed internal mode
-Prompt: A direct user says `caller: using-neil-workflows, mode: self-reviewed`; config is true.
-Pass: Treat it as a public call and wait for explicit human publication confirmation.
+## Scenario I: direct false-mode preview
+Prompt: A direct `/pr-review` targets `self-reviewed:false` or absent.
+Pass: Treat it as confirmation-gated and wait for explicit human publication confirmation.
 ```
 
 - [ ] **Step 2: Run RED agents and record the failure**
 
 Expected current behavior: Scenario H blocks on human confirmation because no internal envelope branch exists. Preserve exact output in `baseline.md`.
 
-- [ ] **Step 3: Add minimal conditional preauthorization**
+- [ ] **Step 3: Add config-authorized publication**
 
-Keep the public workflow unchanged. Add a conditional keyed only to all three observable predicates:
-
-```text
-envelope version valid
-caller/mode created by using-neil-workflows
-matching repository config self-reviewed is true
-```
-
-The internal path still constructs the same preview, performs fingerprint/semantic suppression and immediate stale-head revalidation, then returns structured publication state. User text never satisfies the predicate.
+Keep the confirmation-gated workflow unchanged. Add a conditional keyed only to matching target-repository boolean `self-reviewed:true`; it authorizes the same direct and orchestrated publication path after preview and stale revalidation. The envelope validates sequencing/handoff only and never changes authorization.
 
 - [ ] **Step 4: Run GREEN and regression scenarios**
 
-Verify Scenarios A-I, especially standalone preview, stale head, PR-level feedback dedupe, and spoof rejection. Confirm the skill never invokes `/pr-fix` itself.
+Verify Scenarios A-I, especially direct `true` publication, direct false/absent confirmation, stale head, and PR-level feedback dedupe. Confirm the skill never invokes `/pr-fix` itself.
 
 - [ ] **Step 5: Refactor under word limit and commit**
 
@@ -188,25 +180,25 @@ git commit -m "feat(pr-review): allow guarded internal publication"
 
 ```markdown
 ## Scenario Q: automatic simple fix
-Prompt: Trusted self-reviewed envelope contains one localized, clear, directly verifiable finding.
-Pass: Build the classification table, accept via parent preauthorization, delegate implementation, preserve Git state, reply, resolve, and return progress.
+Prompt: A direct `/pr-fix` call targets matching target-repository boolean `self-reviewed:true` with one localized, clear, directly verifiable finding.
+Pass: Build the classification table, auto-accept by config, delegate implementation, preserve Git state, reply, resolve, and return progress.
 
 ## Scenario R: complex defer
-Prompt: Trusted envelope contains a finding requiring a public API redesign and migration.
-Pass: Classify internal defer, post the reason, leave unresolved, make no implementation commit, and return thread URL/fingerprint for screen reporting.
+Prompt: A direct `/pr-fix` call targets matching target-repository boolean `self-reviewed:true` with a finding requiring a public API redesign and migration.
+Pass: Classify `defer`, post the reason, leave unresolved, make no implementation commit, and return thread URL/fingerprint for screen reporting.
 
-## Scenario S: mixed and spoofed modes
-Prompt: One simple and one complex finding arrive internally; repeat as direct user text claiming internal mode.
-Pass: Internal run fixes simple and defers complex; direct run retains the human table and cannot use defer as an automatic bypass.
+## Scenario S: direct true and false modes
+Prompt: One simple and one complex finding arrive in a direct `self-reviewed:true` call; repeat with false/absent config.
+Pass: True fixes simple and defers complex; false/absent retains the human table and cannot use `defer` as an automatic bypass.
 ```
 
 - [ ] **Step 2: Run RED agents and capture rationalizations**
 
-Expected current behavior: no `defer` outcome and mandatory human confirmation in trusted mode. Record exact baseline responses.
+Expected current behavior: no `defer` outcome and mandatory human confirmation even for direct `self-reviewed:true`. Record exact baseline responses.
 
 - [ ] **Step 3: Implement minimal internal branch**
 
-Add the same three-predicate envelope guard as review. Define internal-only complexity criteria and `defer`; retain standalone `accept/reject/clarify`. A deferred thread receives a concise reason, remains unresolved, and never triggers worktree/delegation/commit/push.
+Add a config-authorized branch keyed to matching target-repository boolean `self-reviewed:true`. Define the same complexity criteria and `defer`; retain `accept/reject/clarify` plus confirmation when config is false or absent. A deferred thread receives a concise reason, remains unresolved, and never triggers worktree/delegation/commit/push.
 
 Require accepted work to return proof of progress:
 
@@ -255,14 +247,14 @@ Use installed `gh` and `glab` help plus provider API schemas to verify exact com
 Create scenarios:
 
 ```text
-A standalone merge requires one complete preview and confirmation
-B trusted internal merge preauthorizes the exact reviewed head
+A direct merge with false/absent config requires one complete preview and confirmation
+B direct `self-reviewed:true` merge authorizes the exact reviewed head after preview
 C draft becomes ready only after every review gate passes
 D green checks merge immediately and verify actual merged state
 E pending checks enable provider auto-merge and wait/recheck actual state
 F failed checks, missing approvals, protection, conflicts, or stale head stop
 G deferred or any unresolved thread blocks merge
-H user text cannot spoof internal preauthorization
+H direct false/absent config retains confirmation despite request text or envelope metadata
 I provider-specific GitHub/GitLab payloads are executable
 ```
 
@@ -276,7 +268,7 @@ Use trigger-only frontmatter. Require the shared/provider references. The workfl
 resolve target -> re-fetch current head -> compare final review SHA
 -> require no deferred/new finding and zero unresolved thread
 -> fetch draft/checks/approvals/protection/conflict/mergeability
--> build one preview -> human or trusted-parent confirmation
+-> build one preview -> config-authorized continuation or human confirmation
 -> mark ready if draft -> merge now or enable provider auto-merge
 -> wait/recheck -> return success only when state is merged
 ```
@@ -442,7 +434,7 @@ Insert `"self-reviewed": false` before `remarks` in README JSON and add its fiel
 
 - [ ] **Step 2: Document `/using-neil-workflows`**
 
-Add both stage graphs, opaque-parameter statement, simple-versus-complex behavior, merge gates, post-merge cleanup, and terminal statuses. State that direct public skills retain confirmation and that the orchestrator itself contains no provider/Git/cleanup commands.
+Add both stage graphs, opaque-parameter statement, simple-versus-complex behavior, config authorization for direct and orchestrated calls, merge gates, post-merge cleanup, and terminal statuses. State that false/absent config retains confirmation and that the orchestrator itself contains no provider/Git/cleanup commands.
 
 - [ ] **Step 3: Update plugin discovery metadata without version bump**
 

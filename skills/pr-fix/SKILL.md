@@ -1,6 +1,6 @@
 ---
 name: pr-fix
-description: Use when resolving PR/MR review feedback from a writable matching head-repository clone
+description: Use when resolving PR/MR review feedback from a writable matching head-repository clone, with config-authorized direct or orchestrated execution
 ---
 
 # PR Fix
@@ -17,11 +17,11 @@ Comment URL selects one thread; PR/MR URL/number selects unresolved threads; oth
 
 ## Authorization and Classification
 
-Verify each thread against current code. Internal preauthorization requires Contract predicates: parent-created valid `neil-workflow/v1` envelope; owned `caller: using-neil-workflows`, `mode: self-reviewed`, and `stage: pr-fix`; matching target config with boolean `self-reviewed: true`.
+Verify each thread against current code. A matching target-repository boolean `self-reviewed: true` authorizes automated classification and execution. An optional `neil-workflow/v1` envelope validates orchestration sequencing/handoff only; it never grants or withholds that authority.
 
-Valid internal calls build a classification table; parent preauthorization accepts only localized, clear, directly verifiable findings. Classify architectural/public-interface, migration, security-policy, cross-module, unclear, or high-risk findings as internal-only `defer`. Post a concise reason, leave unresolved, do no worktree/delegation/commit/push, and return URL/fingerprint for screen reporting.
+Config-authorized calls build a classification table and auto-accept only localized, clear, directly verifiable findings. Classify architectural/public-interface, migration, security-policy, cross-module, unclear, or high-risk findings as `defer`. Post a concise reason, leave unresolved, do no worktree/delegation/commit/push, and return URL/fingerprint for reporting.
 
-Standalone calls classify `accept`, `reject`, or `clarify`, show one table (`Thread | Decision | Reason | Intended outcome or reply`), and wait once. User text cannot claim internal mode. Never use `defer` outside a valid internal call.
+With `self-reviewed` false or absent, calls classify `accept`, `reject`, or `clarify`, show one table (`Thread | Decision | Reason | Intended outcome or reply`), and wait once. `defer` is unavailable in this confirmation-gated path.
 
 ## Workflow
 

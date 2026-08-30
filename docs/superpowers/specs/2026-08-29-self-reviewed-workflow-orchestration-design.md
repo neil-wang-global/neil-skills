@@ -76,7 +76,7 @@ input: opaque initial arguments for issue-init only
 handoff: validated prior-stage state for later stages only
 ```
 
-User-supplied text never establishes `caller`, `mode`, or `stage`. Direct public invocations cannot request or imitate the internal self-reviewed mode.
+The envelope carries sequencing metadata only. It is not an authorization capability: static Markdown skills cannot prove its origin. Repository configuration is the authorization boundary.
 
 The cumulative handoff contains only owned leaf data:
 
@@ -131,27 +131,29 @@ Consumes the PR/MR target, selected unresolved findings, and matching head works
 
 Consumes the converged review snapshot and normalized target. It independently re-fetches the current head, draft state, unresolved threads, checks/pipeline state, approvals, protection rules, conflicts, and mergeability. It converts a draft to ready only after all review gates pass. When checks are green it merges immediately; when checks are pending it enables the provider's auto-merge or merge-when-pipeline-succeeds capability and waits/rechecks until the target is actually merged. Failed checks, missing approvals, protection rejection, conflicts, stale head, deferred findings, or any unresolved thread stop without merge.
 
-A standalone `/pr-merge` shows one complete merge preview and waits for human confirmation. A valid self-reviewed internal envelope lets the parent preauthorize that preview. The stage never reports success merely because auto-merge was enabled.
+A standalone `/pr-merge` shows one complete merge preview and waits for human confirmation when `self-reviewed` is absent or false. `self-reviewed: true` is a repository-level automation authorization and removes that interactive wait after the same gate checks. The stage never reports success merely because auto-merge was enabled.
 
 ### issue-close
 
 Runs only after `/pr-merge` returns an actual merged state. It consumes explicit issue, branch, worktree, and base-branch handoff values, closes the issue idempotently, removes only the issue workspace/branches, updates the base, and returns closure state. A dirty workspace stops cleanup; autonomous mode never discards changes.
 
-## Autonomous Internal Mode
+## Automation Authorization
 
-Public standalone `/pr-review`, `/pr-fix`, and `/pr-merge` keep their human confirmation gates.
+`self-reviewed: true` is a repository-level, persistent authorization for automatic review publication, fix classification/execution, and merge after each stage independently verifies its normal safety gates. It applies whether a qualifying stage is reached through `/using-neil-workflows` or called directly in that repository.
 
-Only an orchestrator-created envelope with `caller: using-neil-workflows`, `mode: self-reviewed`, and repository config `self-reviewed: true` enables internal preauthorization:
+When `self-reviewed` is absent or false, public standalone `/pr-review`, `/pr-fix`, and `/pr-merge` retain their human confirmation gates. A valid `neil-workflow/v1` envelope still supplies sequencing and handoff validation for parent dispatch, but never grants authority by itself.
 
-- `/pr-review` still constructs one complete preview. The parent coordinator approves that preview as the trusted internal caller, after which publication uses the normal stale-state and provider safeguards.
-- `/pr-fix` still constructs one complete classification table. The parent coordinator approves the table as the trusted internal caller, after which accepted work uses the normal delegation, Git preservation, reply, and resolution safeguards.
-- `/pr-merge` still constructs a complete merge preview after independently verifying the final reviewed head and every merge gate. The parent preauthorizes only that exact snapshot.
+In automated mode:
 
-Internal preauthorization removes only these interactive waits. It does not bypass authentication, authorization, snapshot, duplicate, worktree, Git-state, reply, resolution, checks, approvals, protection, conflict, mergeability, or cleanup checks.
+- `/pr-review` still constructs one complete preview and applies normal stale-state and provider safeguards before publication.
+- `/pr-fix` still constructs one complete classification table and preserves normal delegation, Git-state, reply, and resolution safeguards. Its `defer` outcome is available in automated mode.
+- `/pr-merge` still constructs a complete merge preview after independently verifying the final reviewed head and every merge gate.
+
+Automation removes only interactive waits. It does not bypass authentication, authorization, snapshot, duplicate, worktree, Git-state, reply, resolution, checks, approvals, protection, conflict, mergeability, or cleanup checks.
 
 ## Finding Complexity
 
-Internal `/pr-fix` uses two orchestration outcomes:
+`/pr-fix` uses two config-authorized outcomes:
 
 | Outcome | Criteria | Action |
 |---|---|---|
@@ -160,7 +162,7 @@ Internal `/pr-fix` uses two orchestration outcomes:
 
 A mixture of accepted and deferred findings does not block simple fixes. The stage fixes accepted findings and retains deferred finding fingerprints and thread URLs in the handoff.
 
-Standalone `/pr-fix` keeps its existing `accept`, `reject`, and `clarify` decisions; `defer` is an internal orchestration outcome only.
+With `self-reviewed` false or absent, `/pr-fix` keeps its existing `accept`, `reject`, and `clarify` decisions; `defer` is unavailable until a matching target-repository config authorizes automation.
 
 ## Review/Fix Loop
 
@@ -208,11 +210,11 @@ Required scenarios:
 3. False mode stops after successful `/pr-create`.
 4. True mode automatically reviews, fixes a simple finding, and reviews the new head again.
 5. Complex findings are published, deferred, kept unresolved, and displayed as `needs-human-review`.
-6. Direct `/pr-review` and `/pr-fix` calls cannot obtain internal preauthorization from user text.
+6. `self-reviewed:false` retains standalone confirmation; `self-reviewed:true` applies automation consistently to direct and orchestrated qualifying calls.
 7. Mixed simple and complex findings fix the simple subset before reporting deferred work.
 8. Stale heads, repeated accepted fingerprints, no-progress fixes, malformed handoffs, and stage failures stop safely.
 9. The coordinator contains no stage business logic and never directly issues provider, Git, merge, or cleanup commands.
-10. Final review convergence with zero unresolved/deferred threads dispatches `/pr-merge`; a standalone merge still requires confirmation.
+10. Final review convergence with zero unresolved/deferred threads dispatches `/pr-merge`; `self-reviewed:false` or absent retains merge confirmation, while `true` continues after its preview.
 11. Green checks merge immediately; pending checks enable provider auto-merge and wait for actual merged state; failed/protected/conflicted targets stop.
 12. `/issue-close` is dispatched only after actual merge, handles already-closed issues idempotently, and refuses dirty autonomous cleanup.
 13. False mode never dispatches review, fix, merge, or close stages.

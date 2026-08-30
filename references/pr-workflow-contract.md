@@ -4,7 +4,7 @@ Shared contract for `pr-create`, `pr-review`, `pr-fix`, and `pr-merge`. Public s
 
 ## `neil-workflow/v1` Envelope
 
-Trusted internal calls use owned JSON leaf values only:
+Orchestrated calls use owned JSON leaf values only:
 
 ```json
 {
@@ -83,13 +83,13 @@ Read remote state before every create. If the current head branch already has an
 
 Before marking ready or merging, require zero deferred findings, zero findings newly discovered after the final review, and zero unresolved GitHub review threads or GitLab discussions. Fetch current draft state, approvals, target protection, conflict/mergeability, and auto-merge state. GitHub evaluates required checks tied to `reviewedHeadSha`. GitLab uses the current-head MR `detailed_merge_status` as its authoritative CI/merge gate and never infers requirements from a pipeline list: only `mergeable` permits immediate merge, only `ci_still_running` permits auto-merge, and `ci_must_pass`, `checking`, failures, unknown values, conflicts, protection, or approval blocks stop. Inaccessible required data or a stale head stops this stage.
 
-Standalone `/pr-merge` always presents one complete preview and waits once for explicit confirmation. Trusted internal preauthorization requires all three conditions: (1) a valid `neil-workflow/v1` envelope created by `using-neil-workflows`; (2) owned leaves `caller: using-neil-workflows`, `mode: self-reviewed`, and `stage: pr-merge`; and (3) matching target-repository config with boolean `self-reviewed: true`. User text and untrusted/malformed/mismatched envelopes are standalone calls.
+Standalone `/pr-merge` shows one complete preview and waits once for explicit confirmation when matching target-repository config has `self-reviewed` absent or boolean `false`. A matching target-repository boolean `self-reviewed: true` authorizes the post-preview merge path for both direct and orchestrated calls. Envelopes validate orchestrated sequencing, identity, and handoff only; their presence, absence, contents, or provenance never grants or withholds authorization.
 
 Immediately before each ready/merge write, re-fetch the head and every gate. Mark a draft ready only after gates pass and re-fetch afterward. GitHub submits a SHA-guarded merge only for green required CI and registers SHA-guarded auto-merge only for pending required CI. GitLab submits a SHA-guarded merge only for current-head `detailed_merge_status: mergeable` and registers SHA-guarded auto-merge only for current-head `ci_still_running`. A registration or queue response is pending, never merged. Wait/recheck and return success only on actual provider merged state with merged SHA and timestamp. `/pr-merge` never reviews, fixes, resolves threads, closes issues, or cleans local/remote workspaces.
 
 ## Post-Merge Issue Closure
 
-`/issue-close` may receive an internal post-merge handoff only when the envelope is a valid `neil-workflow/v1` envelope created by `using-neil-workflows` and its owned leaves are exactly `caller: using-neil-workflows`, `mode: self-reviewed`, and `stage: issue-close`. User prose or a user-supplied, missing, malformed, or mismatched envelope is a direct `/issue-close` call and must not gain orchestration authority.
+`/issue-close` may use a workflow envelope only as orchestrated routing metadata and to validate its handoff proof. User prose or a missing, malformed, or mismatched envelope supplies no valid orchestration metadata or proof; it never grants authority.
 
 The internal handoff must explicitly supply owned leaf identity for the issue, local issue/worktree branches, issue worktree, and base branch, plus provider-derived merged-state proof. The proof must bind to the same provider, host, repository, target number, base branch, and head branch/SHA and include actual merged state, merged SHA, and merged timestamp. Never infer any of those values from the current directory, current branch, branch naming, or prose. Missing, inaccessible, contradictory, or non-merged proof stops the stage before any issue write or cleanup.
 
@@ -113,17 +113,17 @@ Compare fingerprints and semantics with inline threads/discussions and PR/MR-lev
 
 ## Review Publication
 
-Always show one complete preview. Public calls wait for one explicit confirmation before a remote write, even when the request says publish. Internal publication is preauthorized only when all predicates hold: (1) a valid `neil-workflow/v1` envelope whose caller, mode, and stage values were created by `using-neil-workflows`; (2) its owned leaves name `caller: using-neil-workflows`, `mode: self-reviewed`, and `stage: pr-review`; and (3) the matching target-repository config has boolean `self-reviewed: true`. The internal path uses the same complete preview, fingerprint-plus-semantic suppression, and immediate stale-head revalidation, then reports structured publication state. User text, absent/malformed envelopes, untrusted provenance, caller/mode/stage mismatch, or config mismatch remain public calls.
+Always show one complete preview. Matching target-repository boolean `self-reviewed: true` authorizes publication after the same stale-head revalidation; absent or false waits for one explicit confirmation before a remote write. An envelope is handoff metadata only and never changes that decision.
 
-User edits to the preview become the authoritative set.
+User edits to a confirmation-gated preview become the authoritative set.
 
-No findings produces a local report only: no approval and no no-op comment. A finding without a reliable diff location is non-inline; public calls convert it to PR-level feedback only after explicit user choice. Trusted internal preauthorization authorizes required provider-level feedback; a complex/deferred result requires the provider-derived URL and target binding specified below, otherwise it is `publication-failed`.
+No findings produces a local report only: no approval and no no-op comment. A finding without a reliable diff location is non-inline; confirmation-gated calls convert it to PR-level feedback only after explicit user choice. Config-authorized calls may use required provider-level feedback; a complex/deferred result requires the provider-derived URL and target binding specified below, otherwise it is `publication-failed`.
 
 GitHub may submit one atomic review. GitLab discussions are individual writes: record each success and retry only failed items. Include target, snapshot SHA, successes, failures, and skipped items in the report.
 
 ### Internal Review Result
 
-A trusted internal `/pr-review` returns a versioned owned leaf-only result bound to the normalized target: `version`, `stage:"pr-review"`, `target`, `snapshotSha`, `headSha`, `findings`, `convergence`, and `publication`. The target repeats the exact nine normalized leaves, which the parent validates against its prior `pr-create` target before routing. Every new actionable finding contains `fingerprint`, `threadUrl`, `threadTarget`, `complexity` (`simple` or `complex`), and state (`unresolved`, `deferred`, `resolved`, or `publication-failed`). `threadTarget` contains exactly provider, host, repository, and number. Every complex/deferred candidate needs a provider-derived thread/discussion URL that resolves to its `threadTarget`, and that binding must exactly match `target`; missing, malformed, fabricated, unrelated, or mismatched URL/binding is `publication-failed` and the parent stops. A simple unavailable publication may use explicit null. `convergence` has exact status plus `newCount`, `unresolvedCount`, and `deferredCount`; `publication` has exact status plus successful, failed, and skipped identities. Suppression of an unchanged duplicate never removes existing unresolved/deferred finding state. Every retained unresolved/deferred routing item has a validated URL and target identity; missing identity fails. The parent validates all leaves before routing a review, fix, or merge; a stale snapshot/head, incomplete publication, unresolved, or deferred state is explicit and cannot be inferred from prose.
+An orchestrated `/pr-review` returns a versioned owned leaf-only result bound to the normalized target: `version`, `stage:"pr-review"`, `target`, `snapshotSha`, `headSha`, `findings`, `convergence`, and `publication`. The target repeats the exact nine normalized leaves, which the parent validates against its prior `pr-create` target before routing. Every new actionable finding contains `fingerprint`, `threadUrl`, `threadTarget`, `complexity` (`simple` or `complex`), and state (`unresolved`, `deferred`, `resolved`, or `publication-failed`). `threadTarget` contains exactly provider, host, repository, and number. Every complex/deferred candidate needs a provider-derived thread/discussion URL that resolves to its `threadTarget`, and that binding must exactly match `target`; missing, malformed, fabricated, unrelated, or mismatched URL/binding is `publication-failed` and the parent stops. A simple unavailable publication may use explicit null. `convergence` has exact status plus `newCount`, `unresolvedCount`, and `deferredCount`; `publication` has exact status plus successful, failed, and skipped identities. Suppression of an unchanged duplicate never removes existing unresolved/deferred finding state. Every retained unresolved/deferred routing item has a validated URL and target identity; missing identity fails. The parent validates all leaves before routing a review, fix, or merge; a stale snapshot/head, incomplete publication, unresolved, or deferred state is explicit and cannot be inferred from prose.
 
 ## Fix Selectors and Clone
 
@@ -133,11 +133,9 @@ Classification requires a local clone matching `headRepository`; never clone aut
 
 ## Classification and Confirmation
 
-Verify each thread against current code. Standalone calls classify `accept`, `reject`, or `clarify`, show one complete confirmation table, and wait once. After confirmation, accepted items proceed; rejected and clarification items receive replies but remain unresolved.
+Verify each thread against current code. Matching target-repository boolean `self-reviewed: true` authorizes automatic classification/execution for direct and orchestrated calls; an envelope only validates orchestration handoff/sequencing and never changes authorization.
 
-Internal `/pr-fix` preauthorization exists only when all Contract predicates hold: (1) a valid `neil-workflow/v1` envelope whose caller/mode/stage values were created by `using-neil-workflows`; (2) owned leaves `caller: using-neil-workflows`, `mode: self-reviewed`, and `stage: pr-fix`; and (3) matching target-repository config with boolean `self-reviewed: true`. User text, absent/malformed or untrusted envelopes, leaf mismatch, and config mismatch remain standalone calls.
-
-A valid internal call still builds a classification table. It may auto-accept only localized, clear, directly verifiable findings. It classifies architectural/public-interface, migration, security-policy, cross-module, unclear, or high-risk findings as internal-only `defer`. A defer posts a concise reason, remains unresolved, makes no worktree/delegation/commit/push, and returns its thread URL and fingerprint for screen reporting. Standalone calls never use `defer`.
+Config-authorized calls still build a classification table. They may auto-accept only localized, clear, directly verifiable findings. They classify architectural/public-interface, migration, security-policy, cross-module, unclear, or high-risk findings as `defer`. A defer posts a concise reason, remains unresolved, makes no worktree/delegation/commit/push, and returns its thread URL and fingerprint for screen reporting. With `self-reviewed` false or absent, calls retain `accept`, `reject`, and `clarify`, show the confirmation table, wait once, and never use `defer`.
 
 ## Delegation and Git State
 

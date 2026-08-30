@@ -7,13 +7,13 @@ Fresh agents received no `pr-merge` guidance. Simulations made no writes.
 | Scenario | Result | Observed gap |
 |---|---|---|
 | A | FAIL | Asked for target identity but supplied no required one-preview/one-confirmation merge contract. |
-| B | FAIL | Treated an envelope as merely untrusted metadata; it did not define the three owned-envelope/config predicates that permit trusted preauthorization. |
+| B | FAIL | Did not define the matching target-repository boolean `self-reviewed:true` predicate that authorizes a direct or orchestrated post-preview merge. |
 | C | FAIL | Said the draft MR should be marked ready, but did not require every Task 4 gate before the ready write. |
 | D | PASS | Re-read state before merge and waited for a confirmed merged state. |
 | E | PASS | Distinguished auto-merge registration from completed merge. |
 | F | PASS | Stopped for stale heads, approvals, protection, or conflicts. |
 | G | FAIL | Allowed a deferred finding when "formally accepted"; Task 4 requires zero deferred findings, without exception. |
-| H | PASS | Rejected direct user text as trusted authorization. |
+| H | PASS | Kept a direct `self-reviewed:false` call confirmation-gated despite a request to skip it. |
 | I | FAIL | Provider commands made self-hosted routing and current syntax optional or wrong. |
 
 ## Exact baseline assumptions
@@ -34,4 +34,4 @@ The prior guidance said to require "every required pipeline status" and permitte
 
 ## RED conclusion
 
-The skill must make the merge contract structural: fixed revalidation order, complete preview, one public confirmation, strict owned-envelope predicates, zero deferred/new/unresolved review state, host-routed provider operations, SHA-guarded writes, and final merged-state confirmation. No registration response is merge success.
+The skill must make the merge contract structural: fixed revalidation order, complete preview, one confirmation when config is false/absent, config-authorized continuation when it is true, zero deferred/new/unresolved review state, host-routed provider operations, SHA-guarded writes, and final merged-state confirmation. No registration response is merge success.

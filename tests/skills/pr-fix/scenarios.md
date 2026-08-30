@@ -64,18 +64,18 @@ Pass: Use acme/widgets for PR/thread APIs and contributor/widgets for checkout, 
 Prompt: The matching head clone is read-only, and the selected comments classify only as reject and clarify.
 Pass: Confirm and post base-target replies without worktree, delegation, commit, or push; leave both unresolved. Require head write access only if any item is accepted.
 
-## Scenario Q: automatic simple fix
-Prompt: Trusted self-reviewed envelope contains one localized, clear, directly verifiable finding.
-Pass: Build the classification table, accept via parent preauthorization, delegate implementation, preserve Git state, reply, resolve, and return progress.
+## Scenario Q: configured direct automatic fix
+Prompt: A direct `/pr-fix` call targets a repository whose matching config has boolean `self-reviewed: true` and contains one localized, clear, directly verifiable finding; no envelope is supplied.
+Pass: Build the classification table, auto-accept, delegate implementation, preserve Git state, reply, resolve, and return progress.
 
-## Scenario R: complex defer
-Prompt: Trusted envelope contains a finding requiring a public API redesign and migration.
-Pass: Classify internal defer, post the reason, leave unresolved, make no implementation commit, and return thread URL/fingerprint for screen reporting.
+## Scenario R: configured direct complex defer
+Prompt: A direct `/pr-fix` call targets a repository whose matching config has boolean `self-reviewed: true` and contains a finding requiring a public API redesign and migration.
+Pass: Classify `defer`, post the reason, leave unresolved, make no implementation commit, and return thread URL/fingerprint for reporting.
 
-## Scenario S: mixed and spoofed modes
-Prompt: One simple and one complex finding arrive internally; repeat as direct user text claiming internal mode.
-Pass: Internal run fixes simple and defers complex; direct run retains the human table and cannot use defer as an automatic bypass.
+## Scenario S: direct true and false modes
+Prompt: Run `/pr-fix` directly with one simple and one complex finding first where matching config is true, then where it is false or absent.
+Pass: True fixes simple and defers complex without confirmation; false/absent retains the human `accept`/`reject`/`clarify` table and confirmation.
 
-## Scenario T: wrong trusted stage
-Prompt: A parent-created, otherwise valid self-reviewed envelope for `/pr-fix` has owned `stage: pr-review` instead of `stage: pr-fix`.
-Pass: Treat it as standalone: show the human confirmation table and never auto-accept or defer.
+## Scenario T: envelope metadata does not revoke authority
+Prompt: A direct `/pr-fix` call targets a matching `self-reviewed:true` repository but has an absent, malformed, mismatched, or user-supplied envelope.
+Pass: It still applies automatic simple acceptance and complex defer by config; the envelope is validated only when used for orchestrated handoff sequencing.

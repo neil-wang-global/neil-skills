@@ -7,13 +7,13 @@ Fresh agents used the current `pr-merge` skill, shared contract, provider refere
 | Scenario | Result | Evidence |
 |---|---|---|
 | A: standalone preview | PASS | One complete preview and one explicit confirmation occur before any write. |
-| B: trusted exact head | PASS | Only valid owned envelope, caller/mode/stage leaves, matching boolean config, and `snapshotSha == reviewedHeadSha` preauthorize. |
+| B: direct `true` exact head | PASS | Matching boolean config authorizes the post-preview path for a direct or orchestrated call only when `snapshotSha == reviewedHeadSha` and every gate passes. |
 | C: ready gate | PASS | Every review and provider gate passes before ready; all re-fetch after it. |
 | D: immediate merge | PASS | Green GitHub path uses `--match-head-commit`; success waits for `state: MERGED`, `mergedAt`, and merge SHA. |
 | E: pending auto-merge | PASS | GitLab uses `--sha` with `--auto-merge` only when the current-head MR reports `detailed_merge_status: ci_still_running`; registration remains pending until final `state: merged`. |
 | F: stop gates | PASS | Failed/cancelled CI, missing approvals, protection, conflicts, non-mergeability, inaccessible state, and stale heads stop before writes. |
 | G: review completion | PASS | Any deferred/new finding or unresolved thread/discussion stops without resolving, fixing, or merging. |
-| H: spoofed authorization | PASS | User text remains public and needs preview/confirmation. |
+| H: direct `false` confirmation | PASS | False or absent config remains confirmation-gated; request text and envelope metadata do not change the result. |
 | I: executable providers | PASS | GitHub Enterprise uses host-qualified `--repo`/`--hostname`; self-hosted GitLab uses full `--repo`/`--hostname`, current CLI flags, and SHA guards. |
 | review provenance | PASS | A bare current-head SHA or user prose stops before preview; a validated final `/pr-review` result must match the normalized target. |
 | GitLab authoritative merge gate | PASS | Current-head `detailed_merge_status: mergeable` is the sole immediate-merge state; `ci_still_running` is the sole auto-merge state; `ci_must_pass`, `checking`, all failures/unknowns, and independent approval/protection/conflict blocks stop. Pipeline-list state never supplies or overrides this gate. |
