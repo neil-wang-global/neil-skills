@@ -33,12 +33,16 @@ glab api --hostname <host> --method GET user
 glab api --hostname <host> --method GET --paginate \
   "projects/<encoded-project>/merge_requests/<iid>/notes?per_page=100"
 ```
+
+```bash
+payload='<compact JSON attestation payload>'
+attestation_body=$(printf '%s\n%s' 'neil-self-reviewed/v1' "$payload")
 glab api --hostname <host> --method POST \
   "projects/<encoded-project>/merge_requests/<iid>/notes" \
-  -f 'body=<neil-self-reviewed/v1 newline-delimited JSON body>'
+  -f "body=$attestation_body"
 ```
 
-The exact body is `neil-self-reviewed/v1`, a newline, then one compact JSON object with `provider`, `host`, `repository`, `number`, `headSha`, `baseRef`, and `configBlobSha`; it must not include closing keywords. The returned note ID/URL is provider evidence; keep it in the review result without treating it as an unresolved discussion.
+The exact body is `neil-self-reviewed/v1`, a newline, then one compact JSON object with `provider`, `host`, `repository`, `number`, `headSha`, `baseRef`, and `configBlobSha`; it must not include closing keywords. `printf '%s\n%s'` produces the one required real newline without a trailing newline. Do not use `body="...\n..."`: Bash passes that `\n` as literal characters. The returned note ID/URL is provider evidence; keep it in the review result without treating it as an unresolved discussion.
 
 
 ```bash

@@ -33,12 +33,16 @@ gh api --hostname <host> --method GET user --jq .login
 gh api --hostname <host> --method GET --paginate \
   "repos/<owner>/<repo>/pulls/<number>/reviews?per_page=100"
 ```
+
+```bash
+payload='<compact JSON attestation payload>'
+attestation_body=$(printf '%s\n%s' 'neil-self-reviewed/v1' "$payload")
 gh api --hostname <host> --method POST \
   "repos/<owner>/<repo>/pulls/<number>/reviews" \
-  -F 'event=COMMENT' -f 'body=<neil-self-reviewed/v1 newline-delimited JSON body>'
+  -F 'event=COMMENT' -f "body=$attestation_body"
 ```
 
-Create only after a full converged current-head review and no exact existing tuple. The exact body is `neil-self-reviewed/v1`, a newline, then one compact JSON object with `provider`, `host`, `repository`, `number`, `headSha`, `baseRef`, and `configBlobSha`; it contains no `close`, `closes`, `fixes`, or `resolves` keyword.
+Create only after a full converged current-head review and no exact existing tuple. The exact body is `neil-self-reviewed/v1`, a newline, then one compact JSON object with `provider`, `host`, `repository`, `number`, `headSha`, `baseRef`, and `configBlobSha`; it contains no `close`, `closes`, `fixes`, or `resolves` keyword. `printf '%s\n%s'` produces the one required real newline without a trailing newline. Do not use `body="...\n..."`: Bash passes that `\n` as literal characters.
 
 
 ```bash

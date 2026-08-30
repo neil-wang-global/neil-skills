@@ -85,3 +85,7 @@ Fresh guided Scenario V tested initial literal remote-base `self-reviewed:true` 
 ## Authorization-Mode Regression
 
 A fresh read-only evaluation passed both authorization modes. For an initial remote-base false/absent run, the displayed `accept`/`reject`/`clarify` table received its required confirmation, then fresh false/absent reads before delegation, completion commit/push, reply, and resolution did not reject those confirmed actions. Current target identity, stale-state, and provider authentication/authorization checks remained required. For an initial literal true blob `A` run, a fresh false, malformed/unreadable result, or changed blob `B` stopped each named automated side effect as `authorization-changed`; Scenarios V and W retain the provider-write and post-delegation completion coverage.
+
+## Fresh Language Regression
+
+Scenario Y passed in both authorization modes: target-base `textLanguage:"简体中文"` was freshly resolved immediately before accepted-work delegation and included in its implementation-neutral brief. The classification rationale, completion commit subject/body, accepted reply, and automated defer reply were all Simplified Chinese, while quoted reviewer text, identifiers, URLs, and machine markers remained unchanged.

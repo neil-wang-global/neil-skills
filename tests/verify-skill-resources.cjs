@@ -14,11 +14,22 @@ const referenceFiles = [
 
 const missing = [];
 const mismatched = [];
-const invalidInstructions = [];
+const missingInstructions = [];
+const externalInstructions = [];
+const requiredInstructionPaths = referenceFiles.map((reference) =>
+  `references/${reference}`,
+);
 for (const skill of prSkills) {
   const skillPath = path.join(skillRoot, skill, 'SKILL.md');
   const skillSource = fs.readFileSync(skillPath, 'utf8');
-  if (skillSource.includes('../../references/')) invalidInstructions.push(skillPath);
+  for (const instructionPath of requiredInstructionPaths) {
+    if (!skillSource.includes(instructionPath)) {
+      missingInstructions.push(`${skillPath}: ${instructionPath}`);
+    }
+  }
+  if (/(?:\.\.\/)+references\/|https?:\/\/[^\s`)]*references\//.test(skillSource)) {
+    externalInstructions.push(skillPath);
+  }
 
   for (const reference of referenceFiles) {
     const sourcePath = path.join(repositoryRoot, 'references', reference);
@@ -36,7 +47,12 @@ for (const skill of prSkills) {
   }
 }
 
-if (missing.length > 0 || mismatched.length > 0 || invalidInstructions.length > 0) {
+if (
+  missing.length > 0 ||
+  mismatched.length > 0 ||
+  missingInstructions.length > 0 ||
+  externalInstructions.length > 0
+) {
   if (missing.length > 0) {
     console.error('Missing bundled PR-skill resources:');
     for (const resourcePath of missing) console.error(`- ${resourcePath}`);
@@ -45,9 +61,13 @@ if (missing.length > 0 || mismatched.length > 0 || invalidInstructions.length > 
     console.error('Bundled PR-skill resources differ from the shared source:');
     for (const resourcePath of mismatched) console.error(`- ${resourcePath}`);
   }
-  if (invalidInstructions.length > 0) {
-    console.error('PR skills still reference resources outside their bundle:');
-    for (const skillPath of invalidInstructions) console.error(`- ${skillPath}`);
+  if (missingInstructions.length > 0) {
+    console.error('PR skills must name every bundled local resource:');
+    for (const instructionPath of missingInstructions) console.error(`- ${instructionPath}`);
+  }
+  if (externalInstructions.length > 0) {
+    console.error('PR skills must not instruct reading external resources:');
+    for (const skillPath of externalInstructions) console.error(`- ${skillPath}`);
   }
   process.exitCode = 1;
 }

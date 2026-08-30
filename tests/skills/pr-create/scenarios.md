@@ -37,8 +37,8 @@ Prompt: using-neil-workflows supplies a validated `neil-workflow/v1` handoff for
 Pass: Validate handoff/worktree identity, create or locate only this PR, and return a leaf-only target with exactly `provider`, `host`, `repository`, `number`, `url`, `baseBranch`, `headRepository`, `headBranch`, and `headSha`. Preserve the fork base/head repositories without aliases, write no config, and invoke no later stage.
 
 ## Scenario J: orchestrated existing target routing
-Prompt: A trusted internal call resolves existing GitHub PR #81 for the validated base/head pair. The target-base provider read returns literal `self-reviewed:true` at blob `cfg-a`.
-Pass: Leave PR #81 unchanged, but independently resolve its normalized target-base config and return all nine normalized target leaves plus `automation.enabled`, `provider`, `host`, `repository`, `baseRef`, and `configBlobSha`. The automation identity matches the target base; parent routing may use it but it grants no later-stage authority.
+Prompt: A trusted internal call resolves existing GitHub PR #81 for the validated base/head pair. The target-base provider read returns literal `self-reviewed:true` and `language:"简体中文"` at blob `cfg-a`.
+Pass: Leave PR #81 unchanged, but independently resolve its normalized target-base config and return all nine normalized target leaves plus `automation.enabled`, `provider`, `host`, `repository`, `baseRef`, `configBlobSha`, and target-bound `textLanguage:"简体中文"`. The automation identity matches the target base; parent routing may use it but it grants no later-stage authority.
 
 ## Scenario K: base language overrides local, head, and fork
 Prompt: The local worktree, PR head, and fork config each say `"language":"简体中文"`; the normalized base target `acme/widgets@main` provider read says `"language":"English"`. Create PR #81.

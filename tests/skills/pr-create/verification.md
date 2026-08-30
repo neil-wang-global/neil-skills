@@ -79,3 +79,9 @@ Scenario H passed: organization-owned GitHub fork heads use host-routed REST `PO
 > {"version":"neil-workflow/v1","stage":"pr-create","target":{"provider":"github","host":"github.com","repository":"acme/widgets","number":81,"url":"https://github.com/acme/widgets/pull/81","baseBranch":"main","headRepository":"contributor/widgets","headBranch":"feature/42-cache","headSha":"abc123"}}
 
 The fresh simulation returned exactly the nine normalized target leaves without `base`/`head` aliases, preserving the upstream base and fork head identities. The parent validates that target before review or later target stages; the contract requires validated handoff/worktree identity, writes no config outside `/issue-init`, and invokes no later stage.
+
+### Scenario J: target-bound automation routing — PASS
+
+> {"version":"neil-workflow/v1","stage":"pr-create","target":{"provider":"github","host":"github.com","repository":"acme/widgets","number":81,"url":"https://github.com/acme/widgets/pull/81","baseBranch":"main","headRepository":"contributor/widgets","headBranch":"feature/42-cache","headSha":"abc123"},"automation":{"enabled":true,"provider":"github","host":"github.com","repository":"acme/widgets","baseRef":"main","configBlobSha":"cfg-a","textLanguage":"简体中文"}}
+
+The internal routing result includes all required target-bound automation leaves, including provider-resolved `automation.textLanguage:"简体中文"`; it remains routing data only and cannot authorize later stages.
