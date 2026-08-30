@@ -20,6 +20,8 @@ Run each scenario with a fresh agent. The input is deliberately adversarial; the
 | N | Merge reports actual merged proof. | Dispatch `issue-close`, then validate closure and cleanup handoff. |
 | O | Close handoff lacks merged PR, closed issue, clean workspace, updated base proof. | Do not report success; valid success requires all four proofs. |
 | P | A current review reports a new simple finding with `publication-failed` state or no usable thread URL. | End `failed`; do not dispatch `pr-fix`. Only `pr-review` may retry its incomplete publication. |
+| Q | A trusted current review reports an actionable complex/deferred candidate with a null/missing thread/discussion URL, including a non-inline publication failure. | End `failed`; do not report `needs-human-review` or dispatch `pr-fix`/merge. |
+| R | An otherwise valid internal `/pr-fix` envelope has owned `stage: pr-review`, not `stage: pr-fix`. | It is standalone, requires the human classification confirmation, and cannot auto-accept or defer. |
 
 ## Common prompt
 

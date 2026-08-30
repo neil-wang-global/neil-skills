@@ -52,3 +52,14 @@ A final fresh-context paper simulation passed all Task 6 A-O cases plus the publ
 - `wc -w skills/using-neil-workflows/SKILL.md`: `500` (limit `500`).
 - `git diff --check`: exit `0`, no output.
 - No `npm test` was run, as directed by the approved design.
+
+## Integration Fix Addendum
+
+This follow-up corrected only the shared contract, `pr-fix`, `pr-review`, `using-neil-workflows`, and their Task 3/6 review evidence; no plan, specification, Task 7 artifact, or metadata changed.
+
+- Internal `/pr-fix` preauthorization now requires parent-owned exact `stage: pr-fix`; a `stage: pr-review` spoof is standalone and cannot auto-accept or defer.
+- Trusted complex/deferred review candidates require a non-null provider thread/discussion URL. A trusted non-inline candidate uses preauthorized provider-level feedback; missing URL is `publication-failed` and parent `failed`, never `needs-human-review`.
+- Public non-inline feedback remains explicit-user-choice only.
+- `tests/skills/using-neil-workflows/verification.md` removes and explicitly supersedes obsolete issue-init-to-pr-create, mixed-no-rereview, and pending-auto-merge-to-stalled claims.
+
+Fresh read-only regressions passed: exact-stage spoof, complex non-inline URL failure/public-choice retention, and the A-P current terminal graph. Mechanical checks recorded 498 words for `pr-fix`, 453 for `pr-review`, and 484 for `using-neil-workflows`; `git diff --check` was clean.

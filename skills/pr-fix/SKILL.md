@@ -17,7 +17,7 @@ Comment URL selects one thread; PR/MR URL/number selects unresolved threads; oth
 
 ## Authorization and Classification
 
-Verify each thread against current code. Internal preauthorization requires three Contract predicates: valid `neil-workflow/v1` envelope created by `using-neil-workflows`; owned `caller: using-neil-workflows` and `mode: self-reviewed` leaves; matching target config with boolean `self-reviewed: true`.
+Verify each thread against current code. Internal preauthorization requires Contract predicates: parent-created valid `neil-workflow/v1` envelope; owned `caller: using-neil-workflows`, `mode: self-reviewed`, and `stage: pr-fix`; matching target config with boolean `self-reviewed: true`.
 
 Valid internal calls build a classification table; parent preauthorization accepts only localized, clear, directly verifiable findings. Classify architectural/public-interface, migration, security-policy, cross-module, unclear, or high-risk findings as internal-only `defer`. Post a concise reason, leave unresolved, do no worktree/delegation/commit/push, and return URL/fingerprint for screen reporting.
 

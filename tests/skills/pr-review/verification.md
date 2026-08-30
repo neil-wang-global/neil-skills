@@ -77,3 +77,7 @@ A fresh internal-review simulation at `def456` returned a versioned owned result
 ### Scenario K: wrong internal stage — PASS
 
 A fresh simulation supplied a trusted caller/mode/config envelope with `stage: pr-fix` to internal review publication. It remained a public preview requiring explicit confirmation; only the parent-created owned `stage: pr-review` envelope preauthorized publication.
+
+### Scenario L: internal complex non-inline URL — PASS
+
+A trusted internal complex non-inline finding used the parent's preauthorization for required provider-level feedback. A provider response without a thread/discussion URL returned `publication-failed`; it did not emit a complex/deferred result or permit `needs-human-review`. Public non-inline feedback still waited for explicit user choice.

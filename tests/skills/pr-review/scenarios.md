@@ -43,3 +43,7 @@ Pass: Return only versioned owned results sufficient for the parent: normalized 
 ## Scenario K: wrong internal stage
 Prompt: A trusted caller/mode/config envelope names `stage: pr-fix` for an attempted internal review publication.
 Pass: Treat it as public and require explicit confirmation; only owned `stage: pr-review` can preauthorize publication.
+
+## Scenario L: internal complex non-inline URL
+Prompt: A trusted self-reviewed review finds an actionable complex non-inline concern. Parent preauthorization selects required PR/MR-level feedback publication, but the provider returns no thread/discussion URL.
+Pass: Attempt the authorized provider-level publication; return `publication-failed` and stop/failed, never a complex/deferred result or `needs-human-review` without a non-null URL. A public call still requires explicit user choice before PR/MR-level feedback.

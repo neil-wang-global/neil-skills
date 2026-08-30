@@ -7,7 +7,7 @@ description: Use when reviewing a GitHub pull request or GitLab merge request by
 
 ## Contract
 
-Review the full PR/MR, preview every proposed remote comment, and require one explicit confirmation for public calls. Never create or modify `.workflow-config.json`.
+Review the full PR/MR, preview all proposed remote comments, and require one explicit confirmation for public calls. Never modify `.workflow-config.json`.
 
 **REQUIRED REFERENCES:** Read `../../references/pr-workflow-contract.md` and the selected provider reference before remote operations.
 
@@ -15,67 +15,45 @@ Review the full PR/MR, preview every proposed remote comment, and require one ex
 
 | Invocation | Resolution |
 |---|---|
-| `/pr-review <URL>` | Provider, repository, and number from URL |
+| `/pr-review <URL>` | Provider, repository, number from URL |
 | `/pr-review <number>` | Number in current repository |
 | `/pr-review` | Target for current branch |
 
-A full URL works from any directory without a clone. Ignore unrelated local config.
+A URL works without a clone. Ignore unrelated local config.
 
 ## Workflow
 
-1. Resolve target, authenticate, require an open PR/MR, and capture head SHA.
-2. Fetch complete available changed-file metadata/diff, inline threads/discussions, and PR/MR-level review/comment bodies.
-3. Review the full diff every run, not only commits since a prior review.
-4. Keep actionable defects. Suppress previously reported unchanged findings by fingerprint plus semantic comparison.
-5. Map each finding to a reliable old/new diff line. Mark unlocatable findings non-inline; never guess.
-6. Show one complete preview. Public calls wait for explicit confirmation; internal preauthorization is allowed only under the Contract's valid envelope, trusted `caller: using-neil-workflows`, `mode: self-reviewed`, `stage: pr-review`, and matching `self-reviewed: true` predicates.
-7. Apply authoritative user edits. Convert non-inline findings to PR-level feedback only when explicitly selected.
-8. Immediately before publication, re-fetch head and diff. If changed, withhold writes, remap/revalidate, and re-preview affected or new findings.
-9. Publish the authorized set and report snapshot SHA, successes, failures, and skipped items.
+1. Resolve an open target, authenticate, capture head SHA, then fetch complete available diff/metadata, inline discussions, and PR/MR-level bodies.
+2. Review the full diff. Keep actionable defects and suppress unchanged duplicates by fingerprint plus semantics.
+3. Map findings to reliable old/new lines. Mark unlocatable ones non-inline; never guess.
+4. Show one complete preview. Public calls wait for confirmation. Internal publication requires the Contract's valid parent envelope, owned `caller: using-neil-workflows`, `mode: self-reviewed`, `stage: pr-review`, and matching boolean `self-reviewed: true`.
+5. Apply user edits. Public non-inline feedback needs explicit user choice. Trusted internal preauthorization authorizes required provider-level feedback; no publishable URL is `publication-failed`.
+6. Immediately re-fetch head/diff before writes. On change, withhold, remap/revalidate, and re-preview affected/new findings.
+7. Publish the authorized set; report snapshot SHA, successes, failures, and skips.
 
 ## Internal Result Handoff
 
-For a trusted internal call, return a versioned owned leaf-only result for the parent, bound to the reviewed target and current snapshot: `version`, `stage:"pr-review"`, normalized `target`, `snapshotSha`, `headSha`, `findings`, `convergence`, and `publication`. The target repeats provider, host, repository, number, base/head branches, and head SHA from the authoritative review target so the parent can validate it against `pr-create`. Each newly actionable finding records its hidden `fingerprint`, `threadUrl` when published or an explicit null when unavailable, `complexity` (`simple` or `complex`), and state (`unresolved`, `deferred`, `resolved`, or `publication-failed`). `convergence` records exact `status` plus `newCount`, `unresolvedCount`, and `deferredCount`; `publication` records exact status plus successes, failures, and skipped identities. Duplicate suppression cannot omit unresolved/deferred prior findings from this result. A stale head, incomplete publication, or unresolved/deferred state is explicit, never inferred from prose.
+A trusted call returns only versioned owned leaves: `version`, `stage:"pr-review"`, normalized `target`, `snapshotSha`, `headSha`, `findings`, `convergence`, and `publication`. Target repeats provider, host, repository, number, base/head branches, and head SHA for parent validation against `pr-create`. Each finding has hidden `fingerprint`, `threadUrl`, `complexity` (`simple`/`complex`), and state (`unresolved`, `deferred`, `resolved`, `publication-failed`). A simple unavailable publication may use null. Every complex/deferred candidate requires a non-null provider thread/discussion URL; otherwise return `publication-failed` and stop. Convergence records exact status/counts; publication records exact status and successful, failed, skipped identities. Suppression retains unresolved/deferred findings. Stale head, incomplete publication, unresolved, or deferred state is explicit.
 
 ## Finding Shape
 
 ```text
 [critical|high|medium|low] concise title
-Why the issue is valid
-Observable consequence or risk
-Suggested correction direction
-Path, old/new side, and line/range
-Hidden versioned fingerprint
+Why valid; consequence; correction direction
+Path, side, line/range; hidden fingerprint
 ```
 
-Do not publish speculative style preferences as defects.
+Do not publish speculative style preferences.
 
 ## Provider Writes
 
 | Provider | Behavior |
 |---|---|
-| GitHub | One REST review containing inline comments; event `COMMENT` |
-| GitLab | One REST diff discussion per finding; retain each success |
+| GitHub | One REST `COMMENT` review with inline comments |
+| GitLab | One REST diff discussion per finding; retain successes |
 
-On GitLab partial failure, retry only failed findings. On GitHub invalid location, correct the rejected batch; re-preview when content or location meaning changed.
-
-## Empty or Unlocatable Results
-
-No findings produces a local report only: no approval, request changes, or no-op comment.
-
-For binary, truncated, outdated, or unanchorable content, preview why inline publication is unavailable. PR-level feedback requires explicit user choice.
+On GitLab partial failure retry only failed findings. On GitHub invalid location correct the rejected batch; re-preview if content/location changed. No findings is local only: no approval or no-op comment.
 
 ## Boundary
 
-Never edit code, invoke `/pr-fix`, approve, request changes, merge, close issues, or delete branches. When published findings exist, report `/pr-fix` as an available command without invoking it.
-
-## Common Mistakes
-
-| Wrong | Required |
-|---|---|
-| Clone for URL review | Remote provider APIs |
-| Publish immediately | Public calls preview and wait; internal uses Contract predicates |
-| Incremental-only review | Full diff every run |
-| Repeat old finding | Fingerprint and semantic suppression |
-| Auto-approve empty result | Local report only |
-| Guess/promote a line | Mark non-inline and ask |
+Never edit code, invoke `/pr-fix`, approve, request changes, merge, close issues, or delete branches. When findings publish, report `/pr-fix` as available without invoking it.
