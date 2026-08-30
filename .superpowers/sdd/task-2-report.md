@@ -48,3 +48,20 @@ wc -w skills/pr-create/SKILL.md skills/pr-review/SKILL.md skills/pr-fix/SKILL.md
 ## Concern
 
 `pr-create`, `pr-review`, and `pr-merge` contained a pre-existing uncommitted Task 1 reference-path change. The Task 2 commit stages only Task 2 hunks and intentionally excludes those pre-existing edits.
+
+## Reviewer Follow-up
+
+- Updated `skills/pr-fix/SKILL.md` and `references/pr-workflow-contract.md` so both config-automated and manually-confirmed flows freshly resolve target-base `textLanguage` before the completion commit and every provider reply, defer reply, or resolution write that carries generated text.
+- Kept `self-reviewed` plus target/config-blob authorization revalidation conditional on the config-automated flow. Manually confirmed actions retain their confirmation authority while using the newly resolved language.
+
+## Follow-up Static Verification
+
+Executed only static checks; no executable test suite was run.
+
+```text
+git diff --check
+# exit 0, no whitespace errors
+
+wc -w skills/pr-fix/SKILL.md
+418 skills/pr-fix/SKILL.md
+```
