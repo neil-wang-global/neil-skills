@@ -1,151 +1,92 @@
-# Interactive Issue Execution Design
+# Deferred Coding Handoff Design
 
 ## Purpose
 
-Turn Neil implementation from a one-turn stage into an explicitly completed development subagent. The user performs normal multi-turn work with that `issue-executing` child, including Superpowers, SDD, and any other framework. The coordinator advances only after the child receives:
+Make Neil workflow development portable across ordinary AI chat sessions without relying on child-agent APIs, client adapters, background tasks, or automatic message routing.
+
+When a workflow reaches code implementation, the current session creates a self-contained development handoff prompt. The user opens a separate session, pastes that prompt, and performs the actual multi-turn development work with any preferred framework. When development is ready, the user returns to the original Neil session and enters the exact phrase:
 
 ```text
-/issue-executing-complete
+编码完毕
 ```
 
-The command means "the development stage may be handed back to Neil". It does not mean the entire issue-to-PR workflow has completed.
+Only that phrase resumes the paused Neil context. The original context determines what happens next; the handoff prompt never exposes or predicts that route.
 
 ## Scope
 
-This change defines a client-neutral Neil protocol and updates `/using-neil-workflows`, `/issue-executing`, and a new `/issue-executing-complete` skill. It preserves existing issue, PR/MR, review, fix, merge, and close ownership boundaries.
+This change updates `/using-neil-workflows`, `/issue-executing`, and `/pr-fix`. It adds a shared handoff reference and pressure scenarios. It does not add a child session protocol, client plugin, external service, completion command, workflow state file, or framework dependency.
 
-The protocol names no AI client, UI, agent provider, message transport, session implementation, or framework. A client integration is only responsible for mapping the protocol to its own child-agent and message facilities. Neil owns workflow state, validation, and next-stage dispatch.
+## Development Handoff
 
-## Architecture
+`/issue-executing` no longer performs code changes when used as a Neil implementation stage. It constructs a copyable prompt from the validated issue handoff and stops at the handoff boundary.
+
+The handoff prompt contains only:
+
+- absolute worktree path and expected feature branch;
+- issue number, title, URL, normalized summary, and observable outcomes;
+- the complete literal non-empty `execution-strategy`, or a neutral repository-conventions fallback when absent;
+- constraints to work only on the issue, preserve actual Git state, and avoid PR/MR, review-thread, merge, issue-close, configuration, and Neil orchestration operations;
+- a request to report actual modified files, verification evidence, worktree, branch, HEAD, dirty state, commits, and push state to the user in the development session.
+
+After it displays the prompt, it displays exactly:
 
 ```text
-Neil coordinator
-  -> issue-init agent
-  -> issue-executing development child
-       <-> user and development frameworks
-       -> /issue-executing-complete
-  -> validated completion envelope
-  -> pr-create agent
-  -> existing Neil routing
+已准备开发交接提示词。请新建一个 session 并粘贴执行；研发完成后回到这里输入“编码完毕”告诉我。
 ```
 
-The coordinator owns sequencing, durable state, and handoff validation. The development child owns code changes, tests, commits, and its interactive conversation. `pr-create` and later public stages retain their existing business ownership.
+No extra sentence describes `pr-create`, review, fix, merge, close, or any other later route.
 
-A coordinator persists one workflow run containing the validated `issue-init` handoff, an opaque child reference, and a state. The record is orchestration metadata, never authorization. Every target-consuming stage still resolves its own provider authorization and revalidates actual Git state.
+The new development session is independent. The user may use Superpowers, SDD, or any other process there. That session must not invoke Neil later stages. Its text, completion claim, tool output, commits, tests, or Git activity do not themselves resume the original session.
 
-## Portable Adapter Contract
+## Waiting and Resume
 
-An AI client integration implements these capability-neutral operations. Names are protocol descriptions, not required API names.
+The original session retains its validated pre-development handoff and enters `awaiting-coding`.
 
-| Operation | Input | Required outcome |
-|---|---|---|
-| start development child | workflow run and sealed issue-init handoff | returns one opaque `childRef` |
-| deliver user message | `childRef` and user content | appends content to that child only |
-| deliver child event | `childRef` and protocol event | sends the event to the owning coordinator |
-| resume coordinator | workflow run and validated event | starts the coordinator's next decision turn |
-| start named stage | named skill and validated handoff | starts the specified next agent only |
+| Current context | On `编码完毕` in the original session |
+|---|---|
+| standalone `/issue-executing` | read and report the actual worktree Git state; do not invoke a later public stage |
+| `/using-neil-workflows` after issue initialization | validate actual worktree identity and Git state, append owned `git` data, then continue with fresh `pr-create` |
+| `/pr-fix` after accepted implementation outcomes | validate actual fix-worktree Git state, then complete only `/pr-fix`'s existing commit/push/reply/resolve ownership and return to its existing review route |
 
-A capable client can surface the child as a nested chat, separate tab, terminal session, or any equivalent interaction. The protocol does not prescribe the UI. A client without native child UI may proxy messages through its main conversation while preserving the same `childRef` and event payload. A client that cannot create a child or return a child event reports `unsupported-capability`; it must not treat a closing reply, Git activity, or user prose as completion.
+The phrase is considered only in the original session while its latest active Neil context is `awaiting-coding`. It is not a global command. A matching phrase in the development session, a different session, or an original session that is not waiting has no workflow effect.
 
-The coordinator guarantees automatic continuation only after its adapter receives a valid completion event. This is the required truth boundary: a client that cannot return events cannot provide automatic continuation, but remains interoperable through an explicit transfer of the same completion envelope to the coordinator.
+No alternative wording, including "完成", "继续", "done", a commit message, or a child/framework report, resumes work. If the user has not entered the exact phrase in the original session, the session remains waiting.
 
-## States
+On resume, the owner rereads the recorded worktree and validates repository, provider/host identity, branch, head repository, and actual Git head before any next-stage dispatch. A missing, inaccessible, dirty-when-clean-required, mismatched, or otherwise invalid worktree stops the current context and does not infer state from the development-session prose.
 
-| State | Meaning | Valid transition |
-|---|---|---|
-| `initializing` | `issue-init` is running | `developing`, `failed` |
-| `developing` | One owned `issue-executing` child exists | `completion-requested`, `failed`, `cancelled` |
-| `completion-requested` | The child received the exact completion command | `validated`, `developing`, `failed` |
-| `validated` | Coordinator accepted actual Git handoff | `pr-creating`, `failed` |
-| `pr-creating` | Existing `pr-create` stage is running | existing Neil terminal/routing states |
+## PR Fix Handoff
 
-A child becoming idle, ending one response, reporting progress, making a commit, pushing, or saying work is done leaves the run in `developing`. A child transport may reconnect or resume the same child reference without creating another workflow run. A terminal child failure or explicit cancellation ends `failed` and never dispatches `pr-create`.
+When `/pr-fix` has accepted implementation outcomes that require coding, it creates a repair-oriented development handoff prompt rather than implementing the changes itself. The prompt identifies the matching PR/MR worktree, accepted outcomes, relevant locations, and required observable behavior. It retains the same boundaries and exact final display text as `/issue-executing`.
 
-Each run has one active development child. The coordinator rejects a second child, a completion event from an unknown child reference, or a completion command outside the owned child context.
+The prompt contains no thread reply text, resolution decision, provider command, commit subject, or test command. Those remain owned by the original `/pr-fix` context after `编码完毕`.
 
-## Completion Command
+Rejected, clarified, deferred, or non-implementation outcomes do not create a development handoff. Existing review authorization and thread safeguards remain unchanged.
 
-`/issue-executing-complete` is available only inside a development child that received a valid Neil workflow context. It accepts no user-supplied handoff, target, repository, branch, child reference, or authorization fields.
+## Orchestration Boundaries
 
-On invocation the child:
+The `/using-neil-workflows` coordinator still owns stage sequence and validates only owned handoff leaves. It dispatches fresh `issue-init`, then asks its current implementation context to produce the development handoff and enters `awaiting-coding`; it does not dispatch `pr-create` until the user returns with the exact phrase and actual Git validation succeeds.
 
-1. Reads its sealed incoming `issue-init` handoff and assigned worktree.
-2. Verifies that the worktree is accessible, belongs to the expected repository, and is on the expected branch.
-3. Reads actual Git state without normalizing it: `status`, `headSha`, reachable/new commits, dirty state, and push state.
-4. Emits exactly one `stage-complete` event through its client adapter. The event has `runId`, `childRef`, and one result object with only `version`, `stage`, `status`, and `handoff` at the top level.
+The coordinator does not edit code, run Git/provider business operations, create a development session, inspect the development session, or parse its prose. It only displays a prompt for the user to copy and resumes from its retained handoff when the user explicitly signals completion.
 
-The result object is:
-
-```json
-{
-  "version": "neil-workflow/v1",
-  "stage": "issue-executing",
-  "status": "completed",
-  "handoff": {
-    "version": "neil-workflow/v1",
-    "repository": { "provider": "github", "host": "github.com", "name": "acme/widgets" },
-    "configIdentity": { "repository": "acme/widgets", "path": ".workflow-config.json" },
-    "textLanguage": "",
-    "issue": { "number": 42, "url": "...", "title": "...", "body": "..." },
-    "implementationBrief": { "summary": "Cache invalidation", "outcomes": ["Invalidate stale cache entries"] },
-    "branch": "feature/42-cache",
-    "worktree": "/repo/.worktrees/feature+42-cache",
-    "headRepository": "acme/widgets",
-    "git": {
-      "status": "clean",
-      "headSha": "abc123",
-      "commits": ["abc123"],
-      "dirty": false,
-      "pushState": "pushed"
-    }
-  }
-}
-```
-
-The command rejects an inaccessible or mismatched worktree, missing Git state, malformed inherited handoff, unknown workflow run, or a child that is not the run's active child. The user can repair the condition and invoke the command again.
-
-## Coordinator Validation and Resumption
-
-The coordinator accepts a `stage-complete` event only when all conditions hold:
-
-1. Its run is in `developing` or `completion-requested`.
-2. Event `runId` and `childRef` match its stored owned values.
-3. The result top level contains only `version`, `stage`, `status`, and `handoff`.
-4. The handoff re-emits every issue-init leaf unchanged and has a matching repository, provider, host, issue, branch, worktree, and head repository.
-5. The coordinator independently reads the supplied worktree's current branch and head and finds them equal to the reported actual Git fields.
-
-After validation the coordinator moves to `validated`, invokes its generic start-stage adapter for a fresh `pr-create` agent, and passes only the validated completion handoff. It never accepts prose, copied JSON, a child final message, parent-thread text, framework status, or generic progress event as completion.
-
-## Framework Compatibility
-
-The protocol names no framework. Superpowers, SDD, and any other framework run inside the development child as ordinary guidance. They can create their own internal agents and user checkpoints, but must not invoke later Neil stages or synthesize the completion envelope.
-
-A framework's own notion of completion has no Neil effect. The direct human `/issue-executing-complete` command is the sole request that may emit `stage-complete`.
-
-## Error and Recovery Rules
-
-- A client adapter may resume a child after reconnect or restart only when it can prove the same `childRef`; otherwise it reports an unavailable child and preserves `developing` or records explicit failure.
-- A failed `pr-create` preserves the validated development handoff and leaves no automatic retry. The coordinator reports the exact failed stage.
-- New target-stage authorization remains governed by existing remote-base checks; no run record, child reference, client event, or user message authorizes provider writes.
-- No completion path cleans, amends, commits, pushes, squashes, or otherwise changes Git state solely to satisfy the handoff.
+The existing post-`pr-create` self-review graph, remote authorization, review/fix convergence, merge gates, and issue-close rules are unchanged.
 
 ## Verification Strategy
 
-Use fresh-context RED-GREEN-REFACTOR scenarios for skill contracts and transport-neutral integration simulations.
+Use RED-GREEN-REFACTOR pressure scenarios and static contract checks.
 
-1. Coordinator starts one development child after valid `issue-init` and does not start `pr-create`.
-2. Multiple ordinary child conversations, commits, reports, idle responses, framework completion, and "done" prose do not advance Neil.
-3. The completion command outside the owned child is rejected.
-4. The active child emits only the owned result shape with actual Git fields.
-5. A malformed, stale, foreign-child, wrong-run, wrong-worktree, wrong-branch, or head-mismatched event stops before `pr-create`.
-6. A valid completion event causes exactly one fresh `pr-create` start with the validated handoff.
-7. Nested-chat, separate-chat, terminal, and main-conversation-proxy adapters produce the identical event and coordinator transition.
-8. Reconnect/resume retains `developing`; explicit cancellation and unrecoverable child failure never open a PR/MR.
-9. Existing false/true self-review routing begins only after successful `pr-create` and remains unchanged.
+1. A Neil issue workflow produces the complete copyable handoff prompt and exact final display text, then does not dispatch `pr-create`.
+2. A standalone `/issue-executing` produces the same handoff but does not create or invoke a later stage.
+3. Empty and arbitrary non-empty execution strategies retain the documented fallback and literal-guidance semantics.
+4. Commits, tests, tool output, a development-session "done", "完成", and "继续" in the original session do not resume a waiting workflow.
+5. Only `编码完毕` in the original waiting context rechecks the actual worktree Git state.
+6. A valid workflow resume appends owned actual Git state and dispatches exactly one fresh `pr-create`; an invalid worktree, branch, identity, or head stops first.
+7. An accepted `/pr-fix` creates the repair handoff and waits; its valid resume performs only existing fix ownership before the next review. A rejected, clarified, or deferred finding does not create a handoff.
+8. The handoff prompt never creates a PR/MR, writes configuration, replies/resolves threads, merges, closes issues, or routes later workflow stages.
+9. Existing remote authorization and all post-`pr-create` terminal behavior remain unchanged.
 
 ## Non-Goals
 
-- Do not infer completion from language, tool output, Git status, tests, commits, framework state, or child response termination.
-- Do not require any named client, browser, IDE, agent provider, framework, or transport.
-- Do not alter remote authorization, review/fix logic, merge criteria, or issue-close behavior.
-- Do not add provider or Git business operations to the coordinator.
+- Do not create a subagent, client adapter, workflow service, session router, command, callback, or state file.
+- Do not infer completion from any event except the exact user phrase in the original waiting context.
+- Do not make the copied development session responsible for Neil workflow progression.
+- Do not alter provider authorization, review/fix classification, merge criteria, or issue-close behavior.
