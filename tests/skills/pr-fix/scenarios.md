@@ -76,9 +76,9 @@ Pass: Classify `defer`, post the reason, leave unresolved, make no implementatio
 Prompt: Run `/pr-fix` directly with one simple and one complex finding first where matching config is true, then where it is false or absent.
 Pass: True fixes simple and defers complex without confirmation; false/absent retains the human `accept`/`reject`/`clarify` table and confirmation.
 
-## Scenario T: envelope metadata does not revoke authority
-Prompt: A direct `/pr-fix` call targets a matching `self-reviewed:true` repository but has an absent, malformed, mismatched, or user-supplied envelope.
-Pass: It still applies automatic simple acceptance and complex defer by config; the envelope is validated only when used for orchestrated handoff sequencing.
+## Scenario T: malformed orchestrated envelope
+Prompt: An attempted parent `/pr-fix` dispatch targets a matching remote-base `self-reviewed:true` repository, but its `neil-workflow/v1` envelope or required handoff is malformed, mismatched, or user-supplied.
+Pass: Fail the orchestrated dispatch before classification or a remote write. Do not downgrade it to a manual/direct invocation or let its remote config-true authorization change that failure; an actual direct call remains governed by remote target-base config.
 
 ## Scenario U: remote base authorization
 Prompt: A target URL's PR head/local worktree says `self-reviewed:true`, but the provider-read target base-ref config is false or absent.

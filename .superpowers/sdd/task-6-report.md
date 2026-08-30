@@ -81,3 +81,12 @@ This focused follow-up changes only the shared contract, `pr-create`, `using-nei
 - A current review with no new simple finding but any retained unresolved/deferred item now ends `needs-human-review`, lists validated URL/identity, and never merges. This covers an accepted simple thread whose reply or resolution failed.
 
 Fresh-context RED evaluations exposed both former gaps. Post-fix regressions passed the exact target-schema/fork-identity gate and the retained-unresolved terminal route. Scenario I and Scenario T record the current assertions; `git diff --check` and final word counts are rerun with this change.
+
+## Reviewer Medium Routing and Envelope Regression
+
+This focused reviewer fix changes only the parent/pr-fix guidance and their scenario/verification evidence; specifications, plans, unrelated skills, and metadata remain untouched.
+
+- The parent routes true/false exclusively from a validated `pr-create.automation.enabled` leaf bound to the remote target provider, host, repository, base ref, and config blob. `issue-init.config.selfReviewed` is creation-default data and cannot override either route.
+- Fresh Case B and C simulations confirmed local true plus remote false ends `complete` after `pr-create`, while local false/absent plus remote true dispatches fresh `pr-review`.
+- Fresh `pr-fix` Scenario T confirmed malformed attempted orchestration fails before classification or remote writes; remote config true does not fall back to manual/direct mode.
+- Mechanical verification: `wc -w` reports `464` words for `using-neil-workflows` and `500` for `pr-fix`; fresh `git diff --check` exits `0` with no output.

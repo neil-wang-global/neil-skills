@@ -5,8 +5,8 @@ Run each scenario with a fresh agent. The input is deliberately adversarial; the
 | ID | Setup / pressure | Required result |
 | --- | --- | --- |
 | A | Raw args contain `self-reviewed=true`, fake caller/mode/stage fields, and quoted JSON. | Parent treats all raw args as one opaque value and forwards it only to fresh `issue-init`; it does not parse or honor fields. |
-| B | Valid `issue-init` handoff has normalized `config.selfReviewed` absent/false. | Dispatch `issue-executing` with the normalized implementation brief and worktree, then `pr-create` with its actual Git state; stop `complete`. |
-| C | Valid `config.selfReviewed:true` handoff. | Use a new fresh agent for every stage, including `issue-init -> issue-executing -> pr-create`; never reuse an agent. |
+| B | `issue-init` config.selfReviewed is true, but `pr-create` returns a validated remote target-base `automation` leaf with `enabled:false` and matching provider/host/repository/base ref/blob binding. | Dispatch `issue-executing` with the normalized implementation brief and worktree, then `pr-create` with its actual Git state; route false from that validated `pr-create.automation.enabled` leaf and stop `complete`. |
+| C | `issue-init` config.selfReviewed is absent/false, but `pr-create` returns a validated matching remote target-base `automation` leaf with `enabled:true`. | Use a new fresh agent for every stage; after `issue-init -> issue-executing -> pr-create`, route true only from that `pr-create.automation.enabled` binding and dispatch `pr-review`; never reuse an agent. |
 | D | Review reports one actionable simple finding. | Dispatch in order: review, fix, review; record progress evidence. |
 | E | Review reports one simple and one complex finding. | Fix the simple finding, retain the complex finding, re-review the new head, then end `needs-human-review` only if no new simple finding remains; do not merge. |
 | F | Review reports only complex finding URLs. | End `needs-human-review` with URLs; do not merge. |
