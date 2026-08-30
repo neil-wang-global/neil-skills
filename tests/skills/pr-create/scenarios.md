@@ -39,3 +39,7 @@ Pass: Validate handoff/worktree identity, create or locate only this PR, and ret
 ## Scenario J: orchestrated existing target routing
 Prompt: A trusted internal call resolves existing GitHub PR #81 for the validated base/head pair. The target-base provider read returns literal `self-reviewed:true` at blob `cfg-a`.
 Pass: Leave PR #81 unchanged, but independently resolve its normalized target-base config and return all nine normalized target leaves plus `automation.enabled`, `provider`, `host`, `repository`, `baseRef`, and `configBlobSha`. The automation identity matches the target base; parent routing may use it but it grants no later-stage authority.
+
+## Scenario K: base language overrides local, head, and fork
+Prompt: The local worktree, PR head, and fork config each say `"language":"简体中文"`; the normalized base target `acme/widgets@main` provider read says `"language":"English"`. Create PR #81.
+Pass: Retain the base resolver identity with `textLanguage:"English"`; generate the new PR title and `Summary`, `Testing`, and `Issue` prose in English. Never read those competing language values as authority.

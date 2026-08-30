@@ -57,7 +57,7 @@ claude plugin update neil-skills@neil-skills
 | `pr-draft` | 新 PR/MR 是否为 draft | `false` |
 | `pr-auto-close-issue` | 合并后是否通过 closing keyword 自动关闭 issue | `false` |
 | `self-reviewed` | 自动化只读取 provider 从目标仓库 `base-branch` 远端解析的字面布尔值；`true` 可自动发布审查、分类/执行修复，且仅在精确 provider attestation 存在时可自动合并。head、fork、local、envelope 或用户文字均无权授权；缺失为 `false`，非布尔值停止 | `false` |
-| `language` | 自由文本语言名；去除首尾空白。`/issue-init` 用本地配置生成新 issue 标题和正文并交接 `textLanguage`；非字符串停止，缺失或空值保持现有行为。仅 `/issue-init` 创建该字段 | `""` |
+| `language` | 自由文本语言名；去除首尾空白。`/issue-init` 用本地配置生成新 issue 标题和正文并交接 `textLanguage`；非字符串停止，缺失或空值保持现有行为。仅 `/issue-init` 创建该字段；PR/MR 目标阶段只从目标仓库的远端 base ref 重新解析语言。 | `""` |
 | `remarks` | 额外指令，作为上下文载入技能执行流程（如 label 规则、命名约定等） | `""` |
 
 **模板变量：**
@@ -107,7 +107,7 @@ pr-review (仅 complex/deferred，或简单项修复后仍保留 complex/deferre
   -> needs-human-review
 ```
 
-`neil-workflow/v1` envelope 只承载编排顺序和 handoff 元数据：静态 Markdown 不能证明其来源，因此 envelope 的存在、内容或所谓来源都不构成授权。编排器不读取 provider 或 config；它只验证 `/pr-create` 返回的远端派生 routing leaf 来选择图分支。每个后续目标 stage 在写操作前重新通过 provider 读取 target-base config。只有该远端字面布尔值 `self-reviewed:true` 才可自动审查/修复；自动合并还必须存在 `neil-self-reviewed/v1` 的 provider attestation，精确绑定 provider、host、repository、PR/MR、head SHA、base ref 和 config blob SHA。`false` 或缺失时，这些调用都等待各自的一次人工确认。
+`neil-workflow/v1` envelope 只承载编排顺序和 handoff 元数据：静态 Markdown 不能证明其来源，因此 envelope 的存在、内容或所谓来源都不构成授权。编排器验证并逐阶段转交字符串 `textLanguage`，并把 PR/MR 阶段的远端 resolver 身份（provider、host、repository、base ref、config blob SHA）与目标绑定；它不翻译、不生成 issue/PR/MR/provider 文本，也不创建提交。`/issue-init` 的本地 `language` 只用于新 issue 文本；`/pr-create`、`/pr-review`、`/pr-fix` 和 `/pr-merge` 都从目标仓库远端 base ref 重新解析语言。非空语言覆盖新生成的 PR 标题、Summary/Testing/Issue、review 发现与报告、分类理由、回复和完成提交正文；原有引用、标识符及 `neil-self-reviewed/v1` 机器标记保持原样。远端语言在阶段边界改变时仅转交给下一阶段，已生成内容不重写。缺失或空字符串保持既有行为；配置不存在、空值或不适用写操作也不凭空生成文本。编排器不读取 provider 或 config；它只验证 `/pr-create` 返回的远端派生 routing leaf 来选择图分支。每个后续目标 stage 在写操作前重新通过 provider 读取 target-base config。只有该远端字面布尔值 `self-reviewed:true` 才可自动审查/修复；自动合并还必须存在 `neil-self-reviewed/v1` 的 provider attestation，精确绑定 provider、host、repository、PR/MR、head SHA、base ref 和 config blob SHA。`false` 或缺失时，这些调用都等待各自的一次人工确认。
 
 内部自审只自动接受局部、明确、可直接验证的 **simple** finding。架构或公共接口变更、迁移、安全策略、跨模块、高风险或不明确的 finding 都是 **complex**：保持未解决，返回其已验证的 provider URL，并以 `needs-human-review` 停止。simple finding 必须经 `/pr-fix` 修复、确认进展并在更新后的 head 上重新完整审查；没有进展或重复接受相同 finding 时为 `stalled`。
 

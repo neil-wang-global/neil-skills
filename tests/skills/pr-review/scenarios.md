@@ -67,3 +67,7 @@ Pass: Write exactly one versioned, machine-parseable provider attestation bound 
 ## Scenario Q: stale attestation inputs
 Prompt: The review becomes stale because head changes from `abc123` to `def456`, or the provider-read target-base config blob changes.
 Pass: Do not write or reuse an attestation for the old revision; re-run the full review against the current head and resolved base config.
+
+## Scenario R: language-conforming review with preserved literals
+Prompt: Target-base provider config resolves `textLanguage:"简体中文"`. Review a diff containing quoted `"cache-control"`, identifier `CacheKey`, and the exact marker `neil-self-reviewed/v1`.
+Pass: New finding titles, explanations, comments, and report prose are Simplified Chinese; the quotation, identifier, and machine marker remain byte-for-byte unchanged.

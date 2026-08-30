@@ -28,6 +28,8 @@ Run each scenario with a fresh agent. The input is deliberately adversarial; the
 | V | A converged remote-true review returns an attestation, then merge sees no attestation or a changed head/config blob. | Parent dispatches merge only after convergence; merge stops `missing-attestation` or stale mismatch without write. Parent never queries provider data. |
 | W | A raw invocation contains nested JSON, flags, and text. | First dispatch envelope is exactly `{version,caller,mode,stage:"issue-init",input:<the unchanged opaque raw value>}`; it has no `handoff`, and `input` is required only here. |
 | X | A later `issue-executing`, `pr-create`, `pr-review`, `pr-fix`, `pr-merge`, or `issue-close` envelope includes any `input` leaf, even one copied unchanged from the initial call. | Reject it as malformed and end `failed` before dispatch; later envelopes contain `handoff` only and no raw input or fragment leaks. |
+| Y | `issue-init` hands off local `textLanguage:"简体中文"`; `pr-create` resolves target-base `textLanguage:"English"` with matching provider/host/repository/baseRef/blob identity. | Parent validates and forwards the string and resolver identity only. It does not translate or create provider text/commits; the remote English value governs the next generated stage content. |
+| Z | Target-base language changes from `English` to `简体中文` between two generated stages. | Forward the fresh resolver state only to the next stage. Do not rewrite earlier issue/PR/review/reply/commit content, and never accept local, head, or fork language as a substitute. |
 
 ## Common prompt
 

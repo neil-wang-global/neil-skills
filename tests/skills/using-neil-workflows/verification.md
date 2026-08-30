@@ -59,3 +59,9 @@ The dirty-cleanup stage itself reports `status:"stopped"`; the documented parent
 Fresh guided W-X simulations constructed the first dispatch exactly as `{version:"neil-workflow/v1",caller:"using-neil-workflows",mode:"standard",stage:"issue-init",input:<opaque raw args>}` with no `handoff`. Nested input remained opaque and reached only fresh `issue-init`. Each later stage accepted only its validated owned `handoff`; an injected `input` leaf for `issue-executing`, `pr-create`, `pr-review`, `pr-fix`, `pr-merge`, or `issue-close` was rejected before dispatch as malformed and ended `failed`. No raw input or fragment crossed the issue-init boundary.
 
 Mechanical recheck: `pr-fix` is 499 words (cap 500), `using-neil-workflows` is 474 words, and `git diff --check` exits 0 with no output.
+
+## Task 3 Static Language Handoffs
+
+Document-only contract inspection covers Y-Z: the parent validates and forwards string `textLanguage` plus target-bound remote resolver identity, but never translates, creates provider text, or creates commits. Base `English` overrides local/head/fork `简体中文` for later PR/review/reply/commit content. A later remote change applies only to the next generated stage; earlier text is not rewritten. New generated prose conforms to the resolved language while quotations, identifiers, URLs, and `neil-self-reviewed/v1` remain exact.
+
+Static records also cover ordered default JSON and empty/absent `textLanguage:""` compatibility in `issue-init`. No executable test suite was run.

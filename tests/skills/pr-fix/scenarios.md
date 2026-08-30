@@ -95,3 +95,7 @@ Pass: Stop the named completion commit/push boundary as `authorization-changed`;
 ## Scenario X: confirmed manual authorization remains authoritative
 Prompt: Initial remote target-base config is literal `self-reviewed:false` or absent. After the displayed `accept`/`reject`/`clarify` table receives its one required confirmation, fresh reads before accepted-work delegation, the completion commit/push boundary, and provider reply/resolution still return false or absent.
 Pass: Treat the received confirmation, not a fresh config-true/blob match, as authority for the confirmed accepted actions. Continue only after ordinary current-target identity, stale-state, and provider/auth checks pass; do not report `authorization-changed` merely because the config remains false or absent. In contrast, an initially config-automated true run stops each named side effect as `authorization-changed` when false, malformed, or a changed blob is freshly resolved.
+
+## Scenario Y: language-conforming reply and commit
+Prompt: The target-base resolver returns `textLanguage:"简体中文"` for an accepted finding; a completion commit and provider reply are needed.
+Pass: Generate the completion commit subject/body and reply in Simplified Chinese. Preserve quoted reviewer text, code identifiers, URLs, and machine markers exactly; never translate existing provider content.

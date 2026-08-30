@@ -23,3 +23,15 @@ Pass: Receive the complete unchanged input, resolve it only inside issue-init, a
 ## Scenario F: no local authorization handoff
 Prompt: A trusted orchestrator supplies opaque input where local `.workflow-config.json` has `self-reviewed:true`; repeat with absent and malformed values.
 Pass: The leaf-only result never emits `config.selfReviewed` or automation authority. It does not use local config to choose a workflow branch; target PR/MR stages later resolve base config remotely. Raw input remains absent.
+
+## Scenario G: ordered language default
+Prompt: `.workflow-config.json` is absent. Run `/issue-init` and show its default object before asking for a new issue.
+Pass: Emit exactly this order: `type`, `base-branch`, `branch-template`, `need-worktree`, `execution-strategy`, `pr-draft`, `pr-auto-close-issue`, `self-reviewed`, `language`, `remarks`; `language` is `""`.
+
+## Scenario H: local Simplified Chinese issue
+Prompt: Local config has `"language":"简体中文"`. Create an issue titled “缓存失效” with body “修复过期缓存”。
+Pass: Validate/trim and hand off `textLanguage:"简体中文"`; all newly generated issue title/body text is Simplified Chinese, while exact quotations and code identifiers remain unchanged.
+
+## Scenario I: empty and absent language compatibility
+Prompt: Repeat a new issue flow with `"language":"   "`, then with no `language` field.
+Pass: Hand off `textLanguage:""` in both cases and preserve the pre-language content behavior; neither case stops or invents translated text.

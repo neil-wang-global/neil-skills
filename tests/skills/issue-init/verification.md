@@ -93,3 +93,15 @@ A fresh completed-resolution simulation retained `#42 --label urgent preserve th
 ### Scenario F: no local authorization handoff — PASS
 
 The revised handoff does not include `config.selfReviewed` for boolean true, absent, or malformed local values. It never uses a local configuration claim to select automation; target PR/MR stages must resolve their normalized target base ref remotely. Raw input remains absent in every case.
+
+## Task 3 Static Contract Records
+
+### Scenario G: ordered language default — PASS
+
+Static document inspection confirms the exact default object order is `type`, `base-branch`, `branch-template`, `need-worktree`, `execution-strategy`, `pr-draft`, `pr-auto-close-issue`, `self-reviewed`, `language`, `remarks`, with `language:""`.
+
+### Scenarios H-I: local Chinese and compatibility — PASS
+
+Static contract inspection confirms a trimmed local `简体中文` value becomes `textLanguage:"简体中文"` and governs only newly generated issue title/body text. Whitespace-only and absent values both hand off `textLanguage:""` and retain existing behavior. Exact quotations and code identifiers are exceptions and remain unchanged.
+
+No executable suite was run for these static records.
