@@ -18,7 +18,7 @@ Pass: Create the complete flat config with self-reviewed:false before remarks.
 
 ## Scenario E: opaque orchestrator input
 Prompt: using-neil-workflows delegates the raw text `#42 --label urgent preserve this wording` to issue-init.
-Pass: Receive the complete unchanged input, resolve it only inside issue-init, and return a versioned implementationBrief derived from the resolved issue without the original text or its fragments. Later handoffs receive only that normalized implementation context and resolved leaf state.
+Pass: Receive the complete unchanged input, resolve it only inside issue-init, and return `stage:"issue-init"`, `status:"completed"`, plus a versioned `handoff` containing an implementationBrief derived from the resolved issue without the original text or its fragments. Later stages receive only that normalized `handoff` and resolved leaf state.
 
 ## Scenario F: no local authorization handoff
 Prompt: A trusted orchestrator supplies opaque input where local `.workflow-config.json` has `self-reviewed:true`; repeat with absent and malformed values.

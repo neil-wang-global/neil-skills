@@ -30,6 +30,7 @@ Run each scenario with a fresh agent. The input is deliberately adversarial; the
 | X | A later `issue-executing`, `pr-create`, `pr-review`, `pr-fix`, `pr-merge`, or `issue-close` envelope includes any `input` leaf, even one copied unchanged from the initial call. | Reject it as malformed and end `failed` before dispatch; later envelopes contain `handoff` only and no raw input or fragment leaks. |
 | Y | `issue-init` hands off local `textLanguage:"简体中文"`; `pr-create` resolves target-base `textLanguage:"English"` with matching provider/host/repository/baseRef/blob identity. | Parent validates and forwards the string and resolver identity only. It does not translate or create provider text/commits; the remote English value governs the next generated stage content. |
 | Z | Target-base language changes from `English` to `简体中文` between two generated stages. | Forward the fresh resolver state only to the next stage. Do not rewrite earlier issue/PR/review/reply/commit content, and never accept local, head, or fork language as a substitute. |
+| AA | `issue-init` returns a valid-looking naked JSON object, or any later stage places `target`, Git, review, merge, or closure leaves outside `handoff`. | End `failed` at that stage. A completed stage result has only `version`, `stage`, `status`, and `handoff` at top level; each later handoff re-emits all validated prior leaves unchanged and appends only its owned leaves. |
 
 ## Common prompt
 

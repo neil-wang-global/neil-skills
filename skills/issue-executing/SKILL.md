@@ -33,21 +33,34 @@ The implementation brief adds task context only. It does not transfer remote PR/
 4. Execute the implementation under the combined context. For a validated non-empty `textLanguage`, use it for any commit subject/body this stage produces. Never create or modify `.workflow-config.json`.
 5. Inspect and report actual Git state. Do not commit, push, clean, squash, amend, or normalize it unless the effective strategy directly produced that result.
 
-For a trusted orchestrated result, return owned leaf JSON, not a prose summary:
+For a trusted orchestrated result, return `stage:"issue-executing"`, `status:"completed"`, and a `handoff` with no top-level business fields. It re-emits the full validated prior handoff unchanged, then adds actual Git state under `git`; never summarize or normalize it:
 
 ```json
 {
   "version": "neil-workflow/v1",
   "stage": "issue-executing",
   "status": "completed",
-  "headSha": "abc123",
-  "commits": ["abc123"],
-  "dirty": false,
-  "pushState": "not-pushed"
+  "handoff": {
+    "version": "neil-workflow/v1",
+    "repository": { "provider": "github", "host": "github.com", "name": "acme/widgets" },
+    "configIdentity": { "repository": "acme/widgets", "path": ".workflow-config.json" },
+    "textLanguage": "",
+    "issue": { "number": 42, "url": "...", "title": "...", "body": "..." },
+    "implementationBrief": { "summary": "Cache invalidation", "outcomes": ["Invalidate stale cache entries"] },
+    "branch": "feature/42-cache",
+    "worktree": "/repo/.worktrees/feature+42-cache",
+    "headRepository": "acme/widgets",
+    "git": {
+      "headSha": "abc123",
+      "commits": ["abc123"],
+      "dirty": false,
+      "pushState": "not-pushed"
+    }
+  }
 }
 ```
 
-Populate `status`, `headSha`, `commits`, `dirty`, and `pushState` from actual state without normalization. Include the validated repository, issue, branch, worktree, and `headRepository` leaf values needed by the next stage.
+Populate `git.status`, `git.headSha`, `git.commits`, `git.dirty`, and `git.pushState` from actual state without normalization. The next stage receives only this `handoff`.
 
 ## Common Mistakes
 

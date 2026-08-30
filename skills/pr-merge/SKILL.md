@@ -25,7 +25,7 @@ Use provider target-base config only. Fresh non-empty `textLanguage` governs gen
 8. Mark a draft ready only after gates pass; re-fetch. Readiness waives no gate.
 9. GitHub: green required CI uses SHA-guarded `--subject`/`--body` merge; pending required CI registers the same auto-merge. GitLab: immediately merge only `mergeable`; auto-merge only `ci_still_running`, with `--message` and applicable `--squash-message`. Fresh non-empty `textLanguage` governs those fields. `ci_must_pass`, `checking`, other/failure/unknown statuses, or approval/protection/conflict blocks stop.
 10. After either write, wait/recheck. Return success only when merged, with SHA and timestamp; registration/queue is pending.
-11. After confirmed merge, resolve current target-base `pr-auto-delete-branch`: default true; false preserves remote head. When enabled, revalidate merged target and delete only normalized `headRepository`/`headBranch`. Missing is `already-deleted`; permission/provider failure reports branch-cleanup failure without changing merge success.
+11. Return `stage:"pr-merge"`, `status:"completed"`, and a `handoff` only after actual merged state, SHA, and timestamp. It re-emits the full validated prior handoff unchanged, then appends merge proof and branch-cleanup state. After confirmed merge, resolve current target-base `pr-auto-delete-branch`: default true; false preserves remote head. When enabled, revalidate merged target and delete only normalized `headRepository`/`headBranch`. Missing is `already-deleted`; permission/provider failure reports branch-cleanup failure without changing merge success.
 
 ## Stop Conditions
 

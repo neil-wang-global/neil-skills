@@ -64,4 +64,10 @@ Mechanical recheck: `pr-fix` is 499 words (cap 500), `using-neil-workflows` is 4
 
 Document-only contract inspection covers Y-Z: the parent validates and forwards string `textLanguage` plus target-bound remote resolver identity, but never translates, creates provider text, or creates commits. Base `English` overrides local/head/fork `简体中文` for later PR/review/reply/commit content. A later remote change applies only to the next generated stage; earlier text is not rewritten. New generated prose conforms to the resolved language while quotations, identifiers, URLs, and `neil-self-reviewed/v1` remain exact.
 
-Static records also cover ordered default JSON and empty/absent `textLanguage:""` compatibility in `issue-init`. No executable test suite was run.
+Static records also cover ordered default JSON and empty/absent `textLanguage:""` compatibility in `issue-init`. No executable test suite was run for those earlier records.
+
+## Stage Result Envelope Regression
+
+The prior `issue-init` contract showed a naked JSON object while the coordinator accepted only an owned `handoff`; actual Issue #11 setup exposed that mismatch. The current contract requires every completed orchestrated stage to return only `version`, `stage`, `status`, and `handoff` at the result top level. `issue-init` owns the initial identity; each later stage re-emits the complete validated prior handoff unchanged and appends only its owned state: `git`, `target` plus `automation`, review, fix, merge, and closure proof respectively. A naked object, a top-level business leaf, a missing identity leaf, or a changed repository/provider/host, branch, worktree, head repository, or current Git head ends `failed` at the boundary.
+
+`node tests/verify-workflow-handoff-contract.cjs` checks all seven stage documents and the parent coordinator contract. It initially failed because `issue-init` lacked the required result envelope; after the contract change it reports `workflow handoff contract: PASS`.

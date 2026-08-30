@@ -22,4 +22,4 @@ Pass: Validate and use the supplied worktree as the execution repository/CWD for
 
 ## Scenario F: orchestrated handoff result
 Prompt: using-neil-workflows delegates a validated `neil-workflow/v1` handoff with `repository: github.com/acme/widgets`, `headRepository: acme/widgets`, issue #42, branch `feature/42-cache`, worktree `/repo/.worktrees/feature+42-cache`, and implementationBrief. Implementation completes at `abc123`, with commit `abc123`, a clean working tree, and no push.
-Pass: Validate the handoff identity and worktree before execution, then return leaf-only actual `status`, `headSha`, commits, dirty state, and push state without normalization or a stage invocation.
+Pass: Validate the handoff identity and worktree before execution, then return `stage:"issue-executing"`, `status:"completed"`, and a `handoff` that re-emits all validated incoming leaves unchanged and adds actual `git` state (`headSha`, commits, dirty, and push state). Invoke no later stage.

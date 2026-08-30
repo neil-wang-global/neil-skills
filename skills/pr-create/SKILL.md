@@ -24,31 +24,44 @@ For an internal call, require a `neil-workflow/v1` envelope with trusted caller/
 5. Create ready unless `pr-draft` is true. Link non-closing unless `pr-auto-close-issue` is true; only then use a provider closing reference. Opening never closes an issue.
 6. For an existing or created target, independently re-read it and resolve target-base config through its provider. Return the normalized target plus complete automation routing leaf, including `textLanguage`; never modify an existing target. Automation routes the parent only; later stages re-resolve authorization. Report `/pr-review` as available, without invoking it.
 
-For an internal result, return owned leaf JSON with exactly this normalized target:
+For an internal result, return `stage:"pr-create"`, `status:"completed"`, and a `handoff` with no top-level business fields. It re-emits the full validated prior handoff unchanged, then appends this normalized target and its target-base routing identity:
 
 ```json
 {
   "version": "neil-workflow/v1",
   "stage": "pr-create",
-  "target": {
-    "provider": "github",
-    "host": "github.com",
-    "repository": "acme/widgets",
-    "number": 81,
-    "url": "https://github.com/acme/widgets/pull/81",
-    "baseBranch": "main",
+  "status": "completed",
+  "handoff": {
+    "version": "neil-workflow/v1",
+    "repository": { "provider": "github", "host": "github.com", "name": "acme/widgets" },
+    "configIdentity": { "repository": "acme/widgets", "path": ".workflow-config.json" },
+    "textLanguage": "",
+    "issue": { "number": 42, "url": "...", "title": "...", "body": "..." },
+    "implementationBrief": { "summary": "Cache invalidation", "outcomes": ["Invalidate stale cache entries"] },
+    "branch": "feature/42-subject",
+    "worktree": "/repo/.worktrees/feature+42-subject",
     "headRepository": "contributor/widgets",
-    "headBranch": "feature/42-subject",
-    "headSha": "abc123"
-  },
-  "automation": {
-    "enabled": true,
-    "provider": "github",
-    "host": "github.com",
-    "repository": "acme/widgets",
-    "baseRef": "main",
-    "configBlobSha": "012345",
-    "textLanguage": ""
+    "git": { "headSha": "abc123", "commits": ["abc123"], "dirty": false, "pushState": "pushed" },
+    "target": {
+      "provider": "github",
+      "host": "github.com",
+      "repository": "acme/widgets",
+      "number": 81,
+      "url": "https://github.com/acme/widgets/pull/81",
+      "baseBranch": "main",
+      "headRepository": "contributor/widgets",
+      "headBranch": "feature/42-subject",
+      "headSha": "abc123"
+    },
+    "automation": {
+      "enabled": true,
+      "provider": "github",
+      "host": "github.com",
+      "repository": "acme/widgets",
+      "baseRef": "main",
+      "configBlobSha": "012345",
+      "textLanguage": ""
+    }
   }
 }
 ```

@@ -25,6 +25,6 @@ With true, auto-accept only localized, clear, directly verifiable findings; defe
 4. Capture head/status/local commits/upstream/ahead-behind, pass the delegation gate, then delegate only feedback, context, locations, outcomes, fresh `textLanguage`, worktree, and target IDs.
 5. Inspect actual Git state. At the completion gate, preserve prior commits/pushes; make one accepted-only completion commit if needed and push only commits missing upstream.
 6. Verify outcomes. At each provider-write gate, skip an equivalent latest own reply with no later reviewer message; reply, then resolve accepts only after reply success and permission. Reject/clarify/defer remain unresolved.
-7. Return head before/after, commits, pushed state, accepted/deferred fingerprints, and per-thread outcomes.
+7. Return `stage:"pr-fix"`, `status:"completed"`, and a `handoff`. It re-emits the full validated prior handoff unchanged, then appends head before/after, commits, pushed state, accepted/deferred fingerprints, and per-thread outcomes.
 
 Never squash, amend, rebase, force-push, redundantly push, review the full diff, merge, close issues, or clean branches/worktrees.
