@@ -1,7 +1,7 @@
 {
   "name": "neil-skills",
   "version": "1.0.3",
-  "description": "Neil's issue, execution, pull request, and code review workflow skills for Claude Code",
+  "description": "Neil's issue-to-PR workflow skills for Claude Code, including using-neil-workflows orchestration, self-review, pr-merge auto-merge, and issue-close cleanup",
   "author": {
     "name": "Neil Wang",
     "url": "https://github.com/neil-wang-global"
@@ -9,5 +9,5 @@
   "homepage": "https://github.com/neil-wang-global/neil-skills",
   "repository": "https://github.com/neil-wang-global/neil-skills",
   "license": "MIT",
-  "keywords": ["workflow", "issue", "pull-request", "code-review", "git", "github", "gitlab"]
+  "keywords": ["workflow", "orchestration", "using-neil-workflows", "self-review", "issue", "pull-request", "pr-merge", "auto-merge", "issue-close", "code-review", "git", "github", "gitlab"]
 }

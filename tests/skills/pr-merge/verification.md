@@ -30,3 +30,7 @@ A guided audit found that a bare current-head `snapshotSha` could substitute for
 ## Result
 
 All A-I scenarios plus review-provenance, GitLab-authoritative-gate, and stale-head regressions pass in fresh, read-only simulations. The skill contains no review, fix, issue-close, or cleanup behavior.
+
+## Task 7 Cross-Skill Pressure Evidence
+
+Fresh end-to-end simulations confirm that a trusted simple-finding path reaches this skill only after a changed-head clean re-review, then reaches `issue-close` only after provider evidence of actual merge (`state`, SHA, timestamp). A merge blocked by missing approval or failed required check terminates `merge-blocked`; it neither merges nor dispatches `issue-close`. Auto-merge registration or queueing remains owned by this skill as pending work and is never reported as the parent terminal result.

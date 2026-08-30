@@ -1,14 +1,15 @@
 {
   "name": "neil-skills",
-  "description": "Neil's workflow automation skills for Claude Code",
+  "description": "Neil's workflow orchestration, self-review, pr-merge auto-merge, and issue-close skills for Claude Code",
   "owner": {
     "name": "Neil Wang",
     "url": "https://github.com/neil-wang-global"
   },
+  "keywords": ["workflow", "orchestration", "using-neil-workflows", "self-review", "pr-merge", "auto-merge", "issue-close"],
   "plugins": [
     {
       "name": "neil-skills",
-      "description": "Workflow skills: issue-init, issue-executing, pr-create, pr-review, pr-fix, issue-close, init-commit-hooks",
+      "description": "Workflow skills: issue-init, issue-executing, pr-create, pr-review, pr-fix, pr-merge, issue-close, using-neil-workflows orchestration, self-review, and auto-merge",
       "version": "1.0.3",
       "source": "./",
       "author": {

@@ -36,3 +36,18 @@ wc -w skills/pr-fix/SKILL.md skills/pr-review/SKILL.md skills/using-neil-workflo
 git diff --check
 exit 0; no output
 ```
+
+## Task 7 Fresh End-to-End Pressure Flows
+
+All following checks were read-only fresh-context contract simulations against the current stage documents; no simulation issued provider, Git, or cleanup commands.
+
+| Flow | Result | Verified terminal behavior |
+| --- | --- | --- |
+| `false -> issue-init -> issue-executing -> pr-create` | PASS | Literal `config.selfReviewed:false` dispatches exactly those three stages and ends `complete`; review, fix, merge, and close do not dispatch. |
+| `true/simple -> review/fix convergence -> pr-merge -> actual merge -> issue-close` | PASS | A localized, clear, directly verifiable finding is fixed on a changed head, then a full clean re-review binds the merge to that head. Actual provider merged state, SHA, and timestamp precede clean-worktree closure and `success`. |
+| `true/mixed -> simple fixed, complex unresolved` | PASS | The simple finding is fixed, while the target-valid deferred complex finding remains visible after the changed-head re-review. The result is `needs-human-review`; `pr-merge` and `issue-close` do not dispatch. |
+| final merge gate blocked | PASS | A missing approval or failed required check after a clean current-head review ends `merge-blocked`. No actual merge proof exists, so `issue-close` does not dispatch. |
+| actual merge then dirty cleanup | PASS | `/pr-merge` has already returned matching actual merged state, SHA, and timestamp. `/issue-close` stops with all cleanup leaves `untouched`; the parent reports `failed` rather than `success`, and the completed merge remains preserved. |
+| `issue-executing` handoff/stage failure | PASS | The parent stops at that exact stage as `failed`, retains valid `issue-init` state and any prior side effects, and dispatches no later PR, review, merge, or close stage. |
+
+The dirty-cleanup stage itself reports `status:"stopped"`; the documented parent terminal status is `failed` because closure/cleanup cannot be validated. This distinction retains the merged side effect honestly instead of implying a rollback.

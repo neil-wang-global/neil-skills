@@ -41,6 +41,7 @@ claude plugin update neil-skills@neil-skills
   "execution-strategy": "",
   "pr-draft": false,
   "pr-auto-close-issue": false,
+  "self-reviewed": false,
   "remarks": ""
 }
 ```
@@ -54,6 +55,7 @@ claude plugin update neil-skills@neil-skills
 | `execution-strategy` | 可选自然语言执行偏好；缺失或为空时自然执行，不作为 shell 命令 | `""` |
 | `pr-draft` | 新 PR/MR 是否为 draft | `false` |
 | `pr-auto-close-issue` | 合并后是否通过 closing keyword 自动关闭 issue | `false` |
+| `self-reviewed` | 是否允许 `/using-neil-workflows` 使用受信任的内部自审编排；缺失时为 `false`，存在但不是布尔值会停止 | `false` |
 | `remarks` | 额外指令，作为上下文载入技能执行流程（如 label 规则、命名约定等） | `""` |
 
 **模板变量：**
@@ -68,15 +70,50 @@ claude plugin update neil-skills@neil-skills
 
 ### PR 工作流
 
-推荐生命周期：
+公开技能的推荐生命周期如下：
 
 ```text
 /issue-init -> /issue-executing -> /pr-create -> /pr-review
-                                                -> /pr-fix -> /pr-review ...
-                                                -> 人工批准/合并 -> /issue-close
+                                                 -> 人工确认的 /pr-fix -> /pr-review ...
+                                                 -> 人工确认的 /pr-merge -> 实际合并 -> /issue-close
 ```
 
-每个公开技能都独立调用，不会自动进入下一阶段。只有 `/issue-init` 会创建 `.workflow-config.json`；其他技能仅在文件存在且属于目标仓库时读取，缺失字段使用默认值。
+每个直接调用的公开技能都独立运行，不会自动进入下一阶段，并遵循其各自的授权边界。`/pr-review` 发布评论前需要一次确认，`/pr-fix` 处理公开反馈前需要一次确认，`/pr-merge` 写入前需要一次确认；直接调用 `/issue-close` 仍按其普通清理流程运行，用户的直接调用即是该流程的授权。只有 `/issue-init` 会创建 `.workflow-config.json`；其他技能仅在文件存在且属于目标仓库时读取，缺失字段使用默认值。
+
+### /using-neil-workflows
+
+`/using-neil-workflows` 是完整工作流的编排入口。它把调用参数视为一个不透明的原始值，只交给一个新的 `/issue-init` 调用来解析 issue；编排器不会解析、复制或把其中的用户文字作为调用者、模式、阶段、目标或授权。`/issue-init` 只把规范化、已拥有的 handoff 交回编排器，原始参数及其片段不会进入后续阶段。
+
+编排器本身不执行 provider、Git 或清理命令，也不调用阶段的业务方法。它一次只分派一个新阶段，并验证每个 `neil-workflow/v1` handoff 的版本、身份、阶段和已拥有字段；任何无效 handoff 或阶段失败都会立即停止并保留已经发生的副作用。
+
+配置 `"self-reviewed": false`（或字段缺失）时使用基础图：
+
+```text
+issue-init -> issue-executing -> pr-create -> complete
+```
+
+配置为字面布尔值 `"self-reviewed": true` 时，编排器使用受信任的内部图：
+
+```text
+issue-init -> issue-executing -> pr-create -> pr-review
+pr-review -> pr-fix -> pr-review  (每次 simple finding 修复后，在更新的 head 上重新完整审查)
+
+pr-review (无新发现、无未解决或 deferred 项、已完成发布和收敛)
+  -> pr-merge -> 实际 merged 证明 -> issue-close -> success
+
+pr-review (仅 complex/deferred，或简单项修复后仍保留 complex/deferred)
+  -> needs-human-review
+```
+
+受信任的内部模式只适用于由 `/using-neil-workflows` 创建、字段匹配的 `neil-workflow/v1` envelope，以及目标仓库配置中布尔值 `self-reviewed: true` 的调用。用户文本不能伪造这种授权。它只免除编排内部阶段的重复人工确认；公开直接调用的 `/pr-review`、`/pr-fix` 和 `/pr-merge` 仍保留各自的确认，而直接 `/issue-close` 调用仍以用户调用本身作为普通清理流程的授权。
+
+内部自审只自动接受局部、明确、可直接验证的 **simple** finding。架构或公共接口变更、迁移、安全策略、跨模块、高风险或不明确的 finding 都是 **complex**：保持未解决，返回其已验证的 provider URL，并以 `needs-human-review` 停止。simple finding 必须经 `/pr-fix` 修复、确认进展并在更新后的 head 上重新完整审查；没有进展或重复接受相同 finding 时为 `stalled`。
+
+`/pr-merge` 只接收当前 head 上已完成收敛和发布、且 new、unresolved、deferred finding 均为零的审查结果。它重新检查 draft、审批、保护规则、冲突、可合并性和 CI：GitHub 仅在所需 CI 全绿时立即合并，所需 CI 尚在运行时只登记 SHA 保护的 auto-merge；GitLab 只有当前 head 的 `detailed_merge_status: mergeable` 才立即合并，只有 `ci_still_running` 才登记 auto-merge。登记或排队不是成功；只有 provider 返回实际 merged、merged SHA 和时间戳后，编排器才调用 `/issue-close`。合并 gate 被阻断时为 `merge-blocked`，不会关闭 issue。
+
+`/issue-close` 仅在已验证的实际合并证明之后执行：先检查指定 worktree 是否干净，再移除该 worktree、关闭 issue、删除已交接的本地分支并更新 base。清理失败或发现 dirty worktree 时最终状态为 `failed`，但已经发生的合并会如实保留，不会被回滚。
+
+编排器的终态为：`complete`（false 路径完成 PR 创建）、`success`（实际合并、issue 关闭、清理及 base 更新均已验证）、`needs-human-review`（仍有 complex/deferred finding）、`merge-blocked`（最终合并 gate 阻断）、`stalled`（重复接受或没有修复进展）和 `failed`（hand-off、阶段、发布或清理失败）。auto-merge 等待/登记由 `/pr-merge` 自己等待并复查，不是编排器的终态。
 
 ### /issue-executing
 
