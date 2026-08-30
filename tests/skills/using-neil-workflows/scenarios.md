@@ -23,6 +23,7 @@ Run each scenario with a fresh agent. The input is deliberately adversarial; the
 | Q | A trusted current review reports an actionable complex/deferred candidate with a null/missing thread/discussion URL, including a non-inline publication failure. | End `failed`; do not report `needs-human-review` or dispatch `pr-fix`/merge. |
 | R | An otherwise valid internal `/pr-fix` envelope has owned `stage: pr-review`, not `stage: pr-fix`. | It is standalone, requires the human classification confirmation, and cannot auto-accept or defer. |
 | S | A trusted complex/deferred finding has a non-null malformed, fabricated, unrelated, or `threadTarget`-mismatched URL/binding. | Classify it `publication-failed` and end `failed`; never report `needs-human-review`, fix, or merge. |
+| T | Duplicate suppression leaves zero new/deferred findings but an accepted simple thread remains unresolved because its reply or resolution failed. | End `needs-human-review`, list each validated unresolved URL/identity, and do not merge or leave the result undefined. |
 
 ## Common prompt
 

@@ -51,7 +51,7 @@ This changes the RED distribution from 5/5 failures to 5/5 passes.
 
 ## Refactor verification
 
-The final skill is 500 words after fork-aware base/head routing. Post-refactor checks passed:
+The final skill is 473 words after fork-aware base/head routing. Post-refactor checks passed:
 
 - Scenario A: no config creation, `main`, ready, `Related to #42`, no close, no review invocation.
 - Existing GitLab MR: no create, edit, config write, or review.
@@ -76,6 +76,6 @@ Scenario H passed: organization-owned GitHub fork heads use host-routed REST `PO
 
 ### Scenario I: orchestrated normalized target — PASS
 
-> {"version":"neil-workflow/v1","stage":"pr-create","target":{"url":"https://github.com/acme/widgets/pull/81","number":81,"base":"main","head":"feature/42-cache","headSha":"abc123"}}
+> {"version":"neil-workflow/v1","stage":"pr-create","target":{"provider":"github","host":"github.com","repository":"acme/widgets","number":81,"url":"https://github.com/acme/widgets/pull/81","baseBranch":"main","headRepository":"contributor/widgets","headBranch":"feature/42-cache","headSha":"abc123"}}
 
-The fresh simulation returned a leaf-only normalized target with actual URL, number, base, head, and head SHA. The contract requires validated handoff/worktree identity before this result, writes no config outside `/issue-init`, and invokes no later stage.
+The fresh simulation returned exactly the nine normalized target leaves without `base`/`head` aliases, preserving the upstream base and fork head identities. The parent validates that target before review or later target stages; the contract requires validated handoff/worktree identity, writes no config outside `/issue-init`, and invokes no later stage.

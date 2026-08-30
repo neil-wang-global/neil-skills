@@ -8,7 +8,7 @@ The pre-correction table that described `issue-init -> pr-create`, mixed finding
 
 Fresh-context RED controls exposed three contract gaps: the parent skipped `issue-executing`; issue-init did not export typed `config.selfReviewed`; and pr-review returned prose insufficient for validated routing. The parent also incorrectly treated pending auto-merge as `stalled`.
 
-Fresh GREEN simulations passed the current A-P terminal graph:
+Fresh GREEN simulations passed the current A-T terminal graph:
 
 | Cases | Corrected evidence |
 | --- | --- |
@@ -22,16 +22,18 @@ Fresh GREEN simulations passed the current A-P terminal graph:
 | Q | A complex/deferred candidate with null/missing thread/discussion URL, including failed trusted non-inline publication, ends `failed`; never `needs-human-review`. |
 | R | An otherwise trusted `/pr-fix` envelope with `stage: pr-review` remains standalone and cannot auto-accept or defer. |
 | S | A malformed, fabricated, unrelated, or target-mismatched complex/deferred URL/binding is `publication-failed`, then `failed`; never `needs-human-review`. |
+| T | Zero new/deferred findings with a retained accepted simple thread unresolved after reply/resolution failure ends `needs-human-review`, lists its validated URL/identity, and never merges. |
 
 A separate fresh review-handoff simulation passed: `pr-review` returns a versioned owned target, snapshot/head, finding fingerprint/thread URL/thread target/complexity/state, and exact convergence/publication leaves; duplicate suppression preserves unresolved/deferred state. Its trusted publication path requires owned `stage: pr-review`; a wrong stage remains public.
 
 ## Current Mechanical Checks
 
 ```text
-wc -w skills/pr-fix/SKILL.md skills/pr-review/SKILL.md skills/using-neil-workflows/SKILL.md
+wc -w skills/pr-create/SKILL.md skills/pr-fix/SKILL.md skills/pr-review/SKILL.md skills/using-neil-workflows/SKILL.md
+473 skills/pr-create/SKILL.md
 498 skills/pr-fix/SKILL.md
-453 skills/pr-review/SKILL.md
-484 skills/using-neil-workflows/SKILL.md
+468 skills/pr-review/SKILL.md
+500 skills/using-neil-workflows/SKILL.md
 
 git diff --check
 exit 0; no output

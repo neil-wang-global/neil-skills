@@ -24,23 +24,27 @@ For an internal call, require a `neil-workflow/v1` envelope with trusted caller/
 5. Create ready by default; create draft only when `pr-draft` is true. Link non-closing by default; use a provider closing reference only when `pr-auto-close-issue` is true. Opening never closes an issue.
 6. Re-read remote state. Report `/pr-review` as available, without invoking it.
 
-For an internal result, return owned leaf JSON with a normalized target:
+For an internal result, return owned leaf JSON with exactly this normalized target:
 
 ```json
 {
   "version": "neil-workflow/v1",
   "stage": "pr-create",
   "target": {
-    "url": "https://host/owner/repo/pull/81",
+    "provider": "github",
+    "host": "github.com",
+    "repository": "acme/widgets",
     "number": 81,
-    "base": "main",
-    "head": "feature/42-subject",
+    "url": "https://github.com/acme/widgets/pull/81",
+    "baseBranch": "main",
+    "headRepository": "contributor/widgets",
+    "headBranch": "feature/42-subject",
     "headSha": "abc123"
   }
 }
 ```
 
-Populate target `url`, `number`, `base`, `head`, and `headSha` from the actual remote result. Also retain validated repository, issue, branch, worktree, and `headRepository` leaf values needed by a later stage.
+Populate all nine leaves from resolved identity and the remote result; never return `base` or `head` aliases. Preserve distinct base `repository` and fork `headRepository`, then retain validated issue, branch, and worktree leaves needed later.
 
 ## Failure Rules
 

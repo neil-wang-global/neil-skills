@@ -71,3 +71,13 @@ The reviewer Important gap is closed in the shared contract, `pr-review`, `using
 Fresh RED evaluation confirmed the former non-null-only predicate could route a foreign URL to `needs-human-review`. Fresh GREEN evaluation covered fabricated/unrelated URLs and valid-looking URLs bound to another target; both stopped as `publication-failed -> failed`.
 
 Mechanical validation: `wc -w` reports 468 words for `pr-review` and 497 for `using-neil-workflows`; `git diff --check` exits 0 with no output.
+
+## Final Review Fix Addendum
+
+This focused follow-up changes only the shared contract, `pr-create`, `using-neil-workflows`, and their regression evidence. It does not modify specifications, plans, Task 7 metadata, or the separate provenance finding.
+
+- `pr-create` now returns exactly `provider`, `host`, `repository`, `number`, `url`, `baseBranch`, `headRepository`, `headBranch`, and `headSha`; `base`/`head` aliases are invalid. The base repository and fork head repository remain distinct.
+- The parent validates those nine leaves and their identity binding before review or later target-consuming stages.
+- A current review with no new simple finding but any retained unresolved/deferred item now ends `needs-human-review`, lists validated URL/identity, and never merges. This covers an accepted simple thread whose reply or resolution failed.
+
+Fresh-context RED evaluations exposed both former gaps. Post-fix regressions passed the exact target-schema/fork-identity gate and the retained-unresolved terminal route. Scenario I and Scenario T record the current assertions; `git diff --check` and final word counts are rerun with this change.

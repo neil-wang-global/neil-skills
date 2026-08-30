@@ -21,7 +21,7 @@ Trusted internal calls use owned JSON leaf values only:
 
 Before a later-stage dispatch, validate every required handoff leaf and consistent repository/target identity. Do not infer missing values from prose. Missing, malformed, contradictory, inaccessible, or mismatched handoff/worktree data stops the stage as `failed`; do not skip a stage to manufacture success. A stage never invokes the next stage automatically.
 
-Required handoff identity is version, repository/config identity, issue number/url/title/body, an issue-init-generated normalized `implementationBrief`, branch, worktree, and headRepository. The validated issue-init handoff also contains `config: { "selfReviewed": boolean }`: derive `true` only from a literal boolean config `self-reviewed:true`; use `false` when the field is absent; a present non-boolean is a config error. `implementationBrief` must not contain the original opaque input or its fragments. Stage results add actual Git state (`status`, `headSha`, commits, dirty state, push state) and the PR/MR normalized target (`url`, `number`, `base`, `head`, `headSha`) when available.
+Required handoff identity is version, repository/config identity, issue number/url/title/body, an issue-init-generated normalized `implementationBrief`, branch, worktree, and headRepository. The validated issue-init handoff also contains `config: { "selfReviewed": boolean }`: derive `true` only from a literal boolean config `self-reviewed:true`; use `false` when the field is absent; a present non-boolean is a config error. `implementationBrief` must not contain the original opaque input or its fragments. Stage results add actual Git state (`status`, `headSha`, commits, dirty state, push state) and, when available, the exact normalized target below; legacy `base` and `head` aliases are invalid.
 
 ## Optional Configuration
 
@@ -40,12 +40,14 @@ A malformed present config is an error for the fields the current skill needs. D
 
 ## Normalized Target
 
-Use these field names across provider branches:
+Use exactly these field names across provider branches and stage handoffs; no target may substitute `base` or `head` aliases:
 
 ```text
 provider, host, repository, number, url, baseBranch,
 headRepository, headBranch, headSha
 ```
+
+Before review or any later target-consuming stage, the parent validates all nine leaves and their base/head identity binding; a missing, aliased, or contradictory target fails.
 
 For `pr-create`, resolve `headRepository` from the current branch's push remote and base `repository` from that same repository or an explicit/upstream remote; ask when a fork has no unambiguous base target. Resolve `headBranch` from the current branch and `baseBranch` from config/defaults. Issue lookup, existing-target lookup, and creation use the base repository; pushed-commit verification uses the head repository. Populate number, URL, and head SHA from the remote response.
 
@@ -121,7 +123,7 @@ GitHub may submit one atomic review. GitLab discussions are individual writes: r
 
 ### Internal Review Result
 
-A trusted internal `/pr-review` returns a versioned owned leaf-only result bound to the normalized target: `version`, `stage:"pr-review"`, `target`, `snapshotSha`, `headSha`, `findings`, `convergence`, and `publication`. The target repeats provider, host, repository, number, base/head branches, and head SHA, which the parent validates against its prior `pr-create` target. Every new actionable finding contains `fingerprint`, `threadUrl`, `threadTarget`, `complexity` (`simple` or `complex`), and state (`unresolved`, `deferred`, `resolved`, or `publication-failed`). `threadTarget` contains exactly provider, host, repository, and number. Every complex/deferred candidate needs a provider-derived thread/discussion URL that resolves to its `threadTarget`, and that binding must exactly match `target`; missing, malformed, fabricated, unrelated, or mismatched URL/binding is `publication-failed` and the parent stops. A simple unavailable publication may use explicit null. `convergence` has exact status plus `newCount`, `unresolvedCount`, and `deferredCount`; `publication` has exact status plus successful, failed, and skipped identities. Suppression of an unchanged duplicate never removes existing unresolved/deferred finding state. The parent validates all of these leaves before routing a review, fix, or merge; a stale snapshot/head, incomplete publication, unresolved, or deferred state is explicit and cannot be inferred from prose.
+A trusted internal `/pr-review` returns a versioned owned leaf-only result bound to the normalized target: `version`, `stage:"pr-review"`, `target`, `snapshotSha`, `headSha`, `findings`, `convergence`, and `publication`. The target repeats the exact nine normalized leaves, which the parent validates against its prior `pr-create` target before routing. Every new actionable finding contains `fingerprint`, `threadUrl`, `threadTarget`, `complexity` (`simple` or `complex`), and state (`unresolved`, `deferred`, `resolved`, or `publication-failed`). `threadTarget` contains exactly provider, host, repository, and number. Every complex/deferred candidate needs a provider-derived thread/discussion URL that resolves to its `threadTarget`, and that binding must exactly match `target`; missing, malformed, fabricated, unrelated, or mismatched URL/binding is `publication-failed` and the parent stops. A simple unavailable publication may use explicit null. `convergence` has exact status plus `newCount`, `unresolvedCount`, and `deferredCount`; `publication` has exact status plus successful, failed, and skipped identities. Suppression of an unchanged duplicate never removes existing unresolved/deferred finding state. Every retained unresolved/deferred routing item has a validated URL and target identity; missing identity fails. The parent validates all leaves before routing a review, fix, or merge; a stale snapshot/head, incomplete publication, unresolved, or deferred state is explicit and cannot be inferred from prose.
 
 ## Fix Selectors and Clone
 
