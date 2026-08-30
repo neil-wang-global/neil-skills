@@ -90,6 +90,6 @@ The fresh result contains the required nine-field flat default, with `self-revie
 
 A fresh completed-resolution simulation retained `#42 --label urgent preserve this wording` only while issue-init resolved issue #42. The returned handoff contains normalized issue-init output and resolved leaf state only: it contains neither the original value nor `--label`, `urgent`, or `preserve this wording`. It invoked no later stage.
 
-### Scenario F: normalized self-review handoff — PASS
+### Scenario F: no local authorization handoff — PASS
 
-A fresh simulation verified that the returned owned handoff includes `config:{"selfReviewed":true}` only when the existing config has literal boolean `self-reviewed:true`; an absent field returns `false`. A present string `"true"` stops as a malformed config instead of being coerced. Raw input remains absent from all three outcomes.
+The revised handoff does not include `config.selfReviewed` for boolean true, absent, or malformed local values. It never uses a local configuration claim to select automation; target PR/MR stages must resolve their normalized target base ref remotely. Raw input remains absent in every case.

@@ -93,3 +93,7 @@ A config-authorized complex non-inline finding used required provider-level feed
 ### Scenarios M-N: complex URL identity — PASS
 
 A fresh GREEN evaluation supplied both a malformed/fabricated/unrelated non-null `threadUrl` and a syntactically valid URL whose `threadTarget` named another PR. Each was `publication-failed`, then parent `failed`; neither could reach `needs-human-review`. The contract requires a provider-derived URL resolving to `threadTarget`, with provider, host, repository, and number exactly matching the normalized target.
+
+## Remote Authorization and Attestation Revision
+
+Fresh read-only guided scenarios O-Q passed. URL review resolves target-base config only through the parsed provider host; PR-head, fork, local worktree, and envelope `true` cannot override remote base false/absent. GitHub reads Contents `sha` and writes/lists a `COMMENT` review; GitLab reads file `blob_id` and writes/lists a general non-diff MR note. Both use host-routed installed CLI API syntax. A converged current-head review with zero new/deferred/unresolved findings creates exactly one idempotent `neil-self-reviewed/v1` two-line record for its target/head/base-config tuple. Changed head or blob revision withholds the write and requires a full re-review.

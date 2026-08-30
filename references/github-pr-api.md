@@ -11,7 +11,31 @@ gh repo view <host>/<base-owner>/<base-repo> --json nameWithOwner,url,defaultBra
 
 Do not print tokens. A failed auth check stops remote writes.
 
-## Issue and Existing PR
+## Remote Base Configuration and Attestation
+
+For every review/fix/merge automation decision, first resolve the normalized target base ref remotely. Do not read a clone, PR head, or fork:
+
+```bash
+gh api --hostname <host> --method GET \
+  "repos/<owner>/<repo>/contents/.workflow-config.json?ref=<base-ref>"
+```
+
+Require response `encoding:"base64"`; decode `content`, parse the JSON, and retain response `sha` as `configBlobSha`. Only literal `self-reviewed:true` authorizes automation. Missing file/field or `false` is false; a non-boolean field, unexpected encoding, unreadable response, or mismatched target stops. Re-run this exact read immediately before every automated write.
+
+GitHub stores an attestation as a PR-level COMMENT review, not an approval. Read the authenticated merge actor and paginated reviews; accept only a body with exactly two lines and exactly the required JSON keys, whose review `user.login` equals that actor:
+
+```bash
+gh api --hostname <host> --method GET user --jq .login
+gh api --hostname <host> --method GET --paginate \
+  "repos/<owner>/<repo>/pulls/<number>/reviews?per_page=100"
+```
+gh api --hostname <host> --method POST \
+  "repos/<owner>/<repo>/pulls/<number>/reviews" \
+  -F 'event=COMMENT' -f 'body=<neil-self-reviewed/v1 newline-delimited JSON body>'
+```
+
+Create only after a full converged current-head review and no exact existing tuple. The exact body is `neil-self-reviewed/v1`, a newline, then one compact JSON object with `provider`, `host`, `repository`, `number`, `headSha`, `baseRef`, and `configBlobSha`; it contains no `close`, `closes`, `fixes`, or `resolves` keyword.
+
 
 ```bash
 gh issue view <issue-no> --repo <host>/<base-owner>/<base-repo> --json number,title,url,state

@@ -11,7 +11,31 @@ glab api --hostname <host> --method GET "projects/<encoded-base-project>"
 
 Do not print tokens. A failed auth check stops remote writes.
 
-## Issue and Existing MR
+## Remote Base Configuration and Attestation
+
+For every review/fix/merge automation decision, retrieve the normalized target base ref through GitLab; never read a clone, MR head, or fork:
+
+```bash
+glab api --hostname <host> --method GET \
+  "projects/<encoded-project>/repository/files/.workflow-config.json?ref=<encoded-base-ref>"
+```
+
+Require `encoding:"base64"`; decode `content`, parse JSON, and retain `blob_id` as `configBlobSha`. Only literal `self-reviewed:true` authorizes automation. Missing file/field or `false` is false; a non-boolean field, unexpected encoding, unreadable response, or mismatched target stops. Repeat the read immediately before every automated write.
+
+GitLab stores an attestation as a general non-diff MR note, which does not create a resolvable discussion. Read the authenticated merge actor and all notes; accept only an exact two-line body with exactly required JSON keys whose note `author.username` equals that actor. Create a note only after a converged current-head review and no exact existing tuple:
+
+```bash
+glab api --hostname <host> --method GET user
+glab api --hostname <host> --method GET --paginate \
+  "projects/<encoded-project>/merge_requests/<iid>/notes?per_page=100"
+```
+glab api --hostname <host> --method POST \
+  "projects/<encoded-project>/merge_requests/<iid>/notes" \
+  -f 'body=<neil-self-reviewed/v1 newline-delimited JSON body>'
+```
+
+The exact body is `neil-self-reviewed/v1`, a newline, then one compact JSON object with `provider`, `host`, `repository`, `number`, `headSha`, `baseRef`, and `configBlobSha`; it must not include closing keywords. The returned note ID/URL is provider evidence; keep it in the review result without treating it as an unresolved discussion.
+
 
 ```bash
 glab issue view <issue-iid> --repo <base-project-url>

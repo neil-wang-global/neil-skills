@@ -30,7 +30,9 @@ The orchestrator owns sequencing and validated handoffs only. Existing stage ski
 }
 ```
 
-`self-reviewed` defaults to `false`. Only `/issue-init` creates `.workflow-config.json`. `/using-neil-workflows` and every later stage may read a matching repository's config but never create or modify it. A missing field is interpreted in memory as `false`; a malformed present value is an error.
+`self-reviewed` defaults to `false`. Only `/issue-init` creates `.workflow-config.json`. `/using-neil-workflows` and every later stage may read but never create or modify it. A missing field is interpreted in memory as `false`; a malformed present value is an error.
+
+Automation authorization never reads the PR/MR head, fork, local worktree, arbitrary local file, envelope, or user prose. A target-consuming stage resolves `.workflow-config.json` from the normalized target repository base ref through the selected provider and binds provider, host, repository, base ref, and resolved content/blob SHA. Only literal base boolean `self-reviewed:true` enables automated review/fix; false or absent retains confirmation and malformed remote content stops. The parent stays provider/Git-business-free: `/pr-create` returns a remote-derived routing leaf for it to validate, while review/fix/merge independently re-resolve authorization before a write.
 
 ## Stage Graph
 
@@ -91,8 +93,9 @@ implementation:
   status, headSha, commits, pushed
 change:
   number, url, baseBranch, headRepository, headBranch, headSha
+  automation: enabled, provider, host, repository, baseRef, configBlobSha
 review:
-  snapshotSha, publishedFindings, deferredFindings
+  snapshotSha, publishedFindings, deferredFindings, attestation
 fix:
   accepted, deferred, headBefore, headAfter, commits, pushed, threadOutcomes
 merge:
@@ -131,7 +134,7 @@ Consumes the PR/MR target, selected unresolved findings, and matching head works
 
 Consumes the converged review snapshot and normalized target. It independently re-fetches the current head, draft state, unresolved threads, checks/pipeline state, approvals, protection rules, conflicts, and mergeability. It converts a draft to ready only after all review gates pass. When checks are green it merges immediately; when checks are pending it enables the provider's auto-merge or merge-when-pipeline-succeeds capability and waits/rechecks until the target is actually merged. Failed checks, missing approvals, protection rejection, conflicts, stale head, deferred findings, or any unresolved thread stop without merge.
 
-A standalone `/pr-merge` shows one complete merge preview and waits for human confirmation when `self-reviewed` is absent or false. `self-reviewed: true` is a repository-level automation authorization and removes that interactive wait after the same gate checks. The stage never reports success merely because auto-merge was enabled.
+A standalone `/pr-merge` shows one complete merge preview and waits for human confirmation when `self-reviewed` is absent or false. With remote-base `self-reviewed:true`, it may remove that wait only when it verifies a provider-stored review attestation for the exact target/head. The stage never reports success merely because auto-merge was enabled.
 
 ### issue-close
 
@@ -139,15 +142,17 @@ Runs only after `/pr-merge` returns an actual merged state. It consumes explicit
 
 ## Automation Authorization
 
-`self-reviewed: true` is a repository-level, persistent authorization for automatic review publication, fix classification/execution, and merge after each stage independently verifies its normal safety gates. It applies whether a qualifying stage is reached through `/using-neil-workflows` or called directly in that repository.
+`self-reviewed: true` from the provider-resolved target base ref is repository-level authorization for automatic review publication and fix classification/execution after normal stage checks. A converged automatic `/pr-review` writes one provider-stored, versioned review attestation for its exact provider/host/repository/number/head SHA, with zero new/deferred/unresolved findings and target-ref config blob/SHA. The provider metadata author must equal the authenticated merge actor; its strict two-line version marker plus JSON payload is idempotent per target/head/config revision.
 
-When `self-reviewed` is absent or false, public standalone `/pr-review`, `/pr-fix`, and `/pr-merge` retain their human confirmation gates. A valid `neil-workflow/v1` envelope still supplies sequencing and handoff validation for parent dispatch, but never grants authority by itself.
+`/pr-merge` removes its interactive wait only when it resolves the same target-base authorization and verifies that exact attestation. A direct merge with no matching attestation stops without merge; it never accepts user-provided prose or a copied result as evidence. The normal `/using-neil-workflows` loop naturally creates the attestation before dispatching merge.
+
+When `self-reviewed` is absent or false, public standalone `/pr-review`, `/pr-fix`, and `/pr-merge` retain their human confirmation gates. A valid `neil-workflow/v1` envelope supplies sequencing and handoff validation for parent dispatch, but never grants authority by itself.
 
 In automated mode:
 
-- `/pr-review` still constructs one complete preview and applies normal stale-state and provider safeguards before publication.
+- `/pr-review` still constructs one complete preview, applies normal stale-state/provider safeguards, and records an attestation only after a converged current-head review.
 - `/pr-fix` still constructs one complete classification table and preserves normal delegation, Git-state, reply, and resolution safeguards. Its `defer` outcome is available in automated mode.
-- `/pr-merge` still constructs a complete merge preview after independently verifying the final reviewed head and every merge gate.
+- `/pr-merge` still constructs a complete merge preview after independently verifying the final reviewed head, matching attestation, and every merge gate.
 
 Automation removes only interactive waits. It does not bypass authentication, authorization, snapshot, duplicate, worktree, Git-state, reply, resolution, checks, approvals, protection, conflict, mergeability, or cleanup checks.
 
@@ -162,7 +167,7 @@ Automation removes only interactive waits. It does not bypass authentication, au
 
 A mixture of accepted and deferred findings does not block simple fixes. The stage fixes accepted findings and retains deferred finding fingerprints and thread URLs in the handoff.
 
-With `self-reviewed` false or absent, `/pr-fix` keeps its existing `accept`, `reject`, and `clarify` decisions; `defer` is unavailable until a matching target-repository config authorizes automation.
+With `self-reviewed` false or absent, `/pr-fix` keeps its existing `accept`, `reject`, and `clarify` decisions; `defer` is unavailable until the remote target-base resolver authorizes automation.
 
 ## Review/Fix Loop
 

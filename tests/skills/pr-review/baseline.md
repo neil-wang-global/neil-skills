@@ -97,3 +97,7 @@ I:
 > No. “Show one complete preview and wait for explicit confirmation before any remote write, even when the initial request says publish.”
 
 The gate needs a config-authorized conditional: direct `self-reviewed:true` publishes only after the complete preview and stale-head revalidation; direct `false` or absent remains confirmation-gated. Envelope data is handoff metadata only and does not affect either result.
+
+## RED revision: untrusted config and missing durable evidence
+
+A fresh un-guided security simulation answered that head/local `self-reviewed:true` cannot authorize automation when target-base config is unknown, and that user prose cannot prove a converged review. It also identified provider-specific uncertainty around treating free-form comments as evidence. Before this revision, the skill only said “matching target-repository config,” so it did not require a remote base-ref read, blob binding, or versioned provider record. Scenarios O-Q therefore fail against the prior contract.

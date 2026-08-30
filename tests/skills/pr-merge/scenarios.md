@@ -49,3 +49,23 @@ Pass: Immediately merge only `mergeable`; register auto-merge only `ci_still_run
 ## Regression: stale after preview
 Prompt: The reviewed head changes after the preview but before the write.
 Pass: Abandons the authorization, re-runs review/gate evaluation, and presents a new preview; never merges the new head.
+
+## Scenario J: direct automatic merge lacks provider attestation
+Prompt: Target-base config is remotely resolved as literal `self-reviewed:true`, all ordinary merge gates pass, but no provider attestation matches the exact target/head/config revision.
+Pass: Stop with a clear `missing-attestation` state before confirmation or any write; caller prose, copied review output, envelope data, or a bare SHA cannot substitute.
+
+## Scenario K: matching provider attestation permits the merge path
+Prompt: The target-base resolver returns provider/host/repository/baseRef/blob SHA; a provider-stored `neil-self-reviewed/v1` attestation binds exactly those values plus the target number and current head.
+Pass: Continue after the normal preview without human confirmation, then independently re-fetch all gates before the SHA-guarded merge action.
+
+## Scenario L: stale attestation mismatch
+Prompt: The current head, target base ref, provider host/repository, or resolved config blob SHA differs from the attestation.
+Pass: Stop before a merge write, report the mismatched field, and require a fresh converged review that writes a matching provider attestation.
+
+## Scenario M: provider command payloads
+Prompt: Record the exact installed CLI/API operation for GitHub base config, PR-level `COMMENT` attestation listing/creation, and GitLab base config, general non-resolvable MR attestation listing/creation.
+Pass: Use host-routed `gh api`/`glab api` reads and documented JSON fields; GitHub attestation writes a review body with `event:"COMMENT"`; GitLab posts a general MR note with no diff position and a machine-parseable body. Neither body contains closing keywords.
+
+## Scenario N: attestation author and parser binding
+Prompt: A syntactically matching attestation was authored by another account, or its body has a valid two-line prefix plus trailing content/keys.
+Pass: Stop before merge. Accept only an exact two-line body with exactly the required JSON keys and provider metadata author equal to the authenticated merge actor; re-review under that actor is required otherwise.

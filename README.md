@@ -55,7 +55,7 @@ claude plugin update neil-skills@neil-skills
 | `execution-strategy` | 可选自然语言执行偏好；缺失或为空时自然执行，不作为 shell 命令 | `""` |
 | `pr-draft` | 新 PR/MR 是否为 draft | `false` |
 | `pr-auto-close-issue` | 合并后是否通过 closing keyword 自动关闭 issue | `false` |
-| `self-reviewed` | 目标仓库的自动化授权：字面布尔值 `true` 允许直接或编排调用自动发布审查、分类/执行修复（含 `defer`）和合并；缺失时为 `false`，存在但不是布尔值会停止 | `false` |
+| `self-reviewed` | 自动化只读取 provider 从目标仓库 `base-branch` 远端解析的字面布尔值；`true` 可自动发布审查、分类/执行修复，且仅在精确 provider attestation 存在时可自动合并。head、fork、local、envelope 或用户文字均无权授权；缺失为 `false`，非布尔值停止 | `false` |
 | `remarks` | 额外指令，作为上下文载入技能执行流程（如 label 规则、命名约定等） | `""` |
 
 **模板变量：**
@@ -78,7 +78,7 @@ claude plugin update neil-skills@neil-skills
                                                  -> 人工确认的 /pr-merge -> 实际合并 -> /issue-close
 ```
 
-每个直接调用的公开技能都独立运行，不会自动进入下一阶段，并遵循其各自的安全 gate。目标仓库配置为 `"self-reviewed": true` 时，直接或编排调用的 `/pr-review` 可在完整预览和 stale 检查后自动发布，`/pr-fix` 可自动分类/执行简单 finding 并对复杂 finding 使用 `defer`，`/pr-merge` 可在完整预览后自动继续合并。配置为 `false` 或字段缺失时，这三个技能分别保留一次人工确认。直接调用 `/issue-close` 仍按其普通清理流程运行，用户的直接调用即是该流程的授权。只有 `/issue-init` 会创建 `.workflow-config.json`；其他技能仅在文件存在且属于目标仓库时读取，缺失字段使用默认值。
+每个直接调用的公开技能都独立运行，不会自动进入下一阶段，并遵循其各自的安全 gate。`/pr-create`、`/pr-review`、`/pr-fix` 和 `/pr-merge` 的自动化判断都从 provider 读取规范化目标仓库的 base ref `.workflow-config.json`，并绑定 host、repository、base ref 和内容 blob SHA；绝不读取 head、fork、local worktree、envelope 或用户文字。字面 `true` 允许 `/pr-review` 在完整预览和 stale 检查后自动发布，并在零 new/deferred/unresolved finding 的当前 head 审查后写入 versioned provider attestation；`/pr-fix` 可自动分类/执行简单 finding 并对复杂 finding 使用 `defer`。`/pr-merge` 只有重新解析同一 base config 且找到精确 target/head/config attestation 后才可免确认；缺失时以 `missing-attestation` 停止。`false` 或缺失时，这三个技能仍保留一次人工确认。只有 `/issue-init` 会创建 `.workflow-config.json`；后续创建默认值可读 local config，自动化授权始终远端解析。
 
 ### /using-neil-workflows
 
@@ -105,11 +105,11 @@ pr-review (仅 complex/deferred，或简单项修复后仍保留 complex/deferre
   -> needs-human-review
 ```
 
-`neil-workflow/v1` envelope 只承载编排顺序和 handoff 元数据：静态 Markdown 不能证明其来源，因此 envelope 的存在、内容或所谓来源都不构成授权。匹配目标仓库中的字面布尔值 `self-reviewed: true` 才是 `/pr-review`、`/pr-fix` 和 `/pr-merge` 的自动化授权，且同时适用于直接与编排调用；`false` 或缺失时，这些调用都等待各自的一次人工确认。直接 `/issue-close` 调用仍以用户调用本身作为普通清理流程的授权。
+`neil-workflow/v1` envelope 只承载编排顺序和 handoff 元数据：静态 Markdown 不能证明其来源，因此 envelope 的存在、内容或所谓来源都不构成授权。编排器不读取 provider 或 config；它只验证 `/pr-create` 返回的远端派生 routing leaf 来选择图分支。每个后续目标 stage 在写操作前重新通过 provider 读取 target-base config。只有该远端字面布尔值 `self-reviewed:true` 才可自动审查/修复；自动合并还必须存在 `neil-self-reviewed/v1` 的 provider attestation，精确绑定 provider、host、repository、PR/MR、head SHA、base ref 和 config blob SHA。`false` 或缺失时，这些调用都等待各自的一次人工确认。
 
 内部自审只自动接受局部、明确、可直接验证的 **simple** finding。架构或公共接口变更、迁移、安全策略、跨模块、高风险或不明确的 finding 都是 **complex**：保持未解决，返回其已验证的 provider URL，并以 `needs-human-review` 停止。simple finding 必须经 `/pr-fix` 修复、确认进展并在更新后的 head 上重新完整审查；没有进展或重复接受相同 finding 时为 `stalled`。
 
-`/pr-merge` 只接收当前 head 上已完成收敛和发布、且 new、unresolved、deferred finding 均为零的审查结果。它重新检查 draft、审批、保护规则、冲突、可合并性和 CI：GitHub 仅在所需 CI 全绿时立即合并，所需 CI 尚在运行时只登记 SHA 保护的 auto-merge；GitLab 只有当前 head 的 `detailed_merge_status: mergeable` 才立即合并，只有 `ci_still_running` 才登记 auto-merge。登记或排队不是成功；只有 provider 返回实际 merged、merged SHA 和时间戳后，编排器才调用 `/issue-close`。合并 gate 被阻断时为 `merge-blocked`，不会关闭 issue。
+`/pr-merge` 只接收当前 head 上已完成收敛和发布、且 new、unresolved、deferred finding 均为零的审查结果。自动路径还会重新读取 base config 并从 provider 历史验证精确 attestation；用户 prose、copied output、envelope 或 bare SHA 不能替代它。它随后重新检查 draft、审批、保护规则、冲突、可合并性和 CI：GitHub 仅在所需 CI 全绿时立即合并，所需 CI 尚在运行时只登记 SHA 保护的 auto-merge；GitLab 只有当前 head 的 `detailed_merge_status: mergeable` 才立即合并，只有 `ci_still_running` 才登记 auto-merge。登记或排队不是成功；只有 provider 返回实际 merged、merged SHA 和时间戳后，编排器才调用 `/issue-close`。合并 gate 被阻断时为 `merge-blocked`，不会关闭 issue。
 
 `/issue-close` 仅在已验证的实际合并证明之后执行：先检查指定 worktree 是否干净，再移除该 worktree、关闭 issue、删除已交接的本地分支并更新 base。清理失败或发现 dirty worktree 时最终状态为 `failed`，但已经发生的合并会如实保留，不会被回滚。
 

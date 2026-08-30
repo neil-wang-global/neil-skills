@@ -34,3 +34,7 @@ All A-I scenarios plus review-provenance, GitLab-authoritative-gate, and stale-h
 ## Task 7 Cross-Skill Pressure Evidence
 
 Fresh end-to-end simulations confirm that a trusted simple-finding path reaches this skill only after a changed-head clean re-review, then reaches `issue-close` only after provider evidence of actual merge (`state`, SHA, timestamp). A merge blocked by missing approval or failed required check terminates `merge-blocked`; it neither merges nor dispatches `issue-close`. Auto-merge registration or queueing remains owned by this skill as pending work and is never reported as the parent terminal result.
+
+## Remote Attestation Revision
+
+Fresh read-only simulations J-N passed after the reviewer-driven refactor. A remote-base true direct merge with no exact provider record stops `missing-attestation` before preview confirmation, readiness, or merge write. The automatic path accepts only a two-line `neil-self-reviewed/v1` body with exactly the seven required JSON keys, exact target/head/base-config tuple, and provider metadata author matching the authenticated merge actor. Head, provider/host/repository, base ref, or config blob mismatch reports its field and requires a fresh converged review to write replacement evidence. GitHub uses host-routed Contents/reviews APIs and `event:"COMMENT"`; GitLab uses host-routed file/MR-notes APIs and a general non-diff note. No High/Medium security gap was found in the final read-only contract simulation; it does not substitute for a live provider integration run.

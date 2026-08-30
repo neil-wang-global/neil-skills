@@ -21,9 +21,20 @@ Orchestrated calls use owned JSON leaf values only:
 
 Before a later-stage dispatch, validate every required handoff leaf and consistent repository/target identity. Do not infer missing values from prose. Missing, malformed, contradictory, inaccessible, or mismatched handoff/worktree data stops the stage as `failed`; do not skip a stage to manufacture success. A stage never invokes the next stage automatically.
 
-Required handoff identity is version, repository/config identity, issue number/url/title/body, an issue-init-generated normalized `implementationBrief`, branch, worktree, and headRepository. The validated issue-init handoff also contains `config: { "selfReviewed": boolean }`: derive `true` only from a literal boolean config `self-reviewed:true`; use `false` when the field is absent; a present non-boolean is a config error. `implementationBrief` must not contain the original opaque input or its fragments. Stage results add actual Git state (`status`, `headSha`, commits, dirty state, push state) and, when available, the exact normalized target below; legacy `base` and `head` aliases are invalid.
+Required handoff identity is version, repository/config identity, issue number/url/title/body, an issue-init-generated normalized `implementationBrief`, branch, worktree, and headRepository. The validated issue-init handoff may retain config defaults for creation only; it must not authorize later automated stages. Stage results add actual Git state (`status`, `headSha`, commits, dirty state, push state) and, when available, the exact normalized target below; legacy `base` and `head` aliases are invalid.
 
-## Optional Configuration
+## Remote Automation Authorization
+
+Automation reads `.workflow-config.json` only through the selected provider from the normalized target `repository` at its normalized `baseBranch`. Never use PR/MR head content, a fork, the current clone/worktree, cached/local config, envelope, or user text. The resolver returns owned leaves `provider`, `host`, `repository`, `baseRef`, and `configBlobSha` (GitHub Contents `sha`; GitLab file `blob_id`) plus the parsed config. Only literal boolean `self-reviewed:true` authorizes automation; absent or literal false requires the normal confirmation gate; a present non-boolean or unreadable/mismatched remote content stops as `config-error`.
+
+Resolve immediately before every automated write and bind the result to that write. A URL target always uses this resolver, even outside a clone. A head/local true never overrides target-base false/absent. Do not copy a config result across a changed base ref, provider, host, repository, or blob SHA.
+
+## Review Attestation
+
+After a config-authorized full current-head review reaches zero new, deferred, and unresolved findings, write one provider-stored `neil-self-reviewed/v1` attestation. Its exact body is line 1 `neil-self-reviewed/v1`, line 2 one compact JSON object with exactly owned fields `provider`, `host`, `repository`, `number`, `headSha`, `baseRef`, and `configBlobSha`; no trailing line, extra key, or closing keyword is valid. Read provider history first and match its provider metadata author to the authenticated actor that will merge; parse only this exact two-line form. The exact provider/host/repository/number/head/config/author tuple is idempotent and writes no duplicate. A stale head or config revision aborts the write and requires re-review.
+
+`pr-merge` independently re-resolves target-base config and reads provider history. Automation without an exact current attestation stops as `missing-attestation` before preview confirmation or any ready/merge write. User prose, copied output, envelopes, snapshots, and bare SHAs are never attestation evidence. False/absent config retains the existing confirmation and validated-review-result path.
+
 
 The PR skills may read `.workflow-config.json` only when it belongs to the target repository. Only `/issue-init` creates it; later stages never modify it.
 
@@ -47,7 +58,7 @@ provider, host, repository, number, url, baseBranch,
 headRepository, headBranch, headSha
 ```
 
-Before review or any later target-consuming stage, the parent validates all nine leaves and their base/head identity binding; a missing, aliased, or contradictory target fails.
+Before review or any later target-consuming stage, the parent validates all nine leaves and their base/head identity binding; a missing, aliased, or contradictory target fails. For routing only, an internal `pr-create` result also carries remote-derived `automation: { enabled, provider, host, repository, baseRef, configBlobSha }`; it must match target identity/base branch. The parent never reads config or provider data and each later stage re-resolves authorization before its own write.
 
 For `pr-create`, resolve `headRepository` from the current branch's push remote and base `repository` from that same repository or an explicit/upstream remote; ask when a fork has no unambiguous base target. Resolve `headBranch` from the current branch and `baseBranch` from config/defaults. Issue lookup, existing-target lookup, and creation use the base repository; pushed-commit verification uses the head repository. Populate number, URL, and head SHA from the remote response.
 
@@ -59,7 +70,7 @@ Verify the issue exists before creating a PR/MR.
 
 ## Identity and Configuration
 
-An explicit future PR/MR URL is authoritative for provider, host, repository, and number. Ignore configuration from an unrelated local repository. Local configuration applies only when its Git remote matches the target repository.
+An explicit future PR/MR URL is authoritative for provider, host, repository, and number. Ignore every local config for review/fix/merge authorization, including a matching clone; resolve target-base config remotely as defined above. Local configuration may supply only creation defaults when the local Git remote matches the target repository.
 
 ## Error Semantics
 
@@ -83,7 +94,7 @@ Read remote state before every create. If the current head branch already has an
 
 Before marking ready or merging, require zero deferred findings, zero findings newly discovered after the final review, and zero unresolved GitHub review threads or GitLab discussions. Fetch current draft state, approvals, target protection, conflict/mergeability, and auto-merge state. GitHub evaluates required checks tied to `reviewedHeadSha`. GitLab uses the current-head MR `detailed_merge_status` as its authoritative CI/merge gate and never infers requirements from a pipeline list: only `mergeable` permits immediate merge, only `ci_still_running` permits auto-merge, and `ci_must_pass`, `checking`, failures, unknown values, conflicts, protection, or approval blocks stop. Inaccessible required data or a stale head stops this stage.
 
-Standalone `/pr-merge` shows one complete preview and waits once for explicit confirmation when matching target-repository config has `self-reviewed` absent or boolean `false`. A matching target-repository boolean `self-reviewed: true` authorizes the post-preview merge path for both direct and orchestrated calls. Envelopes validate orchestrated sequencing, identity, and handoff only; their presence, absence, contents, or provenance never grants or withholds authorization.
+Standalone `/pr-merge` shows one complete preview and waits once for explicit confirmation when remotely resolved target-base `self-reviewed` is absent or boolean `false`. Literal remote-base `true` removes confirmation only after the stage independently finds an exact matching provider attestation as defined above; otherwise stop `missing-attestation`. Envelopes validate orchestrated sequencing, identity, and handoff only; their presence, absence, contents, or provenance never grants or withholds authorization.
 
 Immediately before each ready/merge write, re-fetch the head and every gate. Mark a draft ready only after gates pass and re-fetch afterward. GitHub submits a SHA-guarded merge only for green required CI and registers SHA-guarded auto-merge only for pending required CI. GitLab submits a SHA-guarded merge only for current-head `detailed_merge_status: mergeable` and registers SHA-guarded auto-merge only for current-head `ci_still_running`. A registration or queue response is pending, never merged. Wait/recheck and return success only on actual provider merged state with merged SHA and timestamp. `/pr-merge` never reviews, fixes, resolves threads, closes issues, or cleans local/remote workspaces.
 
@@ -113,7 +124,7 @@ Compare fingerprints and semantics with inline threads/discussions and PR/MR-lev
 
 ## Review Publication
 
-Always show one complete preview. Matching target-repository boolean `self-reviewed: true` authorizes publication after the same stale-head revalidation; absent or false waits for one explicit confirmation before a remote write. An envelope is handoff metadata only and never changes that decision.
+Always show one complete preview. Remote-base literal boolean `self-reviewed: true` authorizes publication after the same stale-head and config-revision revalidation; absent or false waits for one explicit confirmation before a remote write. An envelope is handoff metadata only and never changes that decision. A config-authorized converged review then writes the provider attestation defined above.
 
 User edits to a confirmation-gated preview become the authoritative set.
 
@@ -133,7 +144,7 @@ Classification requires a local clone matching `headRepository`; never clone aut
 
 ## Classification and Confirmation
 
-Verify each thread against current code. Matching target-repository boolean `self-reviewed: true` authorizes automatic classification/execution for direct and orchestrated calls; an envelope only validates orchestration handoff/sequencing and never changes authorization.
+Verify each thread against current code. Remote-base literal boolean `self-reviewed: true` authorizes automatic classification/execution for direct and orchestrated calls; an envelope only validates orchestration handoff/sequencing and never changes authorization.
 
 Config-authorized calls still build a classification table. They may auto-accept only localized, clear, directly verifiable findings. They classify architectural/public-interface, migration, security-policy, cross-module, unclear, or high-risk findings as `defer`. A defer posts a concise reason, remains unresolved, makes no worktree/delegation/commit/push, and returns its thread URL and fingerprint for screen reporting. With `self-reviewed` false or absent, calls retain `accept`, `reject`, and `clarify`, show the confirmation table, wait once, and never use `defer`.
 

@@ -22,7 +22,7 @@ For an internal call, require a `neil-workflow/v1` envelope with trusted caller/
 3. Verify provider authentication and the issue in the base repository. Query it for an open target from the head repository and branch; return an existing target unchanged.
 4. Require committed, pushed changes in the head repository. Build a concise title and body with `Summary`, `Testing`, and `Issue`; report only available evidence.
 5. Create ready by default; create draft only when `pr-draft` is true. Link non-closing by default; use a provider closing reference only when `pr-auto-close-issue` is true. Opening never closes an issue.
-6. Re-read remote state. Report `/pr-review` as available, without invoking it.
+6. Re-read remote state and resolve target-base config through its provider. For an internal result, report only the remote-derived automation routing leaf (`enabled`, provider/host/repository/baseRef/configBlobSha); this routes the parent but never authorizes review/fix/merge, which each re-resolve independently. Report `/pr-review` as available, without invoking it.
 
 For an internal result, return owned leaf JSON with exactly this normalized target:
 
@@ -40,22 +40,20 @@ For an internal result, return owned leaf JSON with exactly this normalized targ
     "headRepository": "contributor/widgets",
     "headBranch": "feature/42-subject",
     "headSha": "abc123"
+  },
+  "automation": {
+    "enabled": true,
+    "provider": "github",
+    "host": "github.com",
+    "repository": "acme/widgets",
+    "baseRef": "main",
+    "configBlobSha": "012345"
   }
 }
 ```
 
-Populate all nine leaves from resolved identity and the remote result; never return `base` or `head` aliases. Preserve distinct base `repository` and fork `headRepository`, then retain validated issue, branch, and worktree leaves needed later.
+Populate all nine target leaves from resolved identity and remote result. `automation.enabled` is true only for literal remote target-base `self-reviewed:true`; missing/false is false and non-boolean/unreadable remote config is `config-error`. Preserve distinct base `repository` and fork `headRepository`, then retain validated issue, branch, and worktree leaves needed later.
 
 ## Failure Rules
 
 Stop without a remote write for authentication failure, missing issue, base branch, unresolved issue number, uncommitted/unpushed intended changes, or identity conflict. Distinguish authentication, authorization, not-found/hidden, and invalid-state errors; never expose credentials.
-
-## Common Mistakes
-
-| Mistake | Correct behavior |
-|---|---|
-| Create config when absent | Apply defaults in memory. |
-| Duplicate an existing target | Return it unchanged. |
-| Guess issue from unrelated branch | Ask for the issue number. |
-| Start review after creation | Report the command only. |
-| Return a prose result internally | Return the normalized leaf-only target. |

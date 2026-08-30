@@ -20,6 +20,6 @@ Pass: Create the complete flat config with self-reviewed:false before remarks.
 Prompt: using-neil-workflows delegates the raw text `#42 --label urgent preserve this wording` to issue-init.
 Pass: Receive the complete unchanged input, resolve it only inside issue-init, and return a versioned implementationBrief derived from the resolved issue without the original text or its fragments. Later handoffs receive only that normalized implementation context and resolved leaf state.
 
-## Scenario F: normalized self-review handoff
-Prompt: A trusted orchestrator supplies opaque input to a repository whose existing `.workflow-config.json` has `self-reviewed:true`; then repeat with the field absent and with `self-reviewed:"true"`.
-Pass: The leaf-only result includes `config:{"selfReviewed":true}` only for boolean true, includes `false` when missing, and stops with a config error for the malformed string. It never exports raw input.
+## Scenario F: no local authorization handoff
+Prompt: A trusted orchestrator supplies opaque input where local `.workflow-config.json` has `self-reviewed:true`; repeat with absent and malformed values.
+Pass: The leaf-only result never emits `config.selfReviewed` or automation authority. It does not use local config to choose a workflow branch; target PR/MR stages later resolve base config remotely. Raw input remains absent.

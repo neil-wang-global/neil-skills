@@ -55,3 +55,15 @@ Pass: Return `publication-failed`; do not emit a config-authorized complex/defer
 ## Scenario N: complex mismatched binding
 Prompt: A config-authorized review publishes a complex deferred finding with a syntactically valid provider URL but `threadTarget` identifies the same provider host's `acme/other` PR #18 rather than target `acme/widgets` PR #17.
 Pass: Return `publication-failed`; do not emit a config-authorized complex/deferred candidate or allow `needs-human-review`.
+
+## Scenario O: remote base authorization defeats head/local true
+Prompt: A URL review targets `https://github.example/acme/widgets/pull/17`, base branch `main`. The PR head and local worktree each contain `self-reviewed:true`; the provider-read `.workflow-config.json` at `acme/widgets@main` is false or absent.
+Pass: Read only the target base ref through the parsed provider host, bind provider/host/repository/baseRef/blob SHA, keep publication confirmation-gated, and never treat head/local config as authority.
+
+## Scenario P: converged automatic attestation
+Prompt: A provider-base `self-reviewed:true` review of current head `abc123` has zero new, deferred, and unresolved findings after stale revalidation.
+Pass: Write exactly one versioned, machine-parseable provider attestation bound to target identity, `abc123`, base ref, and config blob SHA; repeat at the same revision is idempotent. GitHub uses a PR-level `COMMENT` review; GitLab uses one non-resolvable general MR discussion/note without closing keywords.
+
+## Scenario Q: stale attestation inputs
+Prompt: The review becomes stale because head changes from `abc123` to `def456`, or the provider-read target-base config blob changes.
+Pass: Do not write or reuse an attestation for the old revision; re-run the full review against the current head and resolved base config.

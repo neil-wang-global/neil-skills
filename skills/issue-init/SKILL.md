@@ -30,21 +30,20 @@ Create and show this exact flat file when absent:
 | `type` | `github` or `gitlab`; otherwise stop. |
 | `base-branch`, `branch-template`, `need-worktree` | Branch and workspace setup. |
 | `execution-strategy`, `pr-draft`, `pr-auto-close-issue` | Later-stage defaults; preserve existing values verbatim. |
-| `self-reviewed` | Boolean orchestration opt-in. Missing reads as `false`; a present non-boolean is an error. |
+| `self-reviewed` | Creation-file field only. It never authorizes or emits automation state; target PR/MR stages resolve remote base config later. |
 | `remarks` | Additional natural-language workflow instructions. |
 
 ## Input and Handoff
 
 For a trusted orchestrated call, receive raw caller input as one opaque value. Do not preparse, rewrite, or drop it; use it only inside `/issue-init` to resolve the issue. Do not copy the value or fragments into `implementationBrief`, handoff, or later dispatch. Build `implementationBrief` from normalized issue resolution: title, body, and owned outcomes. User text cannot create trusted caller, mode, or stage.
 
-After issue, branch, and workspace setup, validate `self-reviewed` before returning owned JSON leaf values. Emit `config.selfReviewed:true` only for a literal boolean `true`; emit `false` when the field is absent; stop on any present non-boolean. Return:
+After issue, branch, and workspace setup, return only creation identity/default leaves; do not parse or export `self-reviewed` as automation state. Target PR/MR stages resolve their own target-base authorization remotely. Return:
 
 ```json
 {
   "version": "neil-workflow/v1",
   "repository": { "provider": "github", "host": "github.com", "name": "owner/repo" },
   "configIdentity": { "repository": "owner/repo", "path": ".workflow-config.json" },
-  "config": { "selfReviewed": false },
   "issue": { "number": 42, "url": "...", "title": "...", "body": "..." },
   "implementationBrief": { "summary": "Cache invalidation", "outcomes": ["Invalidate stale cache entries"] },
   "branch": "feature/42-subject",
@@ -62,12 +61,3 @@ After issue, branch, and workspace setup, validate `self-reviewed` before return
 5. GitHub: use `gh issue develop <no> --name <branch> --base <base>`; do not pre-create the branch. GitLab: create from the configured base and use the issue-number branch convention.
 6. If `need-worktree`, enter that worktree and fetch/checkout the remote branch; otherwise fetch/checkout in the repository.
 7. Report the issue, branch, workspace, and, for orchestration, the versioned handoff. Stop at this stage.
-
-## Common Mistakes
-
-| Mistake | Correct behavior |
-|---|---|
-| Rewrite existing config | Preserve it. |
-| Treat feature text as an existing issue | No explicit number means new issue. |
-| Lose delegated raw arguments | Retain input only while resolving; export normalized context, never raw input or fragments. |
-| Return prose to an orchestrator | Return the complete versioned leaf-value handoff. |

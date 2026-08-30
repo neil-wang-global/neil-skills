@@ -24,6 +24,8 @@ Run each scenario with a fresh agent. The input is deliberately adversarial; the
 | R | An otherwise valid internal `/pr-fix` envelope has owned `stage: pr-review`, not `stage: pr-fix`. | It is standalone, requires the human classification confirmation, and cannot auto-accept or defer. |
 | S | A trusted complex/deferred finding has a non-null malformed, fabricated, unrelated, or `threadTarget`-mismatched URL/binding. | Classify it `publication-failed` and end `failed`; never report `needs-human-review`, fix, or merge. |
 | T | Duplicate suppression leaves zero new/deferred findings but an accepted simple thread remains unresolved because its reply or resolution failed. | End `needs-human-review`, list each validated unresolved URL/identity, and do not merge or leave the result undefined. |
+| U | Issue-init local config says true, but pr-create's validated remote target-base routing leaf is false/absent; repeat with remote true. | Local config never chooses automation. False ends `complete`; true routes review/fix/merge, whose stages independently re-resolve authorization. |
+| V | A converged remote-true review returns an attestation, then merge sees no attestation or a changed head/config blob. | Parent dispatches merge only after convergence; merge stops `missing-attestation` or stale mismatch without write. Parent never queries provider data. |
 
 ## Common prompt
 

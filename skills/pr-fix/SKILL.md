@@ -17,7 +17,7 @@ Comment URL selects one thread; PR/MR URL/number selects unresolved threads; oth
 
 ## Authorization and Classification
 
-Verify each thread against current code. A matching target-repository boolean `self-reviewed: true` authorizes automated classification and execution. An optional `neil-workflow/v1` envelope validates orchestration sequencing/handoff only; it never grants or withholds that authority.
+Verify each thread against current code. Resolve `.workflow-config.json` only from the normalized target repository base ref through the selected provider; retain the provider/host/repository/base ref/blob revision and never read PR/MR head, fork, local, or envelope config. Only remote-base literal boolean `self-reviewed:true` authorizes automated classification/execution. False/absent retains confirmation; malformed/unreadable config stops. An optional `neil-workflow/v1` envelope validates sequencing/handoff only.
 
 Config-authorized calls build a classification table and auto-accept only localized, clear, directly verifiable findings. Classify architectural/public-interface, migration, security-policy, cross-module, unclear, or high-risk findings as `defer`. Post a concise reason, leave unresolved, do no worktree/delegation/commit/push, and return URL/fingerprint for reporting.
 
@@ -42,11 +42,9 @@ The brief contains accepted feedback, context, locations, observable outcomes, w
 | Returned state | Completion action |
 |---|---|
 | Pushed commits; clean | Nothing |
-| Unpushed commits; clean | Push |
-| Commits plus accepted dirty changes | One completion commit; push missing commits |
-| Accepted dirty changes only | One completion commit; push |
+| Other accepted changes | One completion commit; push missing commits |
 
-Never squash, amend, recommit, rebase, force-push, or redundantly push delegated results.
+Never squash, amend, rebase, force-push, or redundantly push.
 
 ## Thread State
 

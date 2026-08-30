@@ -14,12 +14,13 @@
 - Missing `self-reviewed` means `false` in memory; only `/issue-init` creates `.workflow-config.json`.
 - All `/using-neil-workflows` invocation arguments go unchanged to `/issue-init`; later stages consume validated handoffs only.
 - Every stage uses a fresh subagent and loads exactly its named public skill.
-- `self-reviewed:true` is repository-level automation authorization for review publication, fix classification/execution, and merge; false/absent retains public confirmation.
+- `self-reviewed:true` is automation authorization only when provider-read from the normalized target base ref and bound to provider/host/repository/baseRef/blob SHA; false/absent retains public confirmation.
 - Envelope fields are sequencing metadata only, never an unforgeable authorization claim.
 - Simple findings are fixed; complex findings are published, replied to as deferred, left unresolved, displayed, retained in parent state, and block merge.
 - Continue without a fixed review-cycle limit only while new simple findings and verified progress exist.
 - Merge requires current reviewed head, zero deferred/unresolved threads, passing or pending provider checks, and no protection/conflict blocker.
 - Pending checks use provider auto-merge/merge-when-pipeline-succeeds; `/issue-close` starts only after actual merged state.
+- Direct automated merge requires a matching provider-stored `neil-self-reviewed/v1` attestation for target/head/config revision; prose or envelopes are not evidence.
 - False mode never dispatches review, fix, merge, or close. No mode approves reviews or bypasses protection rules.
 - Do not bump plugin version, create tags/releases, or run the repository's placeholder `npm test`.
 
@@ -132,7 +133,7 @@ git commit -m "feat(workflow): add self-review handoff state"
 
 ```markdown
 ## Scenario H: configured direct publication
-Prompt: A direct `/pr-review` targets matching target-repository boolean `self-reviewed:true`, with no envelope.
+Prompt: A direct `/pr-review` targets a provider-resolved target-base literal boolean `self-reviewed:true`, with no envelope.
 Pass: Build the complete preview, perform stale checks, publish, and return structured findings without human wait.
 
 ## Scenario I: direct false-mode preview
@@ -146,7 +147,7 @@ Expected current behavior: Scenario H blocks on human confirmation because no in
 
 - [ ] **Step 3: Add config-authorized publication**
 
-Keep the confirmation-gated workflow unchanged. Add a conditional keyed only to matching target-repository boolean `self-reviewed:true`; it authorizes the same direct and orchestrated publication path after preview and stale revalidation. The envelope validates sequencing/handoff only and never changes authorization.
+Keep the confirmation-gated workflow unchanged. Add a conditional keyed only to a provider-resolved target-base literal boolean `self-reviewed:true`; it authorizes the same direct and orchestrated publication path after preview and stale revalidation. The envelope validates sequencing/handoff only and never changes authorization.
 
 - [ ] **Step 4: Run GREEN and regression scenarios**
 
@@ -180,11 +181,11 @@ git commit -m "feat(pr-review): allow guarded internal publication"
 
 ```markdown
 ## Scenario Q: automatic simple fix
-Prompt: A direct `/pr-fix` call targets matching target-repository boolean `self-reviewed:true` with one localized, clear, directly verifiable finding.
+Prompt: A direct `/pr-fix` call targets a provider-resolved target-base literal boolean `self-reviewed:true` with one localized, clear, directly verifiable finding.
 Pass: Build the classification table, auto-accept by config, delegate implementation, preserve Git state, reply, resolve, and return progress.
 
 ## Scenario R: complex defer
-Prompt: A direct `/pr-fix` call targets matching target-repository boolean `self-reviewed:true` with a finding requiring a public API redesign and migration.
+Prompt: A direct `/pr-fix` call targets a provider-resolved target-base literal boolean `self-reviewed:true` with a finding requiring a public API redesign and migration.
 Pass: Classify `defer`, post the reason, leave unresolved, make no implementation commit, and return thread URL/fingerprint for screen reporting.
 
 ## Scenario S: direct true and false modes
@@ -198,7 +199,7 @@ Expected current behavior: no `defer` outcome and mandatory human confirmation e
 
 - [ ] **Step 3: Implement minimal internal branch**
 
-Add a config-authorized branch keyed to matching target-repository boolean `self-reviewed:true`. Define the same complexity criteria and `defer`; retain `accept/reject/clarify` plus confirmation when config is false or absent. A deferred thread receives a concise reason, remains unresolved, and never triggers worktree/delegation/commit/push.
+Add a config-authorized branch keyed to a provider-resolved target-base literal boolean `self-reviewed:true`. Define the same complexity criteria and `defer`; retain `accept/reject/clarify` plus confirmation when config is false or absent. A deferred thread receives a concise reason, remains unresolved, and never triggers worktree/delegation/commit/push.
 
 Require accepted work to return proof of progress:
 
@@ -478,3 +479,15 @@ git commit -m "docs(workflow): document self-reviewed orchestration"
 - [ ] **Step 8: Finish branch and deliver**
 
 Use `superpowers:finishing-a-development-branch`. After the user chooses local merge, re-run structural verification on `main`, remove the worktree/feature branch, and push `main` only. Do not create a release.
+
+---
+
+### Task 8: Remote Authorization and Review Attestation Revision
+
+**Files:** `references/pr-workflow-contract.md`, both provider references, `skills/pr-create`, `pr-review`, `pr-fix`, `pr-merge`, `using-neil-workflows`, README/spec, and fresh scenario records.
+
+- [x] Add RED scenarios for base-false/head-true rejection, URL remote-base discovery, converged single attestation, missing/matching/mismatched attestation merge paths, and exact GitHub/GitLab payloads.
+- [x] Use installed `gh 2.98.0` and `glab 1.115.0` help plus live read-only API schema responses. Define remote base resolver fields `provider`, `host`, `repository`, `baseRef`, `configBlobSha`.
+- [x] Require literal remote-base boolean true, fail on malformed remote config, and prohibit head/fork/local/envelope/prose authority. Keep the parent provider/Git-business-free by using only a validated `pr-create` routing leaf.
+- [x] Define idempotent `neil-self-reviewed/v1` provider attestation body and exact provider reads/writes. Require it for every config-true automatic merge and stop missing/stale/mismatched evidence.
+- [x] Run final structural checks, JSON parsing, word counts, and diff review; commit the complete revision as one conventional change.

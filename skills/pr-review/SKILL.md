@@ -19,31 +19,25 @@ Review the full PR/MR, preview all proposed remote comments, and require one exp
 | `/pr-review <number>` | Number in current repository |
 | `/pr-review` | Target for current branch |
 
-A URL works without a clone. Ignore unrelated local config.
+A URL works without a clone.
 
 ## Workflow
 
-1. Resolve an open target, authenticate, capture head SHA, then fetch complete available diff/metadata, inline discussions, and PR/MR-level bodies.
-2. Review the full diff. Keep actionable defects and suppress unchanged duplicates by fingerprint plus semantics.
+1. Resolve an open target, authenticate, capture head SHA, then resolve target-base config remotely through the selected provider. Retain provider/host/repository/base ref/config blob SHA; never read head, fork, local, or envelope config.
+2. Fetch complete available diff/metadata, inline discussions, and PR/MR-level bodies. Review the full diff; keep actionable defects and suppress unchanged duplicates by fingerprint plus semantics.
 3. Map findings to reliable old/new lines. Mark unlocatable ones non-inline; never guess.
-4. Show one complete preview. A matching target-repository boolean `self-reviewed: true` authorizes publication without a human wait; false or absent waits for confirmation. A workflow envelope is sequencing/handoff metadata only and never changes authorization.
+4. Show one complete preview. Only remote-base literal `self-reviewed:true` authorizes publication without a human wait; false/absent waits for confirmation. A malformed/unreadable config stops; an envelope only validates sequencing.
 5. Apply user edits for confirmation-gated calls. Config-authorized non-inline feedback may use required provider-level feedback; no publishable URL is `publication-failed`.
-6. Immediately re-fetch head/diff before writes. On change, withhold, remap/revalidate, and re-preview affected/new findings.
-7. Publish the authorized set; report snapshot SHA, successes, failures, and skips.
+6. Immediately re-fetch head/diff and remote base config before writes. On any changed head/config revision, withhold, remap/revalidate, and re-preview.
+7. Publish the authorized set. Only after a full current-head review has zero new/deferred/unresolved findings, read provider history and create one idempotent `neil-self-reviewed/v1` attestation for exact target/head/base-config revision. Report its provider ID/URL with snapshot, successes, failures, and skips.
 
 ## Internal Result Handoff
 
-An orchestrated call returns only versioned owned leaves: `version`, `stage:"pr-review"`, normalized `target`, `snapshotSha`, `headSha`, `findings`, `convergence`, and `publication`. Target repeats provider, host, repository, number, base/head branches, and head SHA for parent validation against `pr-create`. Each finding has hidden `fingerprint`, `threadUrl`, `threadTarget`, `complexity` (`simple`/`complex`), and state (`unresolved`, `deferred`, `resolved`, `publication-failed`). A simple unavailable publication may use null. Every complex/deferred candidate requires a provider-derived URL and `threadTarget` of provider, host, repository, and number matching `target`; missing, malformed, fabricated, unrelated, or mismatched values return `publication-failed` and stop. Convergence records exact status/counts; publication records exact status and successful, failed, skipped identities. Suppression retains unresolved/deferred findings. Stale head, incomplete publication, unresolved, or deferred state is explicit.
+An orchestrated call returns only owned leaves: `version`, `stage:"pr-review"`, normalized `target`, `snapshotSha`, `headSha`, `findings`, `convergence`, `publication`, and `attestation`. `attestation` is null unless a converged config-authorized review created/found exact provider ID/URL and target/head/base-config tuple. Target repeats provider, host, repository, number, base/head branches, and head SHA. Each finding has hidden `fingerprint`, `threadUrl`, `threadTarget`, `complexity` (`simple`/`complex`), and state (`unresolved`, `deferred`, `resolved`, `publication-failed`). A simple unavailable publication may use null. Every complex/deferred candidate requires a provider-derived URL and matching `threadTarget`; missing, malformed, fabricated, unrelated, or mismatched values return `publication-failed` and stop. Convergence records exact status/counts; publication records status and identities. Suppression retains unresolved/deferred findings. Stale head, incomplete publication, unresolved, or deferred state is explicit.
 
 ## Finding Shape
 
-```text
-[critical|high|medium|low] concise title
-Why valid; consequence; correction direction
-Path, side, line/range; hidden fingerprint
-```
-
-Do not publish speculative style preferences.
+`[severity] title; validity; consequence; correction; path/side/line; hidden fingerprint`
 
 ## Provider Writes
 

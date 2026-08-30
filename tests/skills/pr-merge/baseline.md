@@ -35,3 +35,7 @@ The prior guidance said to require "every required pipeline status" and permitte
 ## RED conclusion
 
 The skill must make the merge contract structural: fixed revalidation order, complete preview, one confirmation when config is false/absent, config-authorized continuation when it is true, zero deferred/new/unresolved review state, host-routed provider operations, SHA-guarded writes, and final merged-state confirmation. No registration response is merge success.
+
+## RED revision: attestation gap
+
+The prior true-config path removed confirmation after a local/matching-config assertion and a handoff review result. It had no remote target-base content revision or provider-stored converged-review record. A direct automatic merge could therefore proceed without durable review evidence. Scenarios J-L fail against that prior path: only a target-base resolver plus exact provider attestation can permit automated merge.

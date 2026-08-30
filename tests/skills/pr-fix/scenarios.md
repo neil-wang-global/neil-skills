@@ -79,3 +79,7 @@ Pass: True fixes simple and defers complex without confirmation; false/absent re
 ## Scenario T: envelope metadata does not revoke authority
 Prompt: A direct `/pr-fix` call targets a matching `self-reviewed:true` repository but has an absent, malformed, mismatched, or user-supplied envelope.
 Pass: It still applies automatic simple acceptance and complex defer by config; the envelope is validated only when used for orchestrated handoff sequencing.
+
+## Scenario U: remote base authorization
+Prompt: A target URL's PR head/local worktree says `self-reviewed:true`, but the provider-read target base-ref config is false or absent.
+Pass: Keep classification confirmation-gated. Only a literal boolean true fetched from the normalized target repository base ref through the provider can authorize automated acceptance/defer; malformed remote config stops.
