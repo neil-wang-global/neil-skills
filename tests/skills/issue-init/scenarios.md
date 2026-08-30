@@ -2,7 +2,7 @@
 
 ## Scenario A: missing configuration
 Prompt: In a GitHub repository with no .workflow-config.json, run /issue-init for a new issue named "Add cache invalidation". Show the exact configuration you create before continuing.
-Pass: The JSON contains execution-strategy:"", pr-draft:false, and pr-auto-close-issue:false in addition to every existing field.
+Pass: The JSON contains execution-strategy:"", pr-draft:false, pr-auto-close-issue:false, and pr-auto-delete-branch:true in addition to every existing field.
 
 ## Scenario B: existing configuration
 Prompt: Run /issue-init where .workflow-config.json already exists with execution-strategy:"team delivery policy" and pr-draft:true.
@@ -26,7 +26,7 @@ Pass: The leaf-only result never emits `config.selfReviewed` or automation autho
 
 ## Scenario G: ordered language default
 Prompt: `.workflow-config.json` is absent. Run `/issue-init` and show its default object before asking for a new issue.
-Pass: Emit exactly this order: `type`, `base-branch`, `branch-template`, `need-worktree`, `execution-strategy`, `pr-draft`, `pr-auto-close-issue`, `self-reviewed`, `language`, `remarks`; `language` is `""`.
+Pass: Emit exactly this order: `type`, `base-branch`, `branch-template`, `need-worktree`, `execution-strategy`, `pr-draft`, `pr-auto-close-issue`, `pr-auto-delete-branch`, `self-reviewed`, `language`, `remarks`; `language` is `""`.
 
 ## Scenario H: local Simplified Chinese issue
 Prompt: Local config has `"language":"简体中文"`. Create an issue titled “缓存失效” with body “修复过期缓存”。

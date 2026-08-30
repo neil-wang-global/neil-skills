@@ -20,6 +20,7 @@ Create and show this exact flat file when absent:
   "execution-strategy": "",
   "pr-draft": false,
   "pr-auto-close-issue": false,
+  "pr-auto-delete-branch": true,
   "self-reviewed": false,
   "language": "",
   "remarks": ""
@@ -30,7 +31,7 @@ Create and show this exact flat file when absent:
 |---|---|
 | `type` | `github` or `gitlab`; otherwise stop. |
 | `base-branch`, `branch-template`, `need-worktree` | Branch and workspace setup. |
-| `execution-strategy`, `pr-draft`, `pr-auto-close-issue` | Later-stage defaults; preserve existing values verbatim. |
+| `execution-strategy`, `pr-draft`, `pr-auto-close-issue`, `pr-auto-delete-branch` | Later-stage defaults; preserve existing values verbatim. `pr-auto-delete-branch` deletes the remote PR/MR head branch after confirmed merge. |
 | `self-reviewed` | Creation only; never authorizes automation. Target PR/MR stages resolve base config remotely. |
 | `language` | Trimmed free-text language for issue text; non-string stops; empty/absent preserves behavior. Only `/issue-init` creates it. |
 | `remarks` | Additional natural-language workflow instructions. |

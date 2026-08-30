@@ -10,7 +10,7 @@
     {
       "name": "neil-skills",
       "description": "Workflow skills: issue-init, issue-executing, pr-create, pr-review, pr-fix, pr-merge, issue-close, using-neil-workflows orchestration, self-review, and auto-merge",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "source": "./",
       "author": {
         "name": "Neil Wang",
