@@ -9,7 +9,7 @@ description: Use when reviewing a GitHub pull request or GitLab merge request by
 
 Review the full target, preview all proposed remote comments, and require one explicit confirmation for public calls. Never modify `.workflow-config.json`.
 
-**REQUIRED REFERENCES:** Read `references/pr-workflow-contract.md` and `references/github-pr-api.md` or `references/gitlab-mr-api.md` for the selected provider before remote operations.
+**REQUIRED REFERENCES:** Read `./references/pr-workflow-contract.md` and `./references/github-pr-api.md` or `./references/gitlab-mr-api.md` for the selected provider before remote operations.
 
 ## Target
 
