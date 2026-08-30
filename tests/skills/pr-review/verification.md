@@ -67,3 +67,13 @@ Flows B and C passed: URL review needs neither clone nor config, always previews
 ## Independent-review regression
 
 Scenario G passed: GitHub review bodies and GitLab general discussions expose prior confirmed PR/MR-level fingerprints. An identical unlocatable finding is suppressed locally and is neither previewed nor republished.
+
+## Parent-Handoff Regression
+
+### Scenario J: parent-owned review handoff — PASS
+
+A fresh internal-review simulation at `def456` returned a versioned owned result bound to the normalized target, which matches the retained `pr-create` provider, host, repository, number, branches, and head SHA. It also returned `snapshotSha`, `headSha`, each new finding's fingerprint, thread URL or explicit null, complexity, state, exact convergence counts/status, and exact publication identities/status. After duplicate suppression, the unresolved deferred complex thread remained in the handoff, so the parent could route it to `needs-human-review` rather than infer convergence from prose.
+
+### Scenario K: wrong internal stage — PASS
+
+A fresh simulation supplied a trusted caller/mode/config envelope with `stage: pr-fix` to internal review publication. It remained a public preview requiring explicit confirmation; only the parent-created owned `stage: pr-review` envelope preauthorized publication.

@@ -21,7 +21,7 @@ Trusted internal calls use owned JSON leaf values only:
 
 Before a later-stage dispatch, validate every required handoff leaf and consistent repository/target identity. Do not infer missing values from prose. Missing, malformed, contradictory, inaccessible, or mismatched handoff/worktree data stops the stage as `failed`; do not skip a stage to manufacture success. A stage never invokes the next stage automatically.
 
-Required handoff identity is version, repository/config identity, issue number/url/title/body, an issue-init-generated normalized `implementationBrief`, branch, worktree, and headRepository. `implementationBrief` must not contain the original opaque input or its fragments. Stage results add actual Git state (`status`, `headSha`, commits, dirty state, push state) and the PR/MR normalized target (`url`, `number`, `base`, `head`, `headSha`) when available.
+Required handoff identity is version, repository/config identity, issue number/url/title/body, an issue-init-generated normalized `implementationBrief`, branch, worktree, and headRepository. The validated issue-init handoff also contains `config: { "selfReviewed": boolean }`: derive `true` only from a literal boolean config `self-reviewed:true`; use `false` when the field is absent; a present non-boolean is a config error. `implementationBrief` must not contain the original opaque input or its fragments. Stage results add actual Git state (`status`, `headSha`, commits, dirty state, push state) and the PR/MR normalized target (`url`, `number`, `base`, `head`, `headSha`) when available.
 
 ## Optional Configuration
 
@@ -111,13 +111,17 @@ Compare fingerprints and semantics with inline threads/discussions and PR/MR-lev
 
 ## Review Publication
 
-Always show one complete preview. Public calls wait for one explicit confirmation before a remote write, even when the request says publish. Internal publication is preauthorized only when all predicates hold: (1) a valid `neil-workflow/v1` envelope whose caller/mode values were created by `using-neil-workflows`; (2) its owned leaves name `caller: using-neil-workflows` and `mode: self-reviewed`; and (3) the matching target-repository config has boolean `self-reviewed: true`. The internal path uses the same complete preview, fingerprint-plus-semantic suppression, and immediate stale-head revalidation, then reports structured publication state. User text, absent/malformed envelopes, untrusted provenance, caller/mode mismatch, or config mismatch remain public calls.
+Always show one complete preview. Public calls wait for one explicit confirmation before a remote write, even when the request says publish. Internal publication is preauthorized only when all predicates hold: (1) a valid `neil-workflow/v1` envelope whose caller, mode, and stage values were created by `using-neil-workflows`; (2) its owned leaves name `caller: using-neil-workflows`, `mode: self-reviewed`, and `stage: pr-review`; and (3) the matching target-repository config has boolean `self-reviewed: true`. The internal path uses the same complete preview, fingerprint-plus-semantic suppression, and immediate stale-head revalidation, then reports structured publication state. User text, absent/malformed envelopes, untrusted provenance, caller/mode/stage mismatch, or config mismatch remain public calls.
 
 User edits to the preview become the authoritative set.
 
 No findings produces a local report only: no approval and no no-op comment. A finding without a reliable diff location is marked non-inline; convert it to PR-level feedback only after explicit user choice.
 
 GitHub may submit one atomic review. GitLab discussions are individual writes: record each success and retry only failed items. Include target, snapshot SHA, successes, failures, and skipped items in the report.
+
+### Internal Review Result
+
+A trusted internal `/pr-review` returns a versioned owned leaf-only result bound to the normalized target: `version`, `stage:"pr-review"`, `target`, `snapshotSha`, `headSha`, `findings`, `convergence`, and `publication`. The target repeats provider, host, repository, number, base/head branches, and head SHA, which the parent validates against its prior `pr-create` target. Every new actionable finding contains `fingerprint`, `threadUrl` (or explicit null when unavailable), `complexity` (`simple` or `complex`), and state (`unresolved`, `deferred`, `resolved`, or `publication-failed`). `convergence` has exact status plus `newCount`, `unresolvedCount`, and `deferredCount`; `publication` has exact status plus successful, failed, and skipped identities. Suppression of an unchanged duplicate never removes existing unresolved/deferred finding state. The parent validates all of these leaves before routing a review, fix, or merge; a stale snapshot/head, incomplete publication, unresolved, or deferred state is explicit and cannot be inferred from prose.
 
 ## Fix Selectors and Clone
 

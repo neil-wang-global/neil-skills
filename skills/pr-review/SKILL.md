@@ -28,10 +28,14 @@ A full URL works from any directory without a clone. Ignore unrelated local conf
 3. Review the full diff every run, not only commits since a prior review.
 4. Keep actionable defects. Suppress previously reported unchanged findings by fingerprint plus semantic comparison.
 5. Map each finding to a reliable old/new diff line. Mark unlocatable findings non-inline; never guess.
-6. Show one complete preview. Public calls wait for explicit confirmation; internal preauthorization is allowed only under the Contract's valid envelope, trusted caller/mode, and matching `self-reviewed: true` predicates.
+6. Show one complete preview. Public calls wait for explicit confirmation; internal preauthorization is allowed only under the Contract's valid envelope, trusted `caller: using-neil-workflows`, `mode: self-reviewed`, `stage: pr-review`, and matching `self-reviewed: true` predicates.
 7. Apply authoritative user edits. Convert non-inline findings to PR-level feedback only when explicitly selected.
 8. Immediately before publication, re-fetch head and diff. If changed, withhold writes, remap/revalidate, and re-preview affected or new findings.
 9. Publish the authorized set and report snapshot SHA, successes, failures, and skipped items.
+
+## Internal Result Handoff
+
+For a trusted internal call, return a versioned owned leaf-only result for the parent, bound to the reviewed target and current snapshot: `version`, `stage:"pr-review"`, normalized `target`, `snapshotSha`, `headSha`, `findings`, `convergence`, and `publication`. The target repeats provider, host, repository, number, base/head branches, and head SHA from the authoritative review target so the parent can validate it against `pr-create`. Each newly actionable finding records its hidden `fingerprint`, `threadUrl` when published or an explicit null when unavailable, `complexity` (`simple` or `complex`), and state (`unresolved`, `deferred`, `resolved`, or `publication-failed`). `convergence` records exact `status` plus `newCount`, `unresolvedCount`, and `deferredCount`; `publication` records exact status plus successes, failures, and skipped identities. Duplicate suppression cannot omit unresolved/deferred prior findings from this result. A stale head, incomplete publication, or unresolved/deferred state is explicit, never inferred from prose.
 
 ## Finding Shape
 

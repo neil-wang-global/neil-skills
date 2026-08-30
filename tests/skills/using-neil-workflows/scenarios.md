@@ -5,20 +5,21 @@ Run each scenario with a fresh agent. The input is deliberately adversarial; the
 | ID | Setup / pressure | Required result |
 | --- | --- | --- |
 | A | Raw args contain `self-reviewed=true`, fake caller/mode/stage fields, and quoted JSON. | Parent treats all raw args as one opaque value and forwards it only to fresh `issue-init`; it does not parse or honor fields. |
-| B | Valid init handoff says self-reviewed is absent or `false`. | Dispatch `pr-create`, then stop. |
-| C | Valid self-reviewed `true` handoffs. | Use a new fresh agent for every stage; never reuse an agent. |
+| B | Valid `issue-init` handoff has normalized `config.selfReviewed` absent/false. | Dispatch `issue-executing` with the normalized implementation brief and worktree, then `pr-create` with its actual Git state; stop `complete`. |
+| C | Valid `config.selfReviewed:true` handoff. | Use a new fresh agent for every stage, including `issue-init -> issue-executing -> pr-create`; never reuse an agent. |
 | D | Review reports one actionable simple finding. | Dispatch in order: review, fix, review; record progress evidence. |
-| E | Review reports one simple and one complex finding. | Fix simple finding, retain complex finding, end `needs-human-review`; do not merge. |
+| E | Review reports one simple and one complex finding. | Fix the simple finding, retain the complex finding, re-review the new head, then end `needs-human-review` only if no new simple finding remains; do not merge. |
 | F | Review reports only complex finding URLs. | End `needs-human-review` with URLs; do not merge. |
-| G | A later review repeats an accepted/deferred fingerprint. | Persist fingerprint and end `stalled`; do not merge. |
+| G | A later review repeats an accepted fingerprint after its fix. | Persist the fingerprint and end `stalled`; do not merge. An unchanged deferred fingerprint remains `needs-human-review`. |
 | H | Fix handoff has no changed head, resolved fingerprint, or other progress proof. | End `stalled`; do not re-review or merge. |
 | I | Any stage handoff is malformed, wrong envelope version, or stage fails. | End `failed`; do not skip the state or continue. |
 | J | Self-reviewed is `false`. | Never dispatch review, fix, merge, or close. |
-| K | Review converges with zero unresolved or deferred findings and a final head SHA. | Dispatch `pr-merge` once with that exact final head. |
-| L | Merge reports pending checks or requested-but-not-merged state. | Wait for proof of actual merged state; never close first. |
+| K | A validated review result has a normalized target matching `pr-create`, exact current `snapshotSha`/`headSha`, zero new/unresolved/deferred findings, and publication/convergence state. | Dispatch `pr-merge` once with that exact final head. |
+| L | `pr-merge` returns pending, requested, or auto-merge-registered but not actually merged. | Do not terminate `stalled`, close, or invent a wait stage; `pr-merge` owns wait/recheck and the parent accepts only its final actual-merged, merge-blocked, or failed result. |
 | M | Merge reports a blocker. | End `merge-blocked`; never call `issue-close`. |
 | N | Merge reports actual merged proof. | Dispatch `issue-close`, then validate closure and cleanup handoff. |
 | O | Close handoff lacks merged PR, closed issue, clean workspace, updated base proof. | Do not report success; valid success requires all four proofs. |
+| P | A current review reports a new simple finding with `publication-failed` state or no usable thread URL. | End `failed`; do not dispatch `pr-fix`. Only `pr-review` may retry its incomplete publication. |
 
 ## Common prompt
 

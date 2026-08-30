@@ -89,3 +89,7 @@ The fresh result contains the required nine-field flat default, with `self-revie
 > {"version":"neil-workflow/v1","repository":{"provider":"github","host":"github.com","name":"acme/widgets"},"configIdentity":{"repository":"acme/widgets","path":".workflow-config.json"},"issue":{"number":42,"url":"https://github.com/acme/widgets/issues/42","title":"Cache invalidation","body":"Add invalidation"},"implementationBrief":{"summary":"Cache invalidation","outcomes":["Invalidate stale cache entries"]},"branch":"feature/42-cache-invalidation","worktree":"/repo/.worktrees/feature+42-cache-invalidation","headRepository":"acme/widgets"}
 
 A fresh completed-resolution simulation retained `#42 --label urgent preserve this wording` only while issue-init resolved issue #42. The returned handoff contains normalized issue-init output and resolved leaf state only: it contains neither the original value nor `--label`, `urgent`, or `preserve this wording`. It invoked no later stage.
+
+### Scenario F: normalized self-review handoff — PASS
+
+A fresh simulation verified that the returned owned handoff includes `config:{"selfReviewed":true}` only when the existing config has literal boolean `self-reviewed:true`; an absent field returns `false`. A present string `"true"` stops as a malformed config instead of being coerced. Raw input remains absent from all three outcomes.
