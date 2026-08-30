@@ -1,35 +1,59 @@
-# Task 3 Report: Guarded Internal PR Fix
+# Task 3 Report
 
-## Status
+## Scope
 
-Implemented Task 3 only. The working changes are limited to the `pr-fix` skill, shared PR workflow contract, Q-S scenarios, RED baseline evidence, and GREEN verification evidence. This report is ignored by the task worktree's SDD directory.
-
-## RED
-
-Added fresh pressure scenarios Q, R, and S before changing guidance. Current-skill simulations showed that `/pr-fix` required the standalone confirmation table, had no `defer` outcome, and could confuse review-publication preauthorization with fix authorization. The observed rationalizations are recorded in `tests/skills/pr-fix/baseline.md`.
-
-## GREEN
-
-- Internal preauthorization now requires all three trusted predicates: valid parent-created `neil-workflow/v1` envelope, owned caller/mode leaves, and matching boolean `self-reviewed` target config.
-- Valid internal calls auto-accept only localized, clear, directly verifiable findings. Architectural/public-interface, migration, security-policy, cross-module, unclear, and high-risk findings use internal-only `defer`.
-- A defer posts a concise reason, remains unresolved, returns URL/fingerprint, and performs no worktree, delegation, commit, or push.
-- Standalone calls retain `accept`/`reject`/`clarify`, the human confirmation table, and no `defer` bypass.
-- Accepted work returns `headBefore`, `headAfter`, `commits`, `pushed`, accepted/deferred fingerprints, and per-thread `threadOutcomes`.
-
-## Verification
-
-Fresh read-only simulations passed scenarios A-S. The final Q-S simulation verified the exact final wording; M/N used the GitHub and GitLab provider references. `wc -w skills/pr-fix/SKILL.md` returned 500. `git diff --check` completed cleanly. No project test command was run, per the Task 3 constraint.
+Implemented Task 3 only. The commit updates the coordinator handoff contract, Chinese README language documentation, and the requested static scenarios and verification records. No provider, Git, or content-generation behavior was added to the coordinator.
 
 ## Commit
 
-Created: `2ce72ab` — `feat(pr-fix): defer complex internal findings`.
+`0662540 docs(workflow): document configured content language`
 
-## Concerns
+Committed files:
 
-The commit succeeded but printed `Can't find lefthook in PATH`. A generated, untracked `.build/` directory (`CACHEDIR.TAG` and `.buildSystem_debug`) appeared during the commit. It was neither staged nor removed.
+- `README.md`
+- `skills/using-neil-workflows/SKILL.md`
+- `tests/skills/issue-init/scenarios.md`
+- `tests/skills/issue-init/verification.md`
+- `tests/skills/pr-create/scenarios.md`
+- `tests/skills/pr-review/scenarios.md`
+- `tests/skills/pr-fix/scenarios.md`
+- `tests/skills/using-neil-workflows/scenarios.md`
+- `tests/skills/using-neil-workflows/verification.md`
 
-## Configuration-Authorization Revision
+## Changes
 
-**RED:** direct `self-reviewed:true` simple and complex findings still required the confirmation table because the prior branch depended on envelope provenance; false/absent behavior was not contrasted.
+- The coordinator validates and forwards `textLanguage`, including `""` for empty or absent compatibility.
+- It retains target-bound remote resolver identity (`provider`, `host`, `repository`, `baseRef`, `configBlobSha`) with language handoffs.
+- The parent remains orchestration-only: it never translates, creates provider text, or creates commits. A remote language change applies only to the next stage.
+- The Chinese README documents the local issue-language source, remote target-base resolution, covered generated content, literal preservation exceptions, and compatibility rules.
+- Static scenarios cover ordered defaults, local `简体中文`, base `English` overriding local/head/fork `简体中文`, empty/absent values, language-conforming PR/review/reply/commit content, preservation of quotations/identifiers/machine markers, and later-only remote language changes.
 
-**GREEN:** direct or orchestrated calls with matching `self-reviewed:true` auto-accept only simple findings and classify complex/high-risk findings as `defer`. Direct false/absent calls retain one `accept`/`reject`/`clarify` confirmation table and cannot use `defer`. Envelopes only validate orchestration handoff/sequencing.
+## Static Validation
+
+No executable test suite was run, per instruction.
+
+- Default JSON equality and required key order: PASS.
+- `git diff --check`: PASS with no output.
+- Plugin metadata diff check for `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`: PASS; versions unchanged.
+- `using-neil-workflows/SKILL.md`: 497 words, within the 500-word limit.
+- `git status --short` was checked before commit; only Task 3 files were staged. Existing `.build/` remained untouched.
+
+## Concern
+
+`skills/init-commit-hooks/SKILL.md` is pre-existing at 579 words, over the global 500-word instruction. It was outside the Task 3 brief and was not modified. Git also emitted `Can't find lefthook in PATH` after the successful commit; the commit exists, and no hook/test suite executed.
+
+## Final-Review Resource Evidence
+
+- `skills/pr-fix/references/` matches each current root PR reference byte-for-byte.
+- `node tests/verify-skill-resources.cjs`: PASS; it now validates `pr-create`, `pr-review`, `pr-fix`, and `pr-merge`, including the external-reference-path guard.
+- Static JSON-order assertion: PASS; both issue-init default records use exactly `type`, `base-branch`, `branch-template`, `need-worktree`, `execution-strategy`, `pr-draft`, `pr-auto-close-issue`, `self-reviewed:false`, `language:""`, `remarks`.
+- `skills/pr-fix/SKILL.md`: 418 words, within the 500-word limit.
+- `git diff --check`: PASS with no output.
+
+## Final-Review Follow-up Evidence
+
+- `skills/pr-create/SKILL.md`: static text scan confirms that non-empty normalized `textLanguage` requires the generated PR/MR title, body prose, and `Summary`, `Testing`, and `Issue` headings entirely in that language; English headings are explicitly not exceptions. Machine syntax and existing-target idempotency remain preserved.
+- `tests/skills/issue-init/verification.md` Scenario E: the recorded versioned handoff now includes the normalized `"textLanguage":""` leaf for the unconfigured/default case. The JSON contains no raw opaque input.
+- `git diff --check -- skills/pr-create/SKILL.md tests/skills/issue-init/verification.md`: PASS with no output.
+- `skills/pr-create/SKILL.md`: 496 words, within the 500-word limit.
+- No executable test suite was run, per instruction.

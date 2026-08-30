@@ -89,7 +89,7 @@ The fresh result contains the required ten-field flat default, with `self-review
 
 ### Scenario E: opaque orchestrator input — PASS
 
-> {"version":"neil-workflow/v1","repository":{"provider":"github","host":"github.com","name":"acme/widgets"},"configIdentity":{"repository":"acme/widgets","path":".workflow-config.json"},"issue":{"number":42,"url":"https://github.com/acme/widgets/issues/42","title":"Cache invalidation","body":"Add invalidation"},"implementationBrief":{"summary":"Cache invalidation","outcomes":["Invalidate stale cache entries"]},"branch":"feature/42-cache-invalidation","worktree":"/repo/.worktrees/feature+42-cache-invalidation","headRepository":"acme/widgets"}
+> {"version":"neil-workflow/v1","repository":{"provider":"github","host":"github.com","name":"acme/widgets"},"configIdentity":{"repository":"acme/widgets","path":".workflow-config.json"},"issue":{"number":42,"url":"https://github.com/acme/widgets/issues/42","title":"Cache invalidation","body":"Add invalidation"},"implementationBrief":{"summary":"Cache invalidation","outcomes":["Invalidate stale cache entries"]},"branch":"feature/42-cache-invalidation","worktree":"/repo/.worktrees/feature+42-cache-invalidation","headRepository":"acme/widgets","textLanguage":""}
 
 A fresh completed-resolution simulation retained `#42 --label urgent preserve this wording` only while issue-init resolved issue #42. The returned handoff contains normalized issue-init output and resolved leaf state only: it contains neither the original value nor `--label`, `urgent`, or `preserve this wording`. It invoked no later stage.
 
