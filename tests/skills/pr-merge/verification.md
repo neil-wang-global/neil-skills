@@ -18,10 +18,11 @@ Fresh agents used the current `pr-merge` skill, shared contract, provider refere
 | review provenance | PASS | A bare current-head SHA or user prose stops before preview; a validated final `/pr-review` result must match the normalized target. |
 | GitLab authoritative merge gate | PASS | Current-head `detailed_merge_status: mergeable` is the sole immediate-merge state; `ci_still_running` is the sole auto-merge state; `ci_must_pass`, `checking`, all failures/unknowns, and independent approval/protection/conflict blocks stop. Pipeline-list state never supplies or overrides this gate. |
 | stale after preview | PASS | Changed head invalidates authorization and requires fresh review/gates plus a new preview. |
+| fresh merge language | PASS | Fresh non-empty target-base language governs every GitHub `--subject`/`--body` and GitLab `--message`/applicable `--squash-message` field without changing guards, gates, auto-merge, or attestation behavior. |
 
 ## Provider regressions
 
-Installed help validated `gh` 2.98.0 and `glab` 1.115.0. GitHub uses `gh pr ready`, `gh pr checks --required`, `gh pr merge --match-head-commit`, and `--auto`; final reads require `state: MERGED`. GitLab uses `glab mr update --ready`, `glab mr merge --sha --auto-merge=false` or `--auto-merge`; final reads require `state: merged`, `merge_commit_sha`, and `merged_at`. GitLab REST `GET /projects/:id/merge_requests/:merge_request_iid` documents `detailed_merge_status` as the authoritative merge-status field: only `mergeable` permits immediate merge and only `ci_still_running` permits auto-merge at the current SHA; `ci_must_pass`, `checking`, all other/unknown statuses, and independent blocks stop. The pipeline list does not establish requirements. `--when-pipeline-succeeds` is not an installed `glab` flag, and REST `merge_when_pipeline_succeeds` is deprecated in favor of `auto_merge`.
+Installed help validated `gh` 2.98.0 and `glab` 1.115.0. GitHub uses `gh pr ready`, `gh pr checks --required`, `gh pr merge --match-head-commit`, `--auto`, `--subject`, and `--body`; final reads require `state: MERGED`. GitLab uses `glab mr update --ready`, `glab mr merge --sha --auto-merge=false` or `--auto-merge`, `--message`, and applicable `--squash-message`; final reads require `state: merged`, `merge_commit_sha`, and `merged_at`. Non-empty freshly resolved target-base language governs all generated merge commit content, not generic provider comments/notes. GitLab REST `GET /projects/:id/merge_requests/:merge_request_iid` documents `detailed_merge_status` as the authoritative merge-status field: only `mergeable` permits immediate merge and only `ci_still_running` permits auto-merge at the current SHA; `ci_must_pass`, `checking`, all other/unknown statuses, and independent blocks stop. The pipeline list does not establish requirements. `--when-pipeline-succeeds` is not an installed `glab` flag, and REST `merge_when_pipeline_succeeds` is deprecated in favor of `auto_merge`.
 
 ## Refactor
 
@@ -29,7 +30,7 @@ A guided audit found that a bare current-head `snapshotSha` could substitute for
 
 ## Result
 
-All A-I scenarios plus review-provenance, GitLab-authoritative-gate, and stale-head regressions pass in fresh, read-only simulations. The skill contains no review, fix, issue-close, or cleanup behavior.
+All A-I scenarios plus review-provenance, GitLab-authoritative-gate, and stale-head regressions pass in fresh, read-only simulations. The skill contains no review, fix, or issue-close behavior; it owns only configured post-merge remote head cleanup.
 
 ## Task 7 Cross-Skill Pressure Evidence
 

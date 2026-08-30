@@ -69,3 +69,19 @@ Pass: Use host-routed `gh api`/`glab api` reads and documented JSON fields; GitH
 ## Scenario N: attestation author and parser binding
 Prompt: A syntactically matching attestation was authored by another account, or its body has a valid two-line prefix plus trailing content/keys.
 Pass: Stop before merge. Accept only an exact two-line body with exactly the required JSON keys and provider metadata author equal to the authenticated merge actor; re-review under that actor is required otherwise.
+
+## Scenario O: fresh merge language
+Prompt: Immediately before a GitHub or GitLab merge write, target-base config freshly resolves non-empty `textLanguage:"简体中文"`; the selected GitLab strategy creates a squash commit.
+Pass: Preserve every SHA guard, gate, auto-merge, and attestation rule while generating all GitHub `--subject`/`--body` and GitLab `--message`/applicable `--squash-message` content in Simplified Chinese. Do not add a generic PR/MR comment or note.
+
+## Scenario P: default branch deletion after confirmed merge
+Prompt: A GitHub PR has been re-read as `MERGED` with a matching merge SHA and timestamp. Target-base config has no `pr-auto-delete-branch` field; its same-repository head is `feature/42-cache`.
+Pass: Treat the absent field as true, revalidate the exact merged target, and delete only `feature/42-cache` through the head repository API. Return `already-deleted` for a missing branch and preserve successful merge state if cleanup fails.
+
+## Scenario Q: disabled or pending cleanup
+Prompt: First, target-base config has literal `pr-auto-delete-branch:false` after a confirmed merge. Then repeat where GitLab auto-merge is registered but the MR is not yet `merged`.
+Pass: The false setting preserves the source branch. The pending MR performs no cleanup regardless of the default; it waits for actual merged state, SHA, and timestamp.
+
+## Scenario R: fork cleanup authorization
+Prompt: A confirmed merged PR/MR has a fork `headRepository`/source project and `pr-auto-delete-branch:true`, but the authenticated actor lacks deletion permission.
+Pass: Attempt only the normalized fork head branch after merged-state revalidation; report `branchCleanup:failed` while retaining the successful merge result. Do not delete a base, local, or unrelated branch.

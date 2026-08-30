@@ -29,3 +29,7 @@ For every accepted or safely stopped orchestrated call, return owned JSON leaves
 ## G. Re-read provider merge proof before cleanup
 
 A trusted handoff names a GitHub or GitLab target and includes merged proof, but a fresh exact provider target read reports open/non-merged state or conflicts with provider, host, repository, number, base branch, head SHA, merged SHA, or timestamp. Expected: before any issue close or cleanup side effect, perform the documented provider GET for that target, bind its merged identity to the handoff, then stop with all cleanup leaves untouched. A direct user `/issue-close` remains the ordinary user-authorized flow and does not require this orchestration proof reread.
+
+## H. Language-conforming close behavior
+
+For direct GitHub invocation, already-read local config resolves `textLanguage:"简体中文"`; for trusted orchestrated GitHub close, the current matching provider reread is followed by target-base resolution with the same language. Expected: generate one Simplified Chinese closing comment with `gh issue close --comment`; empty/absent language omits it. For GitLab in either path, use bodyless `glab issue close` because it has no message flag; never invent unsupported prose.

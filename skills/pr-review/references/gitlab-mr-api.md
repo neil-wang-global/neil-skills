@@ -96,16 +96,35 @@ After all gates and authorization pass, make a draft ready and re-read every gat
 glab mr update <iid> --repo <base-project-url> --ready --yes
 ```
 
-Use the reviewed SHA for every merge write. Current `glab mr merge --help` documents `--auto-merge=false` for immediate merge and `--auto-merge` for provider auto-merge; it has no `--when-pipeline-succeeds` flag.
+Use the reviewed SHA for every merge write. Current `glab mr merge --help` documents `--auto-merge=false` for immediate merge, `--auto-merge` for provider auto-merge, `--message` for merge commit content, and `--squash-message` for squash commit content; it has no `--when-pipeline-succeeds` flag. A freshly resolved non-empty `textLanguage` governs every generated human-readable merge message. Pass `--squash-message` only when the selected merge creates a squash commit; do not create a generic MR note.
 
 ```bash
 # Only current-head detailed_merge_status=mergeable: request merge now.
-glab mr merge <iid> --repo <base-project-url> --sha <reviewed-head-sha> --auto-merge=false --yes
+glab mr merge <iid> --repo <base-project-url> --sha <reviewed-head-sha> --auto-merge=false --yes \
+  --message <generated-merge-message>
 # Only current-head detailed_merge_status=ci_still_running: register auto-merge.
-glab mr merge <iid> --repo <base-project-url> --sha <reviewed-head-sha> --auto-merge --yes
+glab mr merge <iid> --repo <base-project-url> --sha <reviewed-head-sha> --auto-merge --yes \
+  --message <generated-merge-message>
+# When the selected merge creates a squash commit, add:
+# --squash-message <generated-squash-message>
 ```
 
 GitLab's current merge REST schema is `PUT /projects/:id/merge_requests/:merge_request_iid/merge` with `sha` and `auto_merge`; `merge_when_pipeline_succeeds` is deprecated. Re-read the MR until `state` is `merged`, then return `merge_commit_sha` and `merged_at`. Auto-merge registration or a queue is pending, not success.
+
+### Post-Merge Branch Deletion
+
+Only after the final MR reread confirms `state: merged`, re-resolve target-base config. `pr-auto-delete-branch` defaults to true; literal false leaves the remote source branch intact. Capture and verify the normalized source project, `source_branch`, source SHA, `merge_commit_sha`, and `merged_at` before this write, then delete only that source branch:
+
+```bash
+glab api --hostname <host> --method DELETE \
+  "projects/<encoded-source-project>/repository/branches/<encoded-head-branch>"
+```
+
+Use the MR's `source_project_id` for a fork and URL-encode both project and branch path values. Treat a not-found branch as `already-deleted`; report authorization or provider errors as `branchCleanup:failed` without changing the successful merge result. Never delete before confirmed merge completion.
+
+### Issue Close
+
+`glab issue close` has no message/comment flag. Keep GitLab close bodyless in both direct and trusted orchestrated paths; never invent unsupported generated prose.
 
 ### Orchestrated Issue-Close Proof Reread
 

@@ -122,16 +122,39 @@ Only after all gates and authorization pass, convert a draft:
 gh pr ready <number> --repo <host>/<owner>/<repo>
 ```
 
-Re-read every gate and use the allowed merge method. `--match-head-commit` binds either write to the reviewed SHA; do not use `--admin` or `--delete-branch`.
+Re-read every gate and use the allowed merge method. `--match-head-commit` binds either write to the reviewed SHA; do not use `--admin` or `--delete-branch`. A freshly resolved non-empty `textLanguage` governs the generated merge commit subject and body, including auto-merge registration; do not create a generic PR comment.
 
 ```bash
 # Green required checks: request merge.
-gh pr merge <number> --repo <host>/<owner>/<repo> --merge --match-head-commit <reviewed-head-sha>
+gh pr merge <number> --repo <host>/<owner>/<repo> --merge --match-head-commit <reviewed-head-sha> \
+  --subject <generated-merge-subject> --body <generated-merge-body>
 # Pending required checks only: register auto-merge.
-gh pr merge <number> --repo <host>/<owner>/<repo> --merge --auto --match-head-commit <reviewed-head-sha>
+gh pr merge <number> --repo <host>/<owner>/<repo> --merge --auto --match-head-commit <reviewed-head-sha> \
+  --subject <generated-merge-subject> --body <generated-merge-body>
 ```
 
-`gh pr merge --help` specifies that merge queues may enqueue these requests. Re-read until `state` is `MERGED`; return `mergedAt` and `mergeCommit.oid` only then. A non-merged `autoMergeRequest`, queue, or command response is pending.
+`gh pr merge --help` specifies `--subject` and `--body` for the merge commit and that merge queues may enqueue these requests. Re-read until `state` is `MERGED`; return `mergedAt` and `mergeCommit.oid` only then. A non-merged `autoMergeRequest`, queue, or command response is pending.
+
+### Post-Merge Branch Deletion
+
+Only after the final PR reread confirms `state: MERGED`, re-resolve target-base config. `pr-auto-delete-branch` defaults to true; literal false leaves the remote head branch intact. Capture and verify the normalized `headRepository`, `headBranch`, `headRefOid`, `mergeCommit.oid`, and `mergedAt` before this write, then delete only that head branch:
+
+```bash
+gh api --hostname <host> --method DELETE \
+  "repos/<head-owner>/<head-repo>/git/refs/heads/<head-branch>"
+```
+
+This can target a fork only when the authenticated actor has permission. Treat a not-found branch as `already-deleted`; report authorization or provider errors as `branchCleanup:failed` without changing the successful merge result. Do not use `gh pr merge --delete-branch`, and never delete before confirmed merge completion.
+
+### Issue Close
+
+For GitHub, `gh issue close --help` supports `--comment`. In direct invocation, use the already-read local config's non-empty `textLanguage` to generate the comment; in trusted orchestrated close, first complete the current matching target reread, then resolve target-base config and use its validated non-empty `textLanguage`:
+
+```bash
+gh issue close <issue-no> --repo <host>/<owner>/<repo> --comment <generated-closing-comment>
+```
+
+With empty/absent language, omit `--comment`. The comment is generated closing prose, not a generic comment.
 
 ### Orchestrated Issue-Close Proof Reread
 

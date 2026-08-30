@@ -11,6 +11,7 @@ Fresh-agent verification read only `skills/issue-close/SKILL.md`, `references/pr
 | E. Cleanup ownership | PASS | Uses only named worktree and local branches, checks occupancy, and never deletes unrelated or remote feature branches. |
 | F. Owned closure state | PASS | Returns `issue`, `worktree`, `branches`, and `base` JSON leaves, excluding live runtime objects. |
 | Direct invocation | PASS | An absent, user-supplied, malformed, or untrusted envelope follows the unchanged direct process. |
+| H. Language-conforming close | PASS | A non-empty already-read local language produces GitHub `gh issue close --comment` prose in direct invocation; after the current matching reread, the validated target-base language does the same for trusted orchestration. GitLab remains bodyless because `glab issue close` has no message flag. |
 
 The verifier noted only hardening opportunities, not scenario failures: a formal JSON schema is not needed for this documentation contract, and an occupied explicitly handed-off branch should report a distinct skip state. The refactor following this verification adds that skip-state requirement.
 
