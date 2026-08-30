@@ -39,3 +39,7 @@ No retry policy, bounded loop rule, progress predicate, or repeated-fingerprint 
 ## Baseline conclusion
 
 The controls could recognize several high-level gates, but none produced the complete owned envelope, ledger, terminal-state vocabulary, or stage-only dispatch discipline. The baseline therefore fails A-O as a reusable coordinator contract.
+
+## Envelope-shape RED regression
+
+Fresh current-guidance simulation of V-W passed raw input directly to `issue-init`, despite the required initial envelope, and treated a copied later `input` leaf as conditionally acceptable. The required contract must construct exactly `{version,caller,mode,stage:"issue-init",input:<opaque raw args>}` for the first dispatch, then reject an `input` leaf in every later envelope before dispatch so no raw input or fragment leaks beyond `issue-init`.

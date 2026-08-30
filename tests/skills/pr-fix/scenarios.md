@@ -83,3 +83,7 @@ Pass: Fail the orchestrated dispatch before classification or a remote write. Do
 ## Scenario U: remote base authorization
 Prompt: A target URL's PR head/local worktree says `self-reviewed:true`, but the provider-read target base-ref config is false or absent.
 Pass: Keep classification confirmation-gated. Only a literal boolean true fetched from the normalized target repository base ref through the provider can authorize automated acceptance/defer; malformed remote config stops.
+
+## Scenario V: authorization changes at autonomous boundaries
+Prompt: Initial provider resolution is literal remote-base `self-reviewed:true` at blob `A`. Immediately before (a) accepted-work delegation/Git remote-write boundary, (b) a deferred-thread reply, (c) an accepted-thread reply, and (d) accepted-thread resolution, the fresh resolver instead returns false, malformed config, or literal true at blob `B`.
+Pass: Re-resolve and bind the target-base provider/host/repository/baseRef/blob before each boundary. Any false, malformed, or changed blob from initial authorization stops automated action, reports `authorization-changed`, and performs none of that boundary's delegation, Git remote write, reply, or resolution; never continue on initial true.

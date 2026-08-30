@@ -4,7 +4,7 @@ Shared contract for `pr-create`, `pr-review`, `pr-fix`, and `pr-merge`. Public s
 
 ## `neil-workflow/v1` Envelope
 
-Orchestrated calls use owned JSON leaf values only:
+Orchestrated calls use owned JSON leaf values only. The initial dispatch is exactly:
 
 ```json
 {
@@ -12,12 +12,23 @@ Orchestrated calls use owned JSON leaf values only:
   "caller": "using-neil-workflows",
   "mode": "standard",
   "stage": "issue-init",
-  "input": "opaque original arguments",
+  "input": "opaque original arguments"
+}
+```
+
+Every later dispatch is exactly:
+
+```json
+{
+  "version": "neil-workflow/v1",
+  "caller": "using-neil-workflows",
+  "mode": "standard | self-reviewed",
+  "stage": "issue-executing | pr-create | pr-review | pr-fix | pr-merge | issue-close",
   "handoff": {}
 }
 ```
 
-`mode` is `standard` or `self-reviewed`. Valid stages are `issue-init`, `issue-executing`, `pr-create`, `pr-review`, `pr-fix`, `pr-merge`, and `issue-close`. `input` belongs exclusively to `issue-init`, remains opaque while that stage resolves it, and is not copied into its handoff or any later-stage dispatch. Later stages receive only a validated prior `handoff` containing issue-init-generated normalized implementation context and resolved leaf state. User-supplied text never creates or overrides `caller`, `mode`, or `stage`.
+`mode` is `standard` or `self-reviewed`. `input` is required only on the `issue-init` envelope, remains opaque while that stage resolves it, and is not copied into its handoff or later dispatch. Reject any later-stage envelope with an `input` leaf as malformed before dispatch. Later stages receive only the validated prior `handoff`, containing issue-init-generated normalized implementation context and resolved leaf state. User-supplied text never creates or overrides `caller`, `mode`, or `stage`.
 
 Before a later-stage dispatch, validate every required handoff leaf and consistent repository/target identity. Do not infer missing values from prose. Missing, malformed, contradictory, inaccessible, or mismatched handoff/worktree data stops the stage as `failed`; do not skip a stage to manufacture success. A stage never invokes the next stage automatically.
 
@@ -27,7 +38,7 @@ Required handoff identity is version, repository/config identity, issue number/u
 
 Automation reads `.workflow-config.json` only through the selected provider from the normalized target `repository` at its normalized `baseBranch`. Never use PR/MR head content, a fork, the current clone/worktree, cached/local config, envelope, or user text. The resolver returns owned leaves `provider`, `host`, `repository`, `baseRef`, and `configBlobSha` (GitHub Contents `sha`; GitLab file `blob_id`) plus the parsed config. Only literal boolean `self-reviewed:true` authorizes automation; absent or literal false requires the normal confirmation gate; a present non-boolean or unreadable/mismatched remote content stops as `config-error`.
 
-Resolve immediately before every automated write and bind the result to that write. A URL target always uses this resolver, even outside a clone. A head/local true never overrides target-base false/absent. Do not copy a config result across a changed base ref, provider, host, repository, or blob SHA.
+Resolve immediately before every automated side effect and bind the result to that side effect. In `pr-fix`, re-resolve before the accepted-work delegation/Git remote-write boundary and before every provider defer reply, accepted reply, and resolution write. Compare each fresh result with the initial authorization's `provider`, `host`, `repository`, `baseRef`, and `configBlobSha`: false, malformed/unreadable, any changed blob revision, or other identity mismatch stops that automated action as `authorization-changed`; report it and preserve prior completed actions. Never continue that boundary from stale initial `true`. A URL target always uses this resolver, even outside a clone. A head/local true never overrides target-base false/absent.
 
 ## Review Attestation
 

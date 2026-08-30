@@ -53,3 +53,9 @@ All following checks were read-only fresh-context contract simulations against t
 | `issue-executing` handoff/stage failure | PASS | The parent stops at that exact stage as `failed`, retains valid `issue-init` state and any prior side effects, and dispatches no later PR, review, merge, or close stage. |
 
 The dirty-cleanup stage itself reports `status:"stopped"`; the documented parent terminal status is `failed` because closure/cleanup cannot be validated. This distinction retains the merged side effect honestly instead of implying a rollback.
+
+## Final-Review Envelope Regression
+
+Fresh guided W-X simulations constructed the first dispatch exactly as `{version:"neil-workflow/v1",caller:"using-neil-workflows",mode:"standard",stage:"issue-init",input:<opaque raw args>}` with no `handoff`. Nested input remained opaque and reached only fresh `issue-init`. Each later stage accepted only its validated owned `handoff`; an injected `input` leaf for `issue-executing`, `pr-create`, `pr-review`, `pr-fix`, `pr-merge`, or `issue-close` was rejected before dispatch as malformed and ended `failed`. No raw input or fragment crossed the issue-init boundary.
+
+Mechanical recheck: `pr-fix` is 499 words (cap 500), `using-neil-workflows` is 474 words, and `git diff --check` exits 0 with no output.

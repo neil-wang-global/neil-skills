@@ -84,3 +84,7 @@ The Q agent also rationalized that the review-publication clause could publish a
 2. Only config-authorized calls may auto-accept simple findings; they still build a classification table and return actual Git/thread progress.
 3. Architectural/public-interface, migration, security-policy, cross-module, unclear, and high-risk findings defer with a concise reply and remain unresolved without worktree, delegation, commit, or push.
 4. With `self-reviewed:false` or absent, calls retain `accept`/`reject`/`clarify`, one human table, and no `defer` bypass. Envelopes only validate orchestration handoff/sequencing.
+
+## Boundary-revalidation RED regression
+
+Fresh current-guidance simulation of Scenario V found that the contract's generic write rule did not name `pr-fix`'s delegation/Git boundary or each defer/reply/resolve write. It correctly refused stale blob `A`, but left false/confirmation scope and the per-boundary `authorization-changed` stop result implicit. The required guidance must re-resolve immediately before every named boundary, compare the original provider/host/repository/baseRef/blob authorization tuple, and stop that automated action on false, malformed, or any blob change.

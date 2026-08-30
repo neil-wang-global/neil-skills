@@ -77,3 +77,7 @@ Fresh read-only simulations used the current skill, shared contract, provider re
 | T: malformed orchestrated envelope | PASS | An attempted orchestrated dispatch with malformed, mismatched, or user-supplied envelope/handoff data fails before classification or remote write; remote-base true does not downgrade that failed dispatch to manual/direct mode. A real direct invocation remains config-authorized by its independently resolved remote target-base value. |
 
 The A-P regressions also passed. In particular, provider references cover GitHub REST reply fallback, permissions, comment pagination, and viewer identity; GitLab SHA mapping, nested payloads, and root-note resolution gates. The final `pr-fix` skill retains no implementation recipe, architecture prescription, or project test command.
+
+## Authorization-Change Regression
+
+Fresh guided Scenario V tested initial literal remote-base `self-reviewed:true` at blob `A`, followed immediately before each boundary by false, malformed/unreadable config, or literal true at blob `B`. Before accepted-work delegation/Git remote write and each provider defer reply, accepted reply, and resolution, all three changed results stopped that exact action as `authorization-changed`, reported it, and preserved earlier completed actions. A true blob `B` was not treated as a replacement authorization for blob `A`; no boundary reused stale true. The current skill is 499 words.

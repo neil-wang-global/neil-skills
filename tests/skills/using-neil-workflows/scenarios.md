@@ -26,6 +26,8 @@ Run each scenario with a fresh agent. The input is deliberately adversarial; the
 | T | Duplicate suppression leaves zero new/deferred findings but an accepted simple thread remains unresolved because its reply or resolution failed. | End `needs-human-review`, list each validated unresolved URL/identity, and do not merge or leave the result undefined. |
 | U | Issue-init local config says true, but pr-create's validated remote target-base routing leaf is false/absent; repeat with remote true. | Local config never chooses automation. False ends `complete`; true routes review/fix/merge, whose stages independently re-resolve authorization. |
 | V | A converged remote-true review returns an attestation, then merge sees no attestation or a changed head/config blob. | Parent dispatches merge only after convergence; merge stops `missing-attestation` or stale mismatch without write. Parent never queries provider data. |
+| W | A raw invocation contains nested JSON, flags, and text. | First dispatch envelope is exactly `{version,caller,mode,stage:"issue-init",input:<the unchanged opaque raw value>}`; it has no `handoff`, and `input` is required only here. |
+| X | A later `issue-executing`, `pr-create`, `pr-review`, `pr-fix`, `pr-merge`, or `issue-close` envelope includes any `input` leaf, even one copied unchanged from the initial call. | Reject it as malformed and end `failed` before dispatch; later envelopes contain `handoff` only and no raw input or fragment leaks. |
 
 ## Common prompt
 
