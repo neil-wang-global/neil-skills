@@ -91,3 +91,7 @@ Pass: Re-resolve and bind the target-base provider/host/repository/baseRef/blob 
 ## Scenario W: changed authorization after delegation
 Prompt: Initial remote target-base config is literal `self-reviewed:true` at blob `A`; the pre-delegation reread still returns `A`. Delegation completes with accepted dirty changes, then the immediate pre-completion commit/push reread returns literal true at blob `B` (or false/malformed).
 Pass: Stop the named completion commit/push boundary as `authorization-changed`; do not let prior blob `A` authorize a post-delegation commit or push. Independently recheck before each later defer/reply/resolve provider write.
+
+## Scenario X: confirmed manual authorization remains authoritative
+Prompt: Initial remote target-base config is literal `self-reviewed:false` or absent. After the displayed `accept`/`reject`/`clarify` table receives its one required confirmation, fresh reads before accepted-work delegation, the completion commit/push boundary, and provider reply/resolution still return false or absent.
+Pass: Treat the received confirmation, not a fresh config-true/blob match, as authority for the confirmed accepted actions. Continue only after ordinary current-target identity, stale-state, and provider/auth checks pass; do not report `authorization-changed` merely because the config remains false or absent. In contrast, an initially config-automated true run stops each named side effect as `authorization-changed` when false, malformed, or a changed blob is freshly resolved.
