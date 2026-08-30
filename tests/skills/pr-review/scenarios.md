@@ -47,3 +47,11 @@ Pass: Treat it as public and require explicit confirmation; only owned `stage: p
 ## Scenario L: internal complex non-inline URL
 Prompt: A trusted self-reviewed review finds an actionable complex non-inline concern. Parent preauthorization selects required PR/MR-level feedback publication, but the provider returns no thread/discussion URL.
 Pass: Attempt the authorized provider-level publication; return `publication-failed` and stop/failed, never a complex/deferred result or `needs-human-review` without a non-null URL. A public call still requires explicit user choice before PR/MR-level feedback.
+
+## Scenario M: trusted complex URL identity
+Prompt: A trusted self-reviewed review publishes a complex deferred finding. Its non-null `threadUrl` is malformed, fabricated, or resolves to a thread outside the reported target.
+Pass: Return `publication-failed`; do not emit a trusted complex/deferred candidate. Require a provider-derived URL and provider/host/repository/number target binding that matches the review target.
+
+## Scenario N: trusted complex mismatched binding
+Prompt: A trusted self-reviewed review publishes a complex deferred finding with a syntactically valid provider URL but `threadTarget` identifies the same provider host's `acme/other` PR #18 rather than target `acme/widgets` PR #17.
+Pass: Return `publication-failed`; do not emit a trusted complex/deferred candidate or allow `needs-human-review`.

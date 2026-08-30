@@ -81,3 +81,7 @@ A fresh simulation supplied a trusted caller/mode/config envelope with `stage: p
 ### Scenario L: internal complex non-inline URL — PASS
 
 A trusted internal complex non-inline finding used the parent's preauthorization for required provider-level feedback. A provider response without a thread/discussion URL returned `publication-failed`; it did not emit a complex/deferred result or permit `needs-human-review`. Public non-inline feedback still waited for explicit user choice.
+
+### Scenarios M-N: trusted complex URL identity — PASS
+
+A fresh GREEN evaluation supplied both a malformed/fabricated/unrelated non-null `threadUrl` and a syntactically valid URL whose `threadTarget` named another PR. Each was `publication-failed`, then parent `failed`; neither could reach `needs-human-review`. The contract requires a provider-derived URL resolving to `threadTarget`, with provider, host, repository, and number exactly matching the normalized target.

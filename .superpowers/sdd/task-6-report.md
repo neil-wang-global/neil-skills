@@ -63,3 +63,11 @@ This follow-up corrected only the shared contract, `pr-fix`, `pr-review`, `using
 - `tests/skills/using-neil-workflows/verification.md` removes and explicitly supersedes obsolete issue-init-to-pr-create, mixed-no-rereview, and pending-auto-merge-to-stalled claims.
 
 Fresh read-only regressions passed: exact-stage spoof, complex non-inline URL failure/public-choice retention, and the A-P current terminal graph. Mechanical checks recorded 498 words for `pr-fix`, 453 for `pr-review`, and 484 for `using-neil-workflows`; `git diff --check` was clean.
+
+## URL Target-Binding Integration Fix
+
+The reviewer Important gap is closed in the shared contract, `pr-review`, `using-neil-workflows`, and their regression evidence. Trusted complex/deferred findings now return a provider-derived `threadUrl` plus `threadTarget` with provider, host, repository, and number. The parent requires the URL to resolve to that binding and the binding to exactly match the normalized PR/MR target. Missing, malformed, fabricated, unrelated, or mismatched values are `publication-failed` then `failed`, never `needs-human-review`. Public non-inline feedback retains its explicit-user-choice rule.
+
+Fresh RED evaluation confirmed the former non-null-only predicate could route a foreign URL to `needs-human-review`. Fresh GREEN evaluation covered fabricated/unrelated URLs and valid-looking URLs bound to another target; both stopped as `publication-failed -> failed`.
+
+Mechanical validation: `wc -w` reports 468 words for `pr-review` and 497 for `using-neil-workflows`; `git diff --check` exits 0 with no output.

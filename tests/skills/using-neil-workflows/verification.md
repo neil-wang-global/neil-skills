@@ -21,8 +21,9 @@ Fresh GREEN simulations passed the current A-P terminal graph:
 | P | Incomplete/failed review publication, or a new simple finding without a usable thread identity, ends `failed`; only `pr-review` owns retry. |
 | Q | A complex/deferred candidate with null/missing thread/discussion URL, including failed trusted non-inline publication, ends `failed`; never `needs-human-review`. |
 | R | An otherwise trusted `/pr-fix` envelope with `stage: pr-review` remains standalone and cannot auto-accept or defer. |
+| S | A malformed, fabricated, unrelated, or target-mismatched complex/deferred URL/binding is `publication-failed`, then `failed`; never `needs-human-review`. |
 
-A separate fresh review-handoff simulation passed: `pr-review` returns a versioned owned target, snapshot/head, finding fingerprint/thread URL/complexity/state, and exact convergence/publication leaves; duplicate suppression preserves unresolved/deferred state. Its trusted publication path requires owned `stage: pr-review`; a wrong stage remains public.
+A separate fresh review-handoff simulation passed: `pr-review` returns a versioned owned target, snapshot/head, finding fingerprint/thread URL/thread target/complexity/state, and exact convergence/publication leaves; duplicate suppression preserves unresolved/deferred state. Its trusted publication path requires owned `stage: pr-review`; a wrong stage remains public.
 
 ## Current Mechanical Checks
 
