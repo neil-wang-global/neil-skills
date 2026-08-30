@@ -32,11 +32,11 @@ Every later dispatch is exactly:
 
 Before a later-stage dispatch, validate every required handoff leaf and consistent repository/target identity. Do not infer missing values from prose. Missing, malformed, contradictory, inaccessible, or mismatched handoff/worktree data stops the stage as `failed`; do not skip a stage to manufacture success. A stage never invokes the next stage automatically.
 
-Required handoff identity is version, repository/config identity, issue number/url/title/body, an issue-init-generated normalized `implementationBrief`, branch, worktree, and headRepository. The validated issue-init handoff may retain config defaults for creation only; it must not authorize later automated stages. Stage results add actual Git state (`status`, `headSha`, commits, dirty state, push state) and, when available, the exact normalized target below; legacy `base` and `head` aliases are invalid.
+Required handoff identity is version, repository/config identity, issue number/url/title/body, an issue-init-generated normalized `implementationBrief`, `textLanguage`, branch, worktree, and headRepository. The validated issue-init handoff may retain config defaults for creation only; it must not authorize later automated stages. Stage results add actual Git state (`status`, `headSha`, commits, dirty state, push state) and, when available, the exact normalized target below; legacy `base` and `head` aliases are invalid.
 
 ## Remote Automation Authorization
 
-Automation reads `.workflow-config.json` only through the selected provider from the normalized target `repository` at its normalized `baseBranch`. Never use PR/MR head content, a fork, the current clone/worktree, cached/local config, envelope, or user text. The resolver returns owned leaves `provider`, `host`, `repository`, `baseRef`, and `configBlobSha` (GitHub Contents `sha`; GitLab file `blob_id`) plus the parsed config. Only literal boolean `self-reviewed:true` authorizes automation; absent or literal false requires the normal confirmation gate; a present non-boolean or unreadable/mismatched remote content stops as `config-error`.
+Automation reads `.workflow-config.json` only through the selected provider from the normalized target `repository` at its normalized `baseBranch`. Never use PR/MR head content, a fork, the current clone/worktree, cached/local config, envelope, or user text. The resolver returns owned leaves `provider`, `host`, `repository`, `baseRef`, `configBlobSha`, and `textLanguage`, plus the parsed config. It trims a string `language`; absent or empty resolves to `textLanguage:""`, while a present non-string stops the target stage as `config-error`. A non-empty remote `textLanguage` governs that stage's next newly generated human-readable text; it cannot be overridden by head, fork, local, envelope, or prose input. Only literal boolean `self-reviewed:true` authorizes automation; absent or literal false requires the normal confirmation gate; a present non-boolean or unreadable/mismatched remote content stops as `config-error`.
 
 Resolve immediately before every config-automated side effect and bind the result to that side effect. In `pr-fix`, only when initial authorization was config-automated (`self-reviewed:true`), re-resolve before the accepted-work delegation/Git remote-write boundary and before every provider defer reply, accepted reply, and resolution write. Compare each fresh result with the initial authorization's `provider`, `host`, `repository`, `baseRef`, and `configBlobSha`: false, malformed/unreadable, any changed blob revision, or other identity mismatch stops that automated action as `authorization-changed`; report it and preserve prior completed actions. Never continue that boundary from stale initial `true`. When initial remote config was false or absent and the required confirmation was received, manual confirmation is the authority for confirmed actions: do not apply config/blob reauthorization gates solely because fresh config remains false or absent. Retain ordinary current-target identity, stale-state, and provider authentication/authorization checks. A URL target always uses this resolver to establish its initial mode, even outside a clone. A head/local true never overrides target-base false/absent.
 
@@ -57,8 +57,9 @@ The PR skills may read `.workflow-config.json` only when it belongs to the targe
 | `pr-draft` | `false` |
 | `pr-auto-close-issue` | `false` |
 | `self-reviewed` | `false` |
+| `language` | `""` |
 
-A malformed present config is an error for the fields the current skill needs. Do not silently rewrite it. `self-reviewed` is `false` when absent; a present non-boolean `self-reviewed` value is an error.
+A malformed present config is an error for the fields the current skill needs. Do not silently rewrite it. `self-reviewed` is `false` when absent; a present non-boolean `self-reviewed` value is an error. `language` is trimmed when present; absent or empty resolves to `textLanguage:""`, and a present non-string value is an error.
 
 ## Normalized Target
 
@@ -69,7 +70,7 @@ provider, host, repository, number, url, baseBranch,
 headRepository, headBranch, headSha
 ```
 
-Before review or any later target-consuming stage, the parent validates all nine leaves and their base/head identity binding; a missing, aliased, or contradictory target fails. For routing only, an internal `pr-create` result also carries remote-derived `automation: { enabled, provider, host, repository, baseRef, configBlobSha }`; it must match target identity/base branch. The parent never reads config or provider data and each later stage re-resolves authorization before its own write.
+Before review or any later target-consuming stage, the parent validates all nine leaves and their base/head identity binding; a missing, aliased, or contradictory target fails. For routing only, an internal `pr-create` result also carries remote-derived `automation: { enabled, provider, host, repository, baseRef, configBlobSha, textLanguage }`; it must match target identity/base branch. The parent never reads config or provider data and each later stage re-resolves authorization before its own write.
 
 For `pr-create`, resolve `headRepository` from the current branch's push remote and base `repository` from that same repository or an explicit/upstream remote; ask when a fork has no unambiguous base target. Resolve `headBranch` from the current branch and `baseBranch` from config/defaults. Issue lookup, existing-target lookup, and creation use the base repository; pushed-commit verification uses the head repository. Populate number, URL, and head SHA from the remote response.
 

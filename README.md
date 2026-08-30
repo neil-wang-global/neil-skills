@@ -42,6 +42,7 @@ claude plugin update neil-skills@neil-skills
   "pr-draft": false,
   "pr-auto-close-issue": false,
   "self-reviewed": false,
+  "language": "",
   "remarks": ""
 }
 ```
@@ -56,6 +57,7 @@ claude plugin update neil-skills@neil-skills
 | `pr-draft` | 新 PR/MR 是否为 draft | `false` |
 | `pr-auto-close-issue` | 合并后是否通过 closing keyword 自动关闭 issue | `false` |
 | `self-reviewed` | 自动化只读取 provider 从目标仓库 `base-branch` 远端解析的字面布尔值；`true` 可自动发布审查、分类/执行修复，且仅在精确 provider attestation 存在时可自动合并。head、fork、local、envelope 或用户文字均无权授权；缺失为 `false`，非布尔值停止 | `false` |
+| `language` | 自由文本语言名；去除首尾空白。`/issue-init` 用本地配置生成新 issue 标题和正文并交接 `textLanguage`；非字符串停止，缺失或空值保持现有行为。仅 `/issue-init` 创建该字段 | `""` |
 | `remarks` | 额外指令，作为上下文载入技能执行流程（如 label 规则、命名约定等） | `""` |
 
 **模板变量：**

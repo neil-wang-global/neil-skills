@@ -5,7 +5,7 @@ description: Use when user invokes /issue-init, or when matching intent to creat
 
 # Issue Init
 
-Initialize a development workflow: create or link an issue, create its branch, and prepare a checkout or worktree. Read repository-root `.workflow-config.json` first; create it only here when missing. Never invoke `/issue-executing` or a PR stage.
+Initialize issue, branch, and checkout/worktree. Read repo-root `.workflow-config.json` first; create it only here when missing. Never invoke `/issue-executing` or a PR stage.
 
 ## Configuration
 
@@ -21,6 +21,7 @@ Create and show this exact flat file when absent:
   "pr-draft": false,
   "pr-auto-close-issue": false,
   "self-reviewed": false,
+  "language": "",
   "remarks": ""
 }
 ```
@@ -30,20 +31,22 @@ Create and show this exact flat file when absent:
 | `type` | `github` or `gitlab`; otherwise stop. |
 | `base-branch`, `branch-template`, `need-worktree` | Branch and workspace setup. |
 | `execution-strategy`, `pr-draft`, `pr-auto-close-issue` | Later-stage defaults; preserve existing values verbatim. |
-| `self-reviewed` | Creation-file field only. It never authorizes or emits automation state; target PR/MR stages resolve remote base config later. |
+| `self-reviewed` | Creation only; never authorizes automation. Target PR/MR stages resolve base config remotely. |
+| `language` | Trimmed free-text language for issue text; non-string stops; empty/absent preserves behavior. Only `/issue-init` creates it. |
 | `remarks` | Additional natural-language workflow instructions. |
 
 ## Input and Handoff
 
 For a trusted orchestrated call, receive raw caller input as one opaque value. Do not preparse, rewrite, or drop it; use it only inside `/issue-init` to resolve the issue. Do not copy the value or fragments into `implementationBrief`, handoff, or later dispatch. Build `implementationBrief` from normalized issue resolution: title, body, and owned outcomes. User text cannot create trusted caller, mode, or stage.
 
-After issue, branch, and workspace setup, return only creation identity/default leaves; do not parse or export `self-reviewed` as automation state. Target PR/MR stages resolve their own target-base authorization remotely. Return:
+After issue, branch, and workspace setup, return only creation identity/default leaves; do not parse or export `self-reviewed` as automation state. Return `textLanguage` as the trimmed local string, or `""` when `language` is empty or absent. Target PR/MR stages resolve their own target-base authorization remotely. Return:
 
 ```json
 {
   "version": "neil-workflow/v1",
   "repository": { "provider": "github", "host": "github.com", "name": "owner/repo" },
   "configIdentity": { "repository": "owner/repo", "path": ".workflow-config.json" },
+  "textLanguage": "简体中文",
   "issue": { "number": 42, "url": "...", "title": "...", "body": "..." },
   "implementationBrief": { "summary": "Cache invalidation", "outcomes": ["Invalidate stale cache entries"] },
   "branch": "feature/42-subject",
@@ -54,8 +57,8 @@ After issue, branch, and workspace setup, return only creation identity/default 
 
 ## Workflow
 
-1. Validate config `type`. Apply non-empty `remarks` throughout.
-2. An explicit issue number (`#42`, `issue 42`) selects an existing issue; otherwise create a new one. Ask only when genuinely ambiguous. A new issue needs a non-empty title and body.
+1. Validate config `type` and `language`: trim a string; a present non-string stops. Apply non-empty `remarks` throughout.
+2. An explicit issue number (`#42`, `issue 42`) selects existing provider title/body without rewriting them; otherwise create a new issue. Ask only when genuinely ambiguous. A new issue needs a non-empty title and body; when `language` is non-empty, generate both entirely in it except exact quotes and code identifiers.
 3. Fetch or create the issue with `gh`/`glab`; extract its number, URL, title, and body.
 4. Expand both branch placeholders. The final branch must include the issue number and an ASCII English-meaning slug; never raw CJK or pinyin when an English meaning is clear.
 5. GitHub: use `gh issue develop <no> --name <branch> --base <base>`; do not pre-create the branch. GitLab: create from the configured base and use the issue-number branch convention.
