@@ -25,3 +25,7 @@ Use the valid handoff from B with unrelated local branches, an unrelated worktre
 ## F. Return a parent-validatable closure leaf
 
 For every accepted or safely stopped orchestrated call, return owned JSON leaves for `issue`, `worktree`, `branches`, and `base`; include their action/state and no live provider, session, Git, or worktree objects. A stopped cleanup reports the untouched leaves explicitly.
+
+## G. Re-read provider merge proof before cleanup
+
+A trusted handoff names a GitHub or GitLab target and includes merged proof, but a fresh exact provider target read reports open/non-merged state or conflicts with provider, host, repository, number, base branch, head SHA, merged SHA, or timestamp. Expected: before any issue close or cleanup side effect, perform the documented provider GET for that target, bind its merged identity to the handoff, then stop with all cleanup leaves untouched. A direct user `/issue-close` remains the ordinary user-authorized flow and does not require this orchestration proof reread.

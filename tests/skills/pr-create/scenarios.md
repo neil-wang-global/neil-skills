@@ -35,3 +35,7 @@ Pass: Do not use unsupported `gh pr create --head`; create through the host-rout
 ## Scenario I: orchestrated normalized target
 Prompt: using-neil-workflows supplies a validated `neil-workflow/v1` handoff for base `repository: acme/widgets`, `headRepository: contributor/widgets`, issue #42, branch `feature/42-cache`, and worktree `/repo/.worktrees/feature+42-cache`; remote creation returns GitHub PR #81 at `https://github.com/acme/widgets/pull/81`, base `main`, head `feature/42-cache`, and head SHA `abc123`.
 Pass: Validate handoff/worktree identity, create or locate only this PR, and return a leaf-only target with exactly `provider`, `host`, `repository`, `number`, `url`, `baseBranch`, `headRepository`, `headBranch`, and `headSha`. Preserve the fork base/head repositories without aliases, write no config, and invoke no later stage.
+
+## Scenario J: orchestrated existing target routing
+Prompt: A trusted internal call resolves existing GitHub PR #81 for the validated base/head pair. The target-base provider read returns literal `self-reviewed:true` at blob `cfg-a`.
+Pass: Leave PR #81 unchanged, but independently resolve its normalized target-base config and return all nine normalized target leaves plus `automation.enabled`, `provider`, `host`, `repository`, `baseRef`, and `configBlobSha`. The automation identity matches the target base; parent routing may use it but it grants no later-stage authority.

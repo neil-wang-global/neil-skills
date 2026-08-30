@@ -99,6 +99,17 @@ glab mr merge <iid> --repo <base-project-url> --sha <reviewed-head-sha> --auto-m
 
 GitLab's current merge REST schema is `PUT /projects/:id/merge_requests/:merge_request_iid/merge` with `sha` and `auto_merge`; `merge_when_pipeline_succeeds` is deprecated. Re-read the MR until `state` is `merged`, then return `merge_commit_sha` and `merged_at`. Auto-merge registration or a queue is pending, not success.
 
+### Orchestrated Issue-Close Proof Reread
+
+For each bounded trusted `/issue-close` side effect, independently run this exact target read immediately before the effect:
+
+```bash
+glab api --hostname <host> --method GET \
+  "projects/<encoded-project>/merge_requests/<iid>"
+```
+
+Require `state: merged`; bind and compare provider/host/repository/IID, `target_branch`, `source_branch`, `sha`, `merge_commit_sha`, and `merged_at` with the handoff. Missing, unreadable, non-merged, or mismatched data stops that effect.
+
 ## Review Metadata and Diff
 
 Route every call with the host parsed from the target URL:

@@ -90,6 +90,9 @@ Post-commit `git status` shows an untracked `.build/` directory containing `CACH
 
 ## Configuration-Authorization Revision
 
-**RED:** direct `self-reviewed:true` review, fix, and merge cases were not consistently represented; the prior README and evidence implied only a provenance-bearing orchestrated call could bypass confirmation.
+**Final Audit Remediation (2026-08-28)**
 
-**GREEN:** README, contract, scenarios, baselines, and verification now state the same rule: matching target-repository boolean `self-reviewed:true` authorizes direct and orchestrated review publication, fix classification/execution including `defer`, and merge after all existing gates. False/absent config retains one public confirmation for each stage. The envelope is sequencing/handoff metadata only.
+- RED: targeted checks failed for an existing internal PR target that could return before automation routing, stale merged handoff proof without a provider reread, and missing explicit post-delegation commit/push authorization reread.
+- GREEN: `node -e` guard checks passed for all three paths and both provider closure reads; `git diff --check` passed.
+- Updated only the three affected skills, the shared contract, GitHub/GitLab provider references, and their scenarios.
+- Skill word counts: `pr-create` 486, `issue-close` 387, `pr-fix` 373.

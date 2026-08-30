@@ -125,6 +125,17 @@ gh pr merge <number> --repo <host>/<owner>/<repo> --merge --auto --match-head-co
 
 `gh pr merge --help` specifies that merge queues may enqueue these requests. Re-read until `state` is `MERGED`; return `mergedAt` and `mergeCommit.oid` only then. A non-merged `autoMergeRequest`, queue, or command response is pending.
 
+### Orchestrated Issue-Close Proof Reread
+
+For each bounded trusted `/issue-close` side effect, independently run this exact target read immediately before the effect:
+
+```bash
+gh pr view <number> --repo <host>/<owner>/<repo> \
+  --json state,baseRefName,headRefName,headRefOid,mergedAt,mergeCommit
+```
+
+Require `state: MERGED`; bind and compare provider/host/repository/number, base/head branches, `headRefOid`, `mergeCommit.oid`, and `mergedAt` with the handoff. Missing, unreadable, non-merged, or mismatched data stops that effect.
+
 ## Review Metadata and Diff
 
 A number, URL, branch, or omitted current branch is accepted by native `gh pr` commands. Normalize `headRepository.nameWithOwner` (with `headRepositoryOwner` as context) separately from the base URL repository; code checkout/push uses the head repository while all PR/review endpoints use the base repository:

@@ -19,10 +19,10 @@ For an internal call, require a `neil-workflow/v1` envelope with trusted caller/
 
 1. Require local Git. Resolve `headRepository` from the branch push remote and base `repository` from that or an explicit/upstream remote; ask when a fork base is ambiguous.
 2. Require a branch different from the base. Extract the issue number by applying `branch-template` to the complete branch, or use an explicit supplied number; otherwise ask and never guess.
-3. Verify provider authentication and the issue in the base repository. Query it for an open target from the head repository and branch; return an existing target unchanged.
-4. Require committed, pushed changes in the head repository. Build a concise title and body with `Summary`, `Testing`, and `Issue`; report only available evidence.
+3. Verify provider authentication and the issue in the base repository. Query it for an open target from the head repository and branch. An existing target is unchanged, but an internal call continues to step 6 before returning.
+4. With no existing target, require committed, pushed changes in the head repository. Build a concise title and body with `Summary`, `Testing`, and `Issue`; report only available evidence.
 5. Create ready by default; create draft only when `pr-draft` is true. Link non-closing by default; use a provider closing reference only when `pr-auto-close-issue` is true. Opening never closes an issue.
-6. Re-read remote state and resolve target-base config through its provider. For an internal result, report only the remote-derived automation routing leaf (`enabled`, provider/host/repository/baseRef/configBlobSha); this routes the parent but never authorizes review/fix/merge, which each re-resolve independently. Report `/pr-review` as available, without invoking it.
+6. For an existing or created target, independently re-read the remote target, resolve target-base config through its provider, and return the normalized target plus the complete automation routing leaf. Never modify an existing target. Automation routes the parent only; each later stage re-resolves authorization. Report `/pr-review` as available, without invoking it.
 
 For an internal result, return owned leaf JSON with exactly this normalized target:
 
