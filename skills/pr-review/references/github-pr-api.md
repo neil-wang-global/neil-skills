@@ -148,7 +148,7 @@ This can target a fork only when the authenticated actor has permission. Treat a
 
 ### Issue Close
 
-For GitHub, `gh issue close --help` supports `--comment`. In direct invocation, use the already-read local config's non-empty `textLanguage` to generate the comment; in trusted orchestrated close, first complete the current matching target reread, then resolve target-base config and use its validated non-empty `textLanguage`:
+For GitHub, `gh issue close --help` supports `--comment`. Before a GitHub close with generated prose, resolve and validate `textLanguage` from the target repository's remote base ref; local/worktree config may provide issue/branch defaults but never this language. In trusted orchestrated close, first complete the current matching target reread, then perform that target-base resolution; direct close uses the same resolution:
 
 ```bash
 gh issue close <issue-no> --repo <host>/<owner>/<repo> --comment <generated-closing-comment>

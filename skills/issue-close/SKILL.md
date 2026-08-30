@@ -19,8 +19,8 @@ For a valid read: inspect the named worktree; dirty stops autonomously. Remove o
 
 ## Direct Invocation
 
-1. Read config; derive the issue from the complete current branch using `branch-template`, or use an explicit issue number. Never guess.
+1. Read config only for `branch-template` and `base-branch` defaults; derive the issue from the complete current branch, or use an explicit issue number. Never guess.
 2. If in an issue worktree, remove it with `ExitWorktree`; dirty state asks whether to discard or abort. Otherwise check out `base-branch`.
-3. GitHub: when the already-read local config has non-empty `textLanguage`, generate one language-conforming closing comment and run `gh issue close <issue-no> --comment <generated-closing-comment>`; otherwise run it without `--comment`. GitLab: run bodyless `glab issue close <issue-no>` because it has no message flag. Already closed is a no-op; never invent a message on GitLab.
+3. GitHub: immediately before generating a closing comment, resolve and validate `textLanguage` from the target repository's remote `base-branch`; local/worktree config never supplies or overrides it. A malformed/unreadable remote language stops before GitHub close; a non-empty value generates one language-conforming comment for `gh issue close <issue-no> --comment <generated-closing-comment>`, while empty/absent language omits `--comment`. GitLab: run bodyless `glab issue close <issue-no>` because it has no message flag. Already closed is a no-op; never invent a message on GitLab.
 4. Delete only the current issue branch and its derived worktree branch when unoccupied. Never delete other or remote branches.
 5. Run `git fetch --prune`, then `git pull`; report the issue, deleted branches, and updated base.
