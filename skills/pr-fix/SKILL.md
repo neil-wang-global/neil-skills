@@ -5,7 +5,7 @@ description: Use when resolving PR/MR feedback from a matching writable head-rep
 
 # PR Fix
 
-Classify feedback, delegate accepted work to `/issue-executing`, then finish Git/thread operations. Never write `.workflow-config.json`. Read the shared contract and selected provider reference before remote operations.
+Classify feedback, delegate accepted work to `/issue-executing`, then finish Git/thread operations. Never write `.workflow-config.json`. Read `references/pr-workflow-contract.md` and the selected `references/github-pr-api.md` or `references/gitlab-mr-api.md` before remote operations.
 
 ## Target and Authorization
 

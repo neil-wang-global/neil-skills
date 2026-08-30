@@ -15,6 +15,8 @@ Fresh agents used the modified `issue-init` skill.
 >   "execution-strategy": "",
 >   "pr-draft": false,
 >   "pr-auto-close-issue": false,
+>   "self-reviewed": false,
+>   "language": "",
 >   "remarks": ""
 > }
 > ```
@@ -50,7 +52,7 @@ The skill stops after reporting its own result.
 
 | Scenario | Result | Evidence |
 |---|---|---|
-| Missing configuration | PASS | Exact nine-field default JSON |
+| Missing configuration | PASS | Exact ten-field default JSON |
 | Existing configuration | PASS | New fields preserved verbatim |
 | No automatic chaining | PASS | Explicitly invokes no later skill |
 
@@ -58,7 +60,7 @@ No new rationalization or loophole appeared during GREEN verification.
 
 ## Cross-skill verification
 
-Flow A passed: `issue-init` alone creates the exact nine-field config, reports its issue/branch/worktree result, and does not invoke `issue-executing` or a PR stage.
+Flow A passed: `issue-init` alone creates the exact ten-field config, reports its issue/branch/worktree result, and does not invoke `issue-executing` or a PR stage.
 
 ## Task 1 GREEN scenarios
 
@@ -76,13 +78,14 @@ Flow A passed: `issue-init` alone creates the exact nine-field config, reports i
 >   "pr-draft": false,
 >   "pr-auto-close-issue": false,
 >   "self-reviewed": false,
+>   "language": "",
 >   "remarks": ""
 > }
 > ```
 >
 > What title and body should the new issue use?
 
-The fresh result contains the required nine-field flat default, with `self-reviewed:false` immediately before `remarks`.
+The fresh result contains the required ten-field flat default, with `self-reviewed:false`, then `language:""`, immediately before `remarks`.
 
 ### Scenario E: opaque orchestrator input — PASS
 

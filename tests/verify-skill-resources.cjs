@@ -5,7 +5,7 @@ const path = require('node:path');
 
 const repositoryRoot = path.resolve(__dirname, '..');
 const skillRoot = process.env.SKILL_ROOT || path.join(repositoryRoot, 'skills');
-const prSkills = ['pr-create', 'pr-review', 'pr-merge'];
+const prSkills = ['pr-create', 'pr-review', 'pr-fix', 'pr-merge'];
 const referenceFiles = [
   'pr-workflow-contract.md',
   'github-pr-api.md',
