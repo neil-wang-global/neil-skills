@@ -5,7 +5,7 @@ description: Use when development on the current issue branch is ready to open o
 
 # PR Create
 
-Create or locate the branch's issue-related PR/MR. Never create or modify `.workflow-config.json`. **REQUIRED REFERENCES:** Read `../../references/pr-workflow-contract.md` and the selected provider reference before remote operations.
+Create or locate the branch's issue-related PR/MR. Never create or modify `.workflow-config.json`. **REQUIRED REFERENCES:** Read `references/pr-workflow-contract.md` and `references/github-pr-api.md` or `references/gitlab-mr-api.md` for the selected provider before remote operations.
 
 ## Defaults
 

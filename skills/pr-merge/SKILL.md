@@ -7,7 +7,7 @@ description: Use when merging a reviewed GitHub pull request or GitLab merge req
 
 ## Contract
 
-Merge only the reviewed head. **REQUIRED REFERENCES:** Read `../../references/pr-workflow-contract.md` and the selected provider reference before remote operations. Never review, fix, resolve blockers, close issues, or clean branches/workspaces.
+Merge only the reviewed head. **REQUIRED REFERENCES:** Read `references/pr-workflow-contract.md` and `references/github-pr-api.md` or `references/gitlab-mr-api.md` before remote operations. Never review, fix, resolve blockers, close issues, or clean branches/workspaces.
 
 ## Authorization
 
