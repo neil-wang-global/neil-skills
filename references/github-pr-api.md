@@ -20,7 +20,11 @@ gh api --hostname <host> --method GET \
   "repos/<owner>/<repo>/contents/.workflow-config.json?ref=<base-ref>"
 ```
 
-Require response `encoding:"base64"`; decode `content`, parse the JSON, and retain response `sha` as `configBlobSha`. Only literal `self-reviewed:true` authorizes automation. Missing file/field or `false` is false; a non-boolean field, unexpected encoding, unreadable response, or mismatched target stops. Re-run this exact read immediately before every automated write.
+Require response `encoding:"base64"`; decode `content`, parse the JSON, and retain response `sha` as `configBlobSha`. A trimmed string `language` returns `textLanguage` (empty/absent is `""`; non-string stops the stage). Only literal `self-reviewed:true` authorizes automation. Missing file/field or `false` is false; a non-boolean field, unexpected encoding, unreadable response, or mismatched target stops. Re-run this exact read immediately before every automated write.
+
+### Generated Text and Protocol Values
+
+A non-empty `textLanguage` governs newly generated human prose only. Keep API paths, field names, enum values, SHA/URL/ID bindings, hidden fingerprints, and exact `neil-self-reviewed/v1` marker/payload unchanged. Provider closing references such as `Related to #<issue-no>` and `Closes #<issue-no>` are fixed relationship syntax, not generated prose.
 
 GitHub stores an attestation as a PR-level COMMENT review, not an approval. Read the authenticated merge actor and paginated reviews; accept only a body with exactly two lines and exactly the required JSON keys, whose review `user.login` equals that actor:
 

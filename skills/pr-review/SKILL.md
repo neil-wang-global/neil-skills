@@ -7,7 +7,7 @@ description: Use when reviewing a GitHub pull request or GitLab merge request by
 
 ## Contract
 
-Review the full PR/MR, preview all proposed remote comments, and require one explicit confirmation for public calls. Never modify `.workflow-config.json`.
+Review the full target, preview all proposed remote comments, and require one explicit confirmation for public calls. Never modify `.workflow-config.json`.
 
 **REQUIRED REFERENCES:** Read `../../references/pr-workflow-contract.md` and the selected provider reference before remote operations.
 
@@ -23,13 +23,13 @@ A URL works without a clone.
 
 ## Workflow
 
-1. Resolve an open target, authenticate, capture head SHA, then resolve target-base config remotely through the selected provider. Retain provider/host/repository/base ref/config blob SHA; never read head, fork, local, or envelope config.
-2. Fetch complete available diff/metadata, inline discussions, and PR/MR-level bodies. Review the full diff; keep actionable defects and suppress unchanged duplicates by fingerprint plus semantics.
-3. Map findings to reliable old/new lines. Mark unlocatable ones non-inline; never guess.
-4. Show one complete preview. Only remote-base literal `self-reviewed:true` authorizes publication without a human wait; false/absent waits for confirmation. A malformed/unreadable config stops; an envelope only validates sequencing.
+1. Resolve an open target, authenticate, capture head SHA, then resolve target-base config remotely. Retain resolver identity and `textLanguage`; never read head, fork, local, or envelope config.
+2. Fetch diff/metadata, inline discussions, and PR/MR bodies. Review the full diff; suppress unchanged duplicates by fingerprint plus semantics.
+3. Map findings to reliable old/new lines. Mark others non-inline; never guess.
+4. Preview in non-empty `textLanguage`. Only remote-base literal `self-reviewed:true` authorizes publication without a human wait; false/absent waits for confirmation. Malformed/unreadable config stops; an envelope validates sequencing only.
 5. Apply user edits for confirmation-gated calls. Config-authorized non-inline feedback may use required provider-level feedback; no publishable URL is `publication-failed`.
-6. Immediately re-fetch head/diff and remote base config before writes. On any changed head/config revision, withhold, remap/revalidate, and re-preview.
-7. Publish the authorized set. Only after a full current-head review has zero new/deferred/unresolved findings, read provider history and create one idempotent `neil-self-reviewed/v1` attestation for exact target/head/base-config revision. Report its provider ID/URL with snapshot, successes, failures, and skips.
+6. Immediately re-fetch head/diff and remote base config before writes. A changed head/config revision withholds, remaps/revalidates, and re-previews; fresh non-empty `textLanguage` governs new finding titles/explanations, inline/non-inline comments, and report prose.
+7. Publish the authorized set. After a full current-head review has zero new/deferred/unresolved findings, read provider history and create one idempotent `neil-self-reviewed/v1` attestation for the exact target/head/base-config revision. Keep marker/payload exact. Report its provider ID/URL with snapshot, successes, failures, and skips.
 
 ## Internal Result Handoff
 

@@ -9,7 +9,7 @@ Create or locate the branch's issue-related PR/MR. Never create or modify `.work
 
 ## Defaults
 
-Absent or missing matching-repository config fields use `base-branch: main`, `branch-template: feature/{issue-no}-{issue-subject}`, `pr-draft: false`, and `pr-auto-close-issue: false`. Use non-empty `remarks` as project instructions. An explicit remote determines provider/repository; stop on a conflicting configured `type`.
+Absent matching-repository config fields use `base-branch: main`, `branch-template: feature/{issue-no}-{issue-subject}`, `pr-draft: false`, and `pr-auto-close-issue: false`. Use non-empty `remarks` as project instructions. An explicit remote determines provider/repository; stop on a conflicting configured `type`.
 
 ## Trusted Orchestration
 
@@ -19,10 +19,10 @@ For an internal call, require a `neil-workflow/v1` envelope with trusted caller/
 
 1. Require local Git. Resolve `headRepository` from the branch push remote and base `repository` from that or an explicit/upstream remote; ask when a fork base is ambiguous.
 2. Require a branch different from the base. Extract the issue number by applying `branch-template` to the complete branch, or use an explicit supplied number; otherwise ask and never guess.
-3. Verify provider authentication and the issue in the base repository. Query it for an open target from the head repository and branch. An existing target is unchanged, but an internal call continues to step 6 before returning.
-4. With no existing target, require committed, pushed changes in the head repository. Build a concise title and body with `Summary`, `Testing`, and `Issue`; report only available evidence.
-5. Create ready by default; create draft only when `pr-draft` is true. Link non-closing by default; use a provider closing reference only when `pr-auto-close-issue` is true. Opening never closes an issue.
-6. For an existing or created target, independently re-read the remote target, resolve target-base config through its provider, and return the normalized target plus the complete automation routing leaf. Never modify an existing target. Automation routes the parent only; each later stage re-resolves authorization. Report `/pr-review` as available, without invoking it.
+3. Verify provider authentication and the base issue, then query it for an open head-repository/branch target. An existing target stays unchanged, but an internal call continues to step 6.
+4. With no target, require committed, pushed head changes. Resolve target-base config remotely, then use its non-empty `textLanguage` for the title and generated `Summary`, `Testing`, and `Issue` prose; report only available evidence.
+5. Create ready unless `pr-draft` is true. Link non-closing unless `pr-auto-close-issue` is true; only then use a provider closing reference. Opening never closes an issue.
+6. For an existing or created target, independently re-read it and resolve target-base config through its provider. Return the normalized target plus complete automation routing leaf, including `textLanguage`; never modify an existing target. Automation routes the parent only; later stages re-resolve authorization. Report `/pr-review` as available, without invoking it.
 
 For an internal result, return owned leaf JSON with exactly this normalized target:
 
@@ -47,7 +47,8 @@ For an internal result, return owned leaf JSON with exactly this normalized targ
     "host": "github.com",
     "repository": "acme/widgets",
     "baseRef": "main",
-    "configBlobSha": "012345"
+    "configBlobSha": "012345",
+    "textLanguage": ""
   }
 }
 ```

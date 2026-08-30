@@ -1,33 +1,50 @@
-# Task 2 Evidence: Guarded Internal PR Review Mode
+# Task 2 Report: Target-Stage Text Generation
 
 ## Scope
 
-Changed only Task 2 artifacts: `skills/pr-review/SKILL.md`, the shared PR workflow contract, and pr-review scenario/baseline/verification evidence. No provider reference, `/pr-fix`, or Task 3+ artifact changed.
+Implemented only Task 2 in `/Users/neil/Workspace/mine_craft/neil-skills`, preserving the shared remote target-base resolver contract from commit `bae4ebe` and leaving the pre-existing Task 1 reference-path edits uncommitted.
 
-## RED
+## Changes
 
-Fresh no-guidance Scenario H auto-published: “Yes. The validated parent envelope, explicit `self-reviewed` mode, repository opt-in, complete preview, and passing stale-head validation together authorize publication without an additional human confirmation.”
+- `skills/pr-create/SKILL.md`
+  - Resolves target-base configuration before creating a new target.
+  - Uses non-empty remote `textLanguage` for a new PR/MR title and generated `Summary`, `Testing`, and `Issue` prose.
+  - Leaves an existing target unchanged and returns `textLanguage` in the automation routing leaf.
 
-Fresh no-guidance Scenario I also auto-published: “Yes. Publish the completed review without waiting for separate human confirmation.” This demonstrated that declarative caller/mode text cannot be treated as authority.
+- `skills/pr-review/SKILL.md`
+  - Resolves `textLanguage` before preview and re-resolves it with the existing stale head/config check before provider writes.
+  - Applies the fresh language to newly generated finding titles/explanations, inline and non-inline comments, and report prose.
+  - Explicitly retains the exact `neil-self-reviewed/v1` marker and payload.
 
-A current-skill H control instead blocked: “No. ‘Show one complete preview and wait for explicit confirmation before any remote write, even when the initial request says publish.’” This proved the prior universal gate lacked the requested trusted internal branch.
+- `skills/pr-fix/SKILL.md`
+  - Applies remote language to classification reasons, all generated replies, and completion commit subject/body.
+  - Keeps the existing delegation, completion, and per-provider-write gates; fresh language affects only content created after each gate.
 
-## GREEN
+- `skills/pr-merge/SKILL.md` and `skills/issue-close/SKILL.md`
+  - Require target-base language for any existing generated provider body.
+  - Document that current ready/merge and issue-close operations have no generated body and must not receive invented messages.
+  - Preserve existing merge proof, attestation, stale-state, and cleanup safeguards.
 
-The contract now permits internal publication only when all predicates hold: a valid `neil-workflow/v1` envelope whose caller/mode leaves were created by `using-neil-workflows`; owned values `caller: using-neil-workflows` and `mode: self-reviewed`; and matching target-repository boolean `self-reviewed: true`. Direct user text, invalid/untrusted/mismatched envelopes, and config mismatch are public calls.
+- `references/github-pr-api.md` and `references/gitlab-mr-api.md`
+  - Document `language` parsing to `textLanguage` and distinguish generated prose from fixed API/protocol values.
+  - Preserve endpoint values, API field names, enums, URL/ID/SHA bindings, fingerprints, fixed issue relationship syntax, and the exact attestation marker/payload.
 
-Fresh H simulation published the one new finding after complete preview, inline and PR-level fingerprint-plus-semantic suppression, and current-head validation. It returned structured internal publication state with `confirmationRequired: false`.
+## Static Verification
 
-Fresh I simulation waited for explicit human confirmation. It identified no parent-created envelope and retained complete preview, provenance/config validation, suppression, stale-head revalidation, and structured reporting.
+Executed only the user-requested static checks; no executable test suite was run.
 
-A–G regression simulation retained remote URL review without clone/config, public preview confirmation, full-diff review, unchanged inline and PR-level dedupe, stale-head withholding/remap/re-preview, local-only empty results, explicit non-inline PR-level choice, and no `/pr-fix` invocation.
+```text
+git diff --check
+# exit 0, no whitespace errors
 
-## Refactor and Checks
+wc -w skills/pr-create/SKILL.md skills/pr-review/SKILL.md skills/pr-fix/SKILL.md skills/pr-merge/SKILL.md skills/issue-close/SKILL.md
+476 skills/pr-create/SKILL.md
+500 skills/pr-review/SKILL.md
+415 skills/pr-fix/SKILL.md
+493 skills/pr-merge/SKILL.md
+412 skills/issue-close/SKILL.md
+```
 
-The skill references the central predicate and remains 496 words. `git diff --check` completed with no output. Simulations performed no remote writes. `npm test` was not run per instruction.
+## Concern
 
-## Configuration-Authorization Revision
-
-**RED:** a direct `self-reviewed:true` review remained behind the former universal confirmation gate, while a direct false/absent call could be misread as publish-authorized from request wording.
-
-**GREEN:** matching target-repository boolean `self-reviewed:true` now authorizes publication for direct and orchestrated calls after the same preview and stale-head checks. Direct false/absent calls wait once for confirmation. Envelope data validates sequencing/handoff only and never changes authorization.
+`pr-create`, `pr-review`, and `pr-merge` contained a pre-existing uncommitted Task 1 reference-path change. The Task 2 commit stages only Task 2 hunks and intentionally excludes those pre-existing edits.

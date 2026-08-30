@@ -20,7 +20,11 @@ glab api --hostname <host> --method GET \
   "projects/<encoded-project>/repository/files/.workflow-config.json?ref=<encoded-base-ref>"
 ```
 
-Require `encoding:"base64"`; decode `content`, parse JSON, and retain `blob_id` as `configBlobSha`. Only literal `self-reviewed:true` authorizes automation. Missing file/field or `false` is false; a non-boolean field, unexpected encoding, unreadable response, or mismatched target stops. Repeat the read immediately before every automated write.
+Require `encoding:"base64"`; decode `content`, parse JSON, and retain `blob_id` as `configBlobSha`. A trimmed string `language` returns `textLanguage` (empty/absent is `""`; non-string stops the stage). Only literal `self-reviewed:true` authorizes automation. Missing file/field or `false` is false; a non-boolean field, unexpected encoding, unreadable response, or mismatched target stops. Repeat the read immediately before every automated write.
+
+### Generated Text and Protocol Values
+
+A non-empty `textLanguage` governs newly generated human prose only. Keep API paths, field names, enum values, SHA/URL/ID bindings, hidden fingerprints, and exact `neil-self-reviewed/v1` marker/payload unchanged. `Related to #<issue-iid>` and `--related-issue <issue-iid>` are fixed provider relationship syntax, not generated prose.
 
 GitLab stores an attestation as a general non-diff MR note, which does not create a resolvable discussion. Read the authenticated merge actor and all notes; accept only an exact two-line body with exactly required JSON keys whose note `author.username` equals that actor. Create a note only after a converged current-head review and no exact existing tuple:
 

@@ -5,7 +5,7 @@ description: Use when user invokes /issue-close, or when matching intent to clos
 
 # Issue Close
 
-Close a GitHub/GitLab issue and clean up its local environment. Read `.workflow-config.json` first. Never delete remote branches or branches/worktrees not owned by this issue.
+Close a GitHub/GitLab issue and clean its local environment. Read `.workflow-config.json` first. Never delete remote branches or branches/worktrees not owned by this issue.
 
 ## Orchestrated Post-Merge Handoff
 
@@ -21,6 +21,6 @@ For a valid read: inspect the named worktree; dirty stops autonomously. Remove o
 
 1. Read config; derive the issue from the complete current branch using `branch-template`, or use an explicit issue number. Never guess.
 2. If in an issue worktree, remove it with `ExitWorktree`; dirty state asks whether to discard or abort. Otherwise check out `base-branch`.
-3. Close with `gh issue close <issue-no>` for GitHub or `glab issue close <issue-no>` for GitLab; already closed is a no-op.
+3. Close with `gh issue close <issue-no>` for GitHub or `glab issue close <issue-no>` for GitLab; already closed is a no-op. These operations create no body, so do not add one. When an existing close operation supports generated prose, resolve target-base `textLanguage` remotely first and use it.
 4. Delete only the current issue branch and its derived worktree branch when unoccupied. Never delete other or remote branches.
 5. Run `git fetch --prune`, then `git pull`; report the issue, deleted branches, and updated base.
