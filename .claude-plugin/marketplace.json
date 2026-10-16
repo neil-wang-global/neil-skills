@@ -1,16 +1,27 @@
 {
   "name": "neil-skills",
-  "description": "Neil's workflow orchestration, self-review, pr-merge auto-merge, and issue-close skills for Claude Code",
+  "description": "Neil's workflow orchestration, self-review, pr-merge auto-merge, and issue-close skills for Claude Code; includes Hermes-derived v0-ui-style UI design",
   "owner": {
     "name": "Neil Wang",
     "url": "https://github.com/neil-wang-global"
   },
-  "keywords": ["workflow", "orchestration", "using-neil-workflows", "self-review", "pr-merge", "auto-merge", "issue-close"],
+  "keywords": [
+    "workflow",
+    "orchestration",
+    "using-neil-workflows",
+    "self-review",
+    "pr-merge",
+    "auto-merge",
+    "issue-close",
+    "ui",
+    "v0-ui-style",
+    "vercel"
+  ],
   "plugins": [
     {
       "name": "neil-skills",
-      "description": "Workflow skills: issue-init, issue-executing, pr-create, pr-review, pr-fix, pr-merge, issue-close, using-neil-workflows orchestration, self-review, and auto-merge",
-      "version": "1.0.5",
+      "description": "Workflow skills: issue-init, issue-executing, pr-create, pr-review, pr-fix, pr-merge, issue-close, using-neil-workflows orchestration, self-review, and auto-merge; v0-ui-style UI design from Hermes sources",
+      "version": "1.0.6",
       "source": "./",
       "author": {
         "name": "Neil Wang",

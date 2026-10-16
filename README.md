@@ -18,6 +18,10 @@ claude plugin update neil-skills@neil-skills
 
 ## 技能
 
+### /v0-ui-style
+
+UI 设计技能：基于本机 Hermes 的 V0 Panel 主题与 Vercel 风格参考，制作 v0.app 风格的中性工作台及可交互 HTML 组件 demo。原始主题和参考已完整随技能打包，并标明来源；不是另创一套同名风格，也不是 v0.app 官方技能。支持将原始视觉 token 适配到现有 UI，强调局部样式、真实交互和浏览器验证。
+
 ### /issue-init
 
 一条命令完成从 issue 到分支的开发环境初始化。

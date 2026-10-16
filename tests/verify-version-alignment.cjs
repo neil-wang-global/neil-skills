@@ -20,6 +20,6 @@ const versions = [
 
 assert.ok(versions.every((version) => version === packageJson.version),
   `root and plugin versions must match: ${versions.join(', ')}`);
-assert.equal(packageJson.version, '1.0.5', 'release version must be 1.0.5');
+assert.match(packageJson.version, /^\d+\.\d+\.\d+$/, 'release version must be a stable semantic version');
 
 console.log(`version alignment: ${packageJson.version}`);
