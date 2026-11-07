@@ -10,23 +10,53 @@
     "orchestration",
     "using-neil-workflows",
     "self-review",
+    "issue",
+    "pull-request",
     "pr-merge",
     "auto-merge",
     "issue-close",
+    "code-review",
+    "git",
+    "github",
+    "gitlab",
     "ui",
     "v0-ui-style",
-    "vercel"
+    "vercel",
+    "mindflow",
+    "cognitive-workflow",
+    "knowledge-management"
   ],
   "plugins": [
     {
       "name": "neil-skills",
-      "description": "Workflow skills: issue-init, issue-executing, pr-create, pr-review, pr-fix, pr-merge, issue-close, using-neil-workflows orchestration, self-review, and auto-merge; v0-ui-style UI design from Hermes sources",
-      "version": "1.0.6",
+      "description": "Workflow skills: issue-init, issue-executing, pr-create, pr-review, pr-fix, pr-merge, issue-close, using-neil-workflows orchestration, self-review, and auto-merge; v0-ui-style UI design from Hermes sources; mindflow cognitive workflow",
+      "version": "1.0.7",
       "source": "./",
       "author": {
         "name": "Neil Wang",
         "url": "https://github.com/neil-wang-global"
-      }
+      },
+      "keywords": [
+        "workflow",
+        "orchestration",
+        "using-neil-workflows",
+        "self-review",
+        "issue",
+        "pull-request",
+        "pr-merge",
+        "auto-merge",
+        "issue-close",
+        "code-review",
+        "git",
+        "github",
+        "gitlab",
+        "ui",
+        "v0-ui-style",
+        "vercel",
+        "mindflow",
+        "cognitive-workflow",
+        "knowledge-management"
+      ]
     }
   ]
 }
