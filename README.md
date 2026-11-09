@@ -20,16 +20,13 @@ claude plugin update neil-skills@neil-skills
 
 ### /to-official-docx
 
-把任意格式的汇报（Markdown / txt / 已有 docx / PDF / 素材笔记）转换成本公司公文式 Word 文档（封面页 + 点线目录 + 仿宋正文 30pt 固定行距 + 一、二、三 章节 + 表 N/图 N 题注 + 内嵌字体）。版式规格取自公司模板《2026绿化养护面积核准报告(格式统一版).docx》。
+把任意来源的汇报（Markdown / txt / 已有 docx / PDF / 素材笔记）转换成本公司公文式 Word 文档：封面页、点线目录、仿宋正文 30pt 固定行距、一、二、三章节、表 N / 图 N 题注、内嵌字体。版式规格取自公司正式报告模板。
 
-**两个阶段，顺序不可颠倒：**
+两个阶段：**先润色语体，再转换格式**。已有 docx 或 PDF 先用 `scripts/extract_text.py` 取纯文本、丢掉原版式，中间产物统一重建为标准 Markdown，再由 `scripts/render_docx.py` 套用模板样式表、字体表与页眉页脚生成 docx。
 
-1. **润色**——把任意来源的正文改写成公文语体（已有 docx 先抽文本、丢掉原版式）。语体特征是可测量的：段落平均 69 字、中位 66 字；零第一人称；零口语词与感叹号；列表现象改成「一是…二是…三是…」；数字带单位与口径；关键数据后补「说明：」边界段。
-2. **转换**——`python3 scripts/render_docx.py polished.md 输出.docx --figure figure.png`，脚本复用模板的样式表、字体表、页眉页脚，只替换正文。
+交付前强制校验 zip 完整性、XML 可解析、分页符数量、题注位置、目录域配对、字体内嵌、封面高度、图片宽高比。**只验证 XML 结构不算通过**——乱码、空白页、被压扁的图，都是结构正常但一眼能看出来的问题。
 
-**交付前强制校验**：zip 完整性、全部 XML 可解析、分页符恰好 2 个、题注紧贴对象且图题在图下方、目录 HYPERLINK 与 PAGEREF 成对、三个 `.odttf` 字体已内嵌、封面高度 < 23.7cm、PNG 魔数与宽高比正确。**只验证 XML 结构不算通过**——乱码、空白页、压扁的图都是结构正常但肉眼可见的错误。
-
-技能内附 `references/layout-spec.md`（样式 ID、页面尺寸、题注与图片规格）与 `references/mermaid-white-theme.json`（白底黑线框图渲染配置）。
+技能内附 `references/layout-spec.md`（样式、字体、表格、题注、分页、图片规格）与 `references/mermaid-white-theme.json`（白底黑线框图渲染配置）。
 
 ### /executive-communication
 
