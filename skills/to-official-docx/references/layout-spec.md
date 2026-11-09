@@ -53,6 +53,20 @@
 首行 `<w:tblHeader/>` + `trHeight 397 atLeast`，其余行 `340 atLeast`。
 单元格段落：`snapToGrid=0`、`line=280 exact`、`jc=center|both`。
 
+## 封面标题行距
+
+封面大标题用**单倍行距**：
+
+```xml
+<w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/>
+```
+
+不要用正文的固定 30 磅（`line="600" lineRule="exact"`）——36pt 的字放在 30pt 固定行距里会上下压字。封面其余空段仍用 30pt，便于按段数算高度。
+
+## 图片段落行距
+
+图片段落同样用单倍行距 + 零段前后间距。写成固定 30pt 时，锚点段落会先占 30pt，再遭到图下方环绕，导致图与图题之间出现一条空白带，看上去像「图题浮在图上」。
+
 ## 题注
 
 ```

@@ -1,15 +1,27 @@
 ---
-name: md-to-official-docx
-description: Use when a Markdown report must become a Chinese formal Word document in the company 公文 style — cover page, dot-leader table of contents, 仿宋 body with fixed 30pt leading, 一、二、三 headings, 表 N/图 N captions, embedded fonts. Triggers on "转成 word", "转公文格式", "转成正式文档", "按绿地扫描那种格式", "输出 docx 汇报", "md 转 docx", "official document format".
+name: to-official-docx
+description: Use when any report — Markdown, txt, an existing .docx, or notes — must become a Chinese formal Word document in the company 公文 style — cover page, dot-leader table of contents, 仿宋 body with fixed 30pt leading, 一、二、三 headings, 表 N/图 N captions, embedded fonts. Triggers on "转成 word", "转公文格式", "转成正式文档", "按绿地扫描那种格式", "输出 docx 汇报", "md 转 docx", "word 转 word", "official document format".
 ---
 
-# Markdown 转公文式 Word
+# 任意文档转公文式 Word
+
+## 输入可以是任何格式
+
+| 输入 | 处理方式 |
+|---|---|
+| Markdown / txt | 直接读文本，按下方阶段一润色 |
+| 已有的 .docx | `python3 scripts/extract_text.py 输入.docx 输出.txt` 取纯文本，**丢掉原有版式**，再按阶段一重写语体 |
+| PDF | 用 `pdftotext` 或 WPS 命令行 `wpscli pdf2txt` 取文本，再润色 |
+| 网页 / 聊天记录 / 口述整理稿 | 当作原始素材，先按阶段一重组成段落 |
+| 多份材料拼一份 | 先合并要点、去重、定章节，再润色 |
+
+**无论来源是什么，输出都必须重建为下面的标准 Markdown 结构**，转换脚本只认这一种中间格式。中间文件写到临时目录，不要覆盖原件。
 
 ## 两阶段，顺序不可颠倒
 
 ```
-阶段一 润色   Markdown → 公文语体的 Markdown
-阶段二 转换   公文语体 Markdown → docx（调用 scripts/render_docx.py）
+阶段一 润色   任意来源 → 公文语体的标准 Markdown
+阶段二 转换   标准 Markdown → docx（调用 scripts/render_docx.py）
 ```
 
 **先润色后转换。** 直接跑脚本只会把口语段落原样排进公文版式——格式对了，读起来还是内部草稿，这不叫转换。样例那份报告之所以读起来像正式文件，一半在版式，一半在语体。
@@ -54,7 +66,7 @@ grep -nE '我们|我司|本人|搞定|弄|其实|非常|特别|!|！' polished.m
 
 ## 阶段二：转换为 docx
 
-### 输入格式约定
+### 标准中间格式（脚本输入）
 
 ```markdown
 # 关于年度云服务器续费 | 与新增采购的请示      ← " | " 分隔封面两行标题
@@ -79,7 +91,10 @@ grep -nE '我们|我司|本人|搞定|弄|其实|非常|特别|!|！' polished.m
 ### 执行
 
 ```bash
-# 1. 图：把 mermaid 渲成白底黑线 PNG（先写主题配置，见 references/mermaid-white-theme.json）
+# 0. 非 Markdown 输入先抽文本
+python3 scripts/extract_text.py 输入.docx 素材.txt    # 支持 .docx / .md / .txt / .pdf
+
+# 1. 图：把 mermaid 渲成白底黑线 PNG（主题配置见 references/mermaid-white-theme.json）
 npx -y -p @mermaid-js/mermaid-cli mmdc -i figure.mmd -o figure.png -b white -s 3 -c mermaid-white-theme.json
 
 # 2. 生成 docx
@@ -96,7 +111,7 @@ python3 scripts/render_docx.py polished.md 输出.docx --figure figure.png
 | 正文 | 方正仿宋_GB2312 16pt，固定行距 30pt，首行缩进 2 字符 |
 | 一级标题 | 方正黑体 16pt，`heading 1` 样式，首行缩进 2 字符 |
 | 二级标题 | 方正楷体 16pt，`heading 2` 样式 |
-| 封面标题 | 方正小标宋 36pt 加粗居中，封面单独一页 |
+| 封面标题 | 方正小标宋 36pt 加粗居中，**单倍行距**（不是 30pt 固定行距），封面单独一页 |
 | 封面信息 | 方正楷体 22pt 居中，三行：编制 / 编制单位 / 编制日期 |
 | 目录 | 楷体 16pt，点线引导到右边界，超链接 + PAGEREF 域 |
 | 表格 | 9751 twips 居中，全框线，仿宋 10.5pt，首行加粗重复 |
@@ -167,7 +182,7 @@ EOF
 | **难看地拆句** | 每段都拆成 6–20 字的碎句，平均 45 字，中位 30 字 | 样例平均 **69 字、中位 66 字**。**目标 60–90 字一段**，不要拆碎 |
 | **重复源文档的结构加造表** | 凭空新增「表 1 采购金额构成」等源文档里没有的表 | 只把源文档已有的信息整理成表；不新增数据维度 |
 | **保留源文档的口语标题与自造词** | 如「本次采购事项的判断与建议如下」这类引出句 | 段落直接进入事实，不加「如下」式引出语 |
-| **图题放错方向** | 图题放在图**上方** | 样例是**图题在图下方**、表题在表上方。方向反了就是格式不对 |
+| **图题看着浮在图上方** | 图锚点段落用了固定 30pt 行距，图片段落先占掉一段行高，图题被推到图与图的视觉间隙之下 | 图片段落改单倍行距 + 零段前后间距；图题必须紧跟在锚点段落之后，中间不插任何段落 |
 | **图片尺寸写死** | 用固定 `cy`，与 PNG 实际比例不符，图被压扁 | 读 PNG 头取宽高比，`cy = cx * h / w` |
 | **字体缺 altName 回退** | 只嵌字体不给回退名，目标机器缺字体时仍可能替换成方块 | 为每个中文字体补 `<w:altName>`，模板已在脚本中自动补 |
 

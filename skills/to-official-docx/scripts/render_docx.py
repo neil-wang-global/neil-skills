@@ -148,7 +148,9 @@ def _png_size(path):
 
 
 def image_anchor(cx, cy, rid, name):
-    return ('<w:p><w:pPr>' + SP600 + '<w:jc w:val="center"/>'
+    # 图片段落用单倍行距且零段前后间距，否则固定 30pt 行距会在图上方压出一条空白带
+    return ('<w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/>'
+            '<w:jc w:val="center"/>'
             '<w:ind w:left="0" w:leftChars="0" w:firstLine="0" w:firstLineChars="0"/></w:pPr>'
             '<w:r><w:drawing>'
             '<wp:anchor distT="0" distB="0" distL="0" distR="0" simplePos="0" relativeHeight="2" '
@@ -172,8 +174,9 @@ def cover(title_lines, meta):
     rpr_b = _fr('方正小标宋简体') + '<w:sz w:val="72"/><w:szCs w:val="72"/><w:b/>'
     rpr_m = _fr('方正楷体') + '<w:sz w:val="44"/><w:szCs w:val="44"/>'
     out = [p_blank(4)]
+    single = '<w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/>'  # 单倍行距
     for line in title_lines:
-        out.append(f'<w:p><w:pPr>{SP600}'
+        out.append(f'<w:p><w:pPr>{single}'
                    f'<w:ind w:left="0" w:leftChars="0" w:firstLine="0" w:firstLineChars="0"/>'
                    f'<w:jc w:val="center"/><w:rPr>{rpr_b}</w:rPr></w:pPr>{run(line, rpr_b)}</w:p>')
     out.append(p_blank(7))
@@ -183,7 +186,8 @@ def cover(title_lines, meta):
                    f'<w:jc w:val="center"/><w:rPr>{rpr_m}</w:rPr></w:pPr>{run(t, rpr_m)}</w:p>')
     out.append(p_blank(1))
     out.append(f'<w:p><w:pPr>{SP600}</w:pPr><w:r><w:br w:type="page"/></w:r></w:p>')
-    # 封面总计 4+2+7+3+1 = 17 段 × 30pt = 17.7cm < 23.7cm 可用高度
+    # 高度核算：空段 30pt，标题行单倍行距约 43pt/行
+    # 4*30 + 2*43 + 7*30 + 3*30 + 1*30 = 120+86+210+90+30 = 536pt = 18.9cm < 23.7cm
     return ''.join(out)
 
 
@@ -257,7 +261,7 @@ def build(md_path, out_path, template=DEFAULT_TEMPLATE, figure_png=None):
             size = _png_size(figure_png) if figure_png else None
             cy = int(cx * size[1] / size[0]) if size else 3000000
             body.append(image_anchor(cx, cy, 'rId8', 'figure'))
-            body.append(caption(label))   # 图题在图下方，与模板一致
+            body.append(caption(label))   # 图题必须在锚点段落之后，且中间不得插入任何段落
             i = j + 1
             continue
         if s.startswith('|'):
