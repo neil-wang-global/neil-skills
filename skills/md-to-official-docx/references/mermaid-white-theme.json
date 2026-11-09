@@ -1,0 +1,20 @@
+{
+  "theme": "base",
+  "themeVariables": {
+    "fontFamily": "\"PingFang SC\", \"Microsoft YaHei\", Arial, sans-serif",
+    "fontSize": "14px",
+    "primaryColor": "#ffffff",
+    "primaryTextColor": "#000000",
+    "primaryBorderColor": "#555555",
+    "lineColor": "#555555",
+    "edgeLabelBackground": "#ffffff"
+  },
+  "flowchart": {
+    "curve": "basis",
+    "nodeSpacing": 36,
+    "rankSpacing": 32,
+    "htmlLabels": true,
+    "padding": 12
+  },
+  "_comment": "白底黑线框目标。Mermaid 的子图默认用黄色填充且 themeVariables 覆盖不掉，必须在 .mmd 里用 style/classDef 强制白色，见 SKILL.md 说明。"
+}

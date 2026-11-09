@@ -1,6 +1,6 @@
 {
   "name": "neil-skills",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Neil's issue-to-PR workflow skills for Claude Code, including using-neil-workflows orchestration, self-review, pr-merge auto-merge, and issue-close cleanup; includes Hermes-derived v0-ui-style UI design and executive-communication formal reports",
   "author": {
     "name": "Neil Wang",
