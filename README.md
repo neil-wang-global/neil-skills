@@ -18,22 +18,6 @@ claude plugin update neil-skills@neil-skills
 
 ## 技能
 
-### /mindflow
-
-基于 [MindFlow](https://github.com/neil-wang-global/MindFlow) 认知工作流执行任务：`Task -> Learning(Read) -> Recognition -> Analysis -> Planning -> Execution Control -> Reflection -> Learning`。支持在任意目录下调度，自动在用户目录（`~/.mindflow/MindFlow`）维护一个共享的 MindFlow 工作区。
-
-**功能：**
-
-1. 强制第一步：clone 或 `git pull --ff-only` 最新 `main`，校验 `SYSTEM.md` 存在
-2. 解析 Runtime Root 并按需初始化：MindFlow 把「协议」与「用户状态」分成两棵树，`~/.mindflow/MindFlow/` 只是只读协议树，Soul / 知识库 / 任务产物等运行态落在独立的 Runtime Root（默认 `~/.mindflow/MindFlow/runtime/`，可用 `MINDFLOW_RUNTIME_ROOT` 覆盖），因此 `git pull` 永远不会和本地状态冲突
-3. Soul 就绪检查（Runtime Root 的 `mind/soul/core.md` 是最高约束层，与用户共同填写，不臆造）
-4. Recovery 检查：`{runtime}/tasks/*/state.md` 未到 `completed`/`cancelled` 的任务按 `SYSTEM.md §Recovery Protocol` 续跑，以 `state.md §Runtime Root` 记录的那棵树为准
-5. 由当前会话直接按模块顺序驱动完整主流程，模块 `README.md` 进入时才加载（Lazy Loading）
-6. 仅在 MindFlow 要求独立性处用子 agent（`Learning(Acquire)` Stage 3 校验、`review-*.md`），prompt 必须逐字携带该 Runtime Root 的 `mind/soul/core.md`
-7. 跑完 terminal `Learning`：`tl-{task-id}.md`、draft → review → approved 晋升、knowledge gaps、capability updates、`Knowledge Outcome`
-
-技能本身是薄封装，不含 MindFlow 业务逻辑；流程、产物、门禁一律以 clone 下来的 `SYSTEM.md`、`CLAUDE.md`、`CONTRIBUTING.md` 与各模块 `README.md` 为准。运行态永远写在 Runtime Root，不写进协议树；默认不在 MindFlow 仓库里创建 commit。
-
 ### /v0-ui-style
 
 UI 设计技能：基于本机 Hermes 的 V0 Panel 主题与 Vercel 风格参考，制作 v0.app 风格的中性工作台及可交互 HTML 组件 demo。原始主题和参考已完整随技能打包，并标明来源；不是另创一套同名风格，也不是 v0.app 官方技能。支持将原始视觉 token 适配到现有 UI，强调局部样式、真实交互和浏览器验证。

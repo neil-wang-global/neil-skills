@@ -1,7 +1,7 @@
 {
   "name": "neil-skills",
-  "version": "1.1.0",
-  "description": "Neil's issue-to-PR workflow skills for Claude Code, including using-neil-workflows orchestration, self-review, pr-merge auto-merge, and issue-close cleanup; includes Hermes-derived v0-ui-style UI design and the MindFlow cognitive-workflow skill",
+  "version": "1.2.0",
+  "description": "Neil's issue-to-PR workflow skills for Claude Code, including using-neil-workflows orchestration, self-review, pr-merge auto-merge, and issue-close cleanup; includes Hermes-derived v0-ui-style UI design",
   "author": {
     "name": "Neil Wang",
     "url": "https://github.com/neil-wang-global"
@@ -25,9 +25,6 @@
     "gitlab",
     "ui",
     "v0-ui-style",
-    "vercel",
-    "mindflow",
-    "cognitive-workflow",
-    "knowledge-management"
+    "vercel"
   ]
 }
