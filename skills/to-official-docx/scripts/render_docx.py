@@ -383,6 +383,20 @@ def build(md_path, out_path, template=DEFAULT_TEMPLATE, figure_png=None):
             z.write(ph, 'word/media/figure.png')
     print(f'已生成 {out_path}  表 {tbl_no} 张，图 {fig_no} 张，目录 {len(entries)} 条')
 
+    # 字体体检：缺字体时文档在别人机器上会显示为方块
+    try:
+        import subprocess as _sp
+        r = _sp.run([sys.executable, os.path.join(HERE, 'ensure_fonts.py')],
+                    capture_output=True, text=True, timeout=120)
+        if r.returncode != 0:
+            print()
+            print('⚠ 本机缺少公文排版字体，文档在他人机器上可能显示为方块：')
+            print(r.stdout.rstrip())
+            print()
+            print('  自动安装开源等价字体：python3 scripts/ensure_fonts.py --install')
+    except Exception:
+        pass
+
 
 if __name__ == '__main__':
     if len(sys.argv) < 3:

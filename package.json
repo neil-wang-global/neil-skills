@@ -1,6 +1,6 @@
 {
   "name": "neil-skills",
-  "version": "1.4.2",
+  "version": "1.5.0",
   "description": "Claude Code / DSH 技能插件：issue-to-PR 工作流编排、自审与自动合并、v0 UI 风格，以及面向非技术老板的正式汇报写作。",
   "main": "index.js",
   "scripts": {
