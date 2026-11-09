@@ -1,7 +1,7 @@
 {
   "name": "neil-skills",
-  "version": "1.2.0",
-  "description": "Claude Code 工作流自动化技能插件。",
+  "version": "1.3.0",
+  "description": "Claude Code / DSH 技能插件：issue-to-PR 工作流编排、自审与自动合并、v0 UI 风格，以及面向非技术老板的正式汇报写作。",
   "main": "index.js",
   "scripts": {
     "test": "node tests/verify-skill-resources.cjs && node tests/verify-attestation-body.cjs && node tests/verify-pr-auto-delete-branch.cjs && node tests/verify-workflow-handoff-contract.cjs && node tests/verify-version-alignment.cjs",
